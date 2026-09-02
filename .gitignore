@@ -26,3 +26,24 @@ coverage
 *.njsproj
 *.sln
 *.sw?
+
+# ---------------------------------------------------------------------------
+# Design-side: resta in locale, non finisce mai su GitHub
+# ---------------------------------------------------------------------------
+# Ragionamento, PRD, esplorazioni, decisioni. Vedi design/CLAUDE.md.
+design/**
+!design/README.md
+!design/CLAUDE.md
+!design/_templates/
+!design/_templates/**
+
+# Output delle skill del flusso di design emps: scrivono nella CWD, quindi se
+# le lanci dalla root del repo atterrano qui e non devono essere pushate.
+/briefs/
+/insights/
+/requirements/
+/use-cases/
+/research-plans/
+/proposals/
+/meeting-notes/
+/log.md

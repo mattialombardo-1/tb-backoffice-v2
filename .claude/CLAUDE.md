@@ -98,6 +98,23 @@ Dettagli, dati e limiti: **`mock/README.md`**.
 L'unica operazione davvero non implementata è `questionsService.bulkDelete`, che
 lancia un errore lato client: l'endpoint non esiste nemmeno sul backend.
 
+## Ragionamento di design → `design/`
+
+PRD, decisioni, note ed esplorazioni vanno in **`design/`**, che è gitignored e
+non finisce nel repo del cliente. Regole complete in `design/CLAUDE.md`,
+template in `design/_templates/`.
+
+In breve:
+- ragionamento in `design/`, codice in `src/` — non si mescolano
+- niente ragionamento nei commenti del codice o nei messaggi di commit
+- niente nuovi `.md` di ragionamento nella root: la documentazione tracciata
+  descrive il codice **com'è adesso**, altrimenti diventa `docs/MOCK_MIGRATION.md`
+- gli output delle skill di design (`briefs/`, `requirements/`, `use-cases/`,
+  `insights/`, `research-plans/`, `proposals/`, `meeting-notes/`, `log.md`)
+  sono già gitignorati: lasciali dove atterrano
+
+Il deliverable resta `git diff <primo-commit>..HEAD -- src/`.
+
 ## UI Components (shadcn/ui)
 
 Components live in `src/components/ui/` and come from the [bundui/shadcn-ui-kit-dashboard](https://github.com/bundui/shadcn-ui-kit-dashboard) repo. They use:
@@ -122,3 +139,4 @@ Components live in `src/components/ui/` and come from the [bundui/shadcn-ui-kit-
 - `.claude/components.md` — inventory completo di componenti custom e hook
 - `.claude/known-issues.md` — problemi noti, feature disabilitate, impatto audit 2026-05
 - `.claude/memory/` — preferenze e feedback dell'utente
+- `design/CLAUDE.md` — dove va il ragionamento di design (PRD, decisioni, note)
