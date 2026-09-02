@@ -1,44 +1,40 @@
 # design/
 
-Ragionamento di design: PRD, decisioni, note, esplorazioni.
+La deliberazione: note di call, benchmark, opzioni scartate, esplorazioni.
+Roba nostra, che serve a decidere e non a implementare.
 
-**Questa cartella è gitignored.** Nel repo restano solo `README.md`,
-`CLAUDE.md` e `_templates/`; tutto il resto vive solo sulla tua macchina e non
-finisce mai nel repo del cliente.
+**Questa cartella è gitignored.** Restano tracciati solo `README.md` e
+`CLAUDE.md`; tutto il resto vive solo sulla tua macchina.
 
 ```
 design/
-  CLAUDE.md      regole (dove va cosa, cosa non fare) — leggile prima
-  _templates/    template PRD e decisione
-  prd/           PRD per feature          NNN-nome-feature.md
-  decisions/     decisioni prese e perché YYYY-MM-DD-titolo.md
-  notes/         ricerca, benchmark, appunti liberi
+  CLAUDE.md    la regola su cosa sta nel repo e cosa no — leggila
+  notes/       note di call, ricerca, benchmark, opzioni scartate
+  scratch/     esplorazioni usa-e-getta
 ```
 
-Per iniziare un PRD:
+## Le specifiche invece stanno nel repo
+
+Quando la deliberazione produce qualcosa che serve a chi implementa, quel
+qualcosa va **tracciato**:
 
 ```bash
-mkdir -p design/prd
-cp design/_templates/prd.md design/prd/001-nuova-valutazione-domande.md
+cp docs/specs/_TEMPLATE.md docs/specs/001-nuova-valutazione-domande.md
+cp docs/decisions/_TEMPLATE.md docs/decisions/2026-09-02-scala-difficolta.md
 ```
 
-(Il `mkdir` serve: `prd/`, `decisions/` e `notes/` sono ignorate, quindi su un
-clone pulito non esistono.)
+Il criterio sta in `CLAUDE.md`, in una riga: serve a implementare, o serve solo
+a noi per decidere?
 
 ## Attenzione: qui dentro non c'è storia
 
 Essendo ignorata, questa cartella **non è versionata**. Un `git clean -xdf`, un
-clone su un'altra macchina o un disco che muore se la portano via, e i PRD non
-tornano indietro.
+clone su un'altra macchina o un disco che muore se la portano via.
 
-Se vuoi tenerne la storia senza mai spingerla sul remote del cliente, la via più
-semplice è un repo git annidato, invisibile a quello esterno perché la cartella
-è ignorata:
+Se vuoi tenerne la storia senza mai spingerla sul remote, un repo git annidato
+è invisibile a quello esterno proprio perché la cartella è ignorata:
 
 ```bash
 git -C design init
 git -C design add -A && git -C design commit -m "design notes"
 ```
-
-Da quel momento `design/` ha la sua storia, separata, che non finisce mai in un
-push del repo principale.

@@ -39,14 +39,14 @@ coverage
 *.sw?
 
 # ---------------------------------------------------------------------------
-# Design-side: resta in locale, non finisce mai su GitHub
+# Deliberazione fra designer: resta in locale, non finisce mai su GitHub
 # ---------------------------------------------------------------------------
-# Ragionamento, PRD, esplorazioni, decisioni. Vedi design/CLAUDE.md.
+# Note di call, benchmark, opzioni scartate, esplorazioni. Vedi design/CLAUDE.md.
+# Le SPECIFICHE invece sono tracciate e stanno in docs/specs e docs/decisions:
+# servono a chi implementa.
 design/**
 !design/README.md
 !design/CLAUDE.md
-!design/_templates/
-!design/_templates/**
 
 # Output delle skill del flusso di design emps: scrivono nella CWD, quindi se
 # le lanci dalla root del repo atterrano qui e non devono essere pushate.

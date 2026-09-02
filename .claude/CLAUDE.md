@@ -98,22 +98,28 @@ Dettagli, dati e limiti: **`mock/README.md`**.
 L'unica operazione davvero non implementata è `questionsService.bulkDelete`, che
 lancia un errore lato client: l'endpoint non esiste nemmeno sul backend.
 
-## Ragionamento di design → `design/`
+## Cosa sta nel repo e cosa no
 
-PRD, decisioni, note ed esplorazioni vanno in **`design/`**, che è gitignored e
-non finisce nel repo del cliente. Regole complete in `design/CLAUDE.md`,
-template in `design/_templates/`.
+Una domanda sola, prima di scrivere un file:
+**serve a chi implementa, o serve solo a noi per decidere?**
 
-In breve:
-- ragionamento in `design/`, codice in `src/` — non si mescolano
-- niente ragionamento nei commenti del codice o nei messaggi di commit
-- niente nuovi `.md` di ragionamento nella root: la documentazione tracciata
-  descrive il codice **com'è adesso**, altrimenti diventa `docs/MOCK_MIGRATION.md`
-- gli output delle skill di design (`briefs/`, `requirements/`, `use-cases/`,
-  `insights/`, `research-plans/`, `proposals/`, `meeting-notes/`, `log.md`)
-  sono già gitignorati: lasciali dove atterrano
+| Serve a implementare → **tracciato** | Serve a decidere → **`design/`, gitignored** |
+|---|---|
+| `docs/specs/` — cosa costruire | note di call, chi ha detto cosa |
+| `docs/decisions/` — decisioni prese e il vincolo tecnico | opzioni scartate, ipotesi non validate |
+| `.claude/*.md` — come funziona il codice oggi | benchmark, riferimenti, esplorazioni |
+| `mock/README.md`, `README.md` — come far girare l'app | dinamiche di cliente e di team |
 
-Il deliverable resta `git diff <primo-commit>..HEAD -- src/`.
+Il repo contiene il **risultato** del ragionamento, non il ragionamento. Scrivi
+i file tracciati per Edoardo: se una frase ha senso solo per chi era in call,
+va in `design/`.
+
+Regole complete e casi limite: **`design/CLAUDE.md`**.
+Template: `docs/specs/_TEMPLATE.md`, `docs/decisions/_TEMPLATE.md`.
+
+Corollario che questo repo ha già violato: la documentazione tracciata descrive
+il codice **com'è adesso**. Quando smette di essere vera si corregge o si marca
+obsoleta, altrimenti diventa un altro `docs/MOCK_MIGRATION.md`.
 
 ## UI Components (shadcn/ui)
 
@@ -139,4 +145,4 @@ Components live in `src/components/ui/` and come from the [bundui/shadcn-ui-kit-
 - `.claude/components.md` — inventory completo di componenti custom e hook
 - `.claude/known-issues.md` — problemi noti, feature disabilitate, impatto audit 2026-05
 - `.claude/memory/` — preferenze e feedback dell'utente
-- `design/CLAUDE.md` — dove va il ragionamento di design (PRD, decisioni, note)
+- `design/CLAUDE.md` — cosa sta nel repo e cosa no (specifiche vs deliberazione)
