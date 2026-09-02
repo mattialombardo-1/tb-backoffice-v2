@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__shadcn__get_add_command_for_items",
+      "mcp__shadcn__get_item_examples_from_registries",
+      "mcp__shadcn__search_items_in_registries",
+      "Bash(npx shadcn@latest add @shadcnuikit/calendar15 --yes)",
+      "Bash(npx shadcn@latest add @shadcnuikit/calendar15)",
+      "Bash(yes N)",
+      "Bash(grep -E \"\\\\.\\(ts|tsx|json\\)$\")",
+      "Read(//Users/edoardosuppo/Development_TB/elliotApiV2/lambda_src/_schemas/**)",
+      "Read(//Users/edoardosuppo/Development_TB/elliotApiV2/lib/constructs/modules/**)",
+      "Bash(sed -i '' -e 's/question\\\\.type === '\\\\''risposta_chiusa'\\\\''/question.type === '\\\\''MULTIPLE_CHOICE'\\\\''/g' -e 's/question\\\\.type === '\\\\''completamento'\\\\''/question.type === '\\\\''COMPLETION'\\\\''/g' src/components/questions/QuestionsViewDialog.tsx)",
+      "Bash(sed -i '' -e 's/type === '\\\\''risposta_chiusa'\\\\''/type === '\\\\''MULTIPLE_CHOICE'\\\\''/g' -e 's/type === '\\\\''completamento'\\\\''/type === '\\\\''COMPLETION'\\\\''/g' src/components/questions/QuestionStudentPreview.tsx)",
+      "Bash(sed -i '' -e 's/form\\\\.type === '\\\\''risposta_chiusa'\\\\''/form.type === '\\\\''MULTIPLE_CHOICE'\\\\''/g' -e 's/form\\\\.type === '\\\\''completamento'\\\\''/form.type === '\\\\''COMPLETION'\\\\''/g' src/components/questions/QuestionContentEditor.tsx)",
+      "Bash(xargs ls -la)",
+      "Bash(npx shadcn@latest add @shadcnuikit/tabs12 --yes)",
+      "Bash(npx shadcn@latest add @shadcnuikit/tabs12)",
+      "Bash(yes)"
+    ]
+  }
+}

@@ -1,0 +1,1102 @@
+{
+    "common": {
+        "save": "Save",
+        "saving": "Saving...",
+        "cancel": "Cancel",
+        "delete": "Delete",
+        "deleting": "Deleting...",
+        "create": "Create",
+        "creating": "Creating...",
+        "add": "Add",
+        "adding": "Adding...",
+        "edit": "Edit",
+        "confirm": "Confirm",
+        "confirming": "Saving...",
+        "retry": "Retry",
+        "close": "Close",
+        "error": "Error",
+        "loading": "Loading...",
+        "next": "Next",
+        "back": "Back",
+        "actions": "Actions",
+        "signOut": "Sign out",
+        "pagination": "Page {{page}} of {{totalPages}} ({{total}} results)",
+        "deselectAll": "Deselect all",
+        "bulkExit": "Exit",
+        "noResults": "No results",
+        "copy": "Copy",
+        "search": "Search...",
+        "selectAll": "Select all",
+        "selectRow": "Select row"
+    },
+    "nav": {
+        "title": "Peerpetual Backoffice",
+        "home": "Home",
+        "staff": "Staff",
+        "roles": "Roles",
+        "clients": "Clients",
+        "questions": "Questions",
+        "questionsList": "Question List",
+        "questionsCreate": "Create Question",
+        "subjects": "Subjects & Topics",
+        "pools": "Pools",
+        "packages": "Packages & SKUs",
+        "tests": "Tests",
+        "collections": "Collections",
+        "campaigns": "Production campaigns",
+        "mySlots": "Questions to produce",
+        "settings": "Settings",
+        "lightMode": "Light Mode",
+        "darkMode": "Dark Mode",
+        "language": "Language",
+        "attributes": "Attributes"
+    },
+    "auth": {
+        "unauthorized": "Unauthorized",
+        "unauthorizedDesc": "Your account is not associated with any staff profile. Contact an administrator to request access.",
+        "logout": "Log out",
+        "userFallback": "User",
+        "login": {
+            "title": "Backoffice Login",
+            "desc": "Please log in to access the backoffice dashboard.",
+            "button": "Log In with OAuth"
+        },
+        "callback": {
+            "error": "Authentication error",
+            "errorHeading": "Authentication failed",
+            "retry": "Try again",
+            "loading": "Authenticating..."
+        }
+    },
+    "settings": {
+        "title": "Settings",
+        "subtitle": "Configuration and debug tools for administrators.",
+        "accessDenied": "Unauthorized",
+        "accessDeniedDesc": "This page is restricted to administrators.",
+        "language": {
+            "title": "Language",
+            "desc": "Choose the interface language.",
+            "it": "Italiano",
+            "en": "English"
+        },
+        "roleSimulation": {
+            "title": "Role Simulation",
+            "desc": "Select a role to simulate its capabilities in the interface. This does not modify the database — the simulation resets when the browser is closed.",
+            "noCapabilities": "No capabilities",
+            "noRoles": "No roles available.",
+            "active": "Simulating",
+            "end": "End",
+            "endAria": "End simulation"
+        }
+    },
+    "impersonation": {
+        "endAria": "End simulation"
+    },
+    "staff": {
+        "title": "Staff",
+        "subtitle": "Manage staff members.",
+        "add": "Add staff member",
+        "noResults": "No staff members found",
+        "table": {
+            "cognitoId": "Cognito ID",
+            "name": "First name",
+            "surname": "Last name",
+            "email": "Email",
+            "roles": "Roles",
+            "copyCognitoId": "Copy Cognito ID",
+            "rolesCount_one": "{{count}} role",
+            "rolesCount_other": "{{count}} roles"
+        },
+        "filters": {
+            "search": "Search by id, email, first or last name...",
+            "allRoles": "All roles"
+        },
+        "addDialog": {
+            "stepSelectUsers": "Select users",
+            "stepAssignRoles": "Assign roles",
+            "searchPlaceholder": "Search by first name, last name or email...",
+            "noUsers": "No users found",
+            "searchHint": "Search for a user to add them",
+            "selected_one": "{{count}} user selected",
+            "selected_other": "{{count}} users selected",
+            "noRole": "no role",
+            "nextCount": "Next ({{count}})",
+            "adding": "Adding...",
+            "addBtn": "Add",
+            "success_one": "Staff member added successfully",
+            "success_other": "{{count}} staff members added successfully",
+            "errorCreate": "Error during creation",
+            "errorPartial_one": "{{count}} addition failed",
+            "errorPartial_other": "{{count}} additions failed"
+        },
+        "changeRole": {
+            "title": "Edit roles",
+            "desc": "Edit the roles assigned to",
+            "validation": "Select at least one role",
+            "saving": "Saving...",
+            "save": "Save",
+            "successToast": "Roles updated for {{label}}",
+            "errorToast": "Error updating role"
+        },
+        "delete": {
+            "title": "Remove staff member",
+            "confirm": "Are you sure you want to remove",
+            "confirmSuffix": "from staff? This action cannot be undone.",
+            "deleting": "Removing...",
+            "delete": "Remove",
+            "successToast": "{{label}} removed from staff"
+        },
+        "actions": {
+            "editRoles": "Edit roles",
+            "delete": "Delete"
+        }
+    },
+    "roles": {
+        "title": "Roles",
+        "subtitle": "List of available community roles.",
+        "create": "Create role",
+        "noResults": "No roles found",
+        "table": {
+            "rank": "Rank",
+            "name": "Name",
+            "description": "Description",
+            "capabilities": "Capabilities",
+            "capabilitiesCount_one": "{{count}} capability",
+            "capabilitiesCount_other": "{{count}} capabilities"
+        },
+        "createDialog": {
+            "title": "Create new role",
+            "nameLabel": "Name (slug)",
+            "namePlaceholder": "e.g. admin",
+            "rankLabel": "Rank",
+            "rankPlaceholder": "e.g. 10",
+            "displayNameLabel": "Display name",
+            "displayNamePlaceholder": "e.g. Administrator",
+            "descLabel": "Description",
+            "descPlaceholder": "Optional description",
+            "capabilitiesLabel": "Capabilities",
+            "capResourcePlaceholder": "resource (e.g. questions)",
+            "addCapability": "Add capability",
+            "creating": "Creating...",
+            "create": "Create role",
+            "success": "Role \"{{name}}\" created",
+            "error": "Error during creation"
+        },
+        "editDialog": {
+            "title": "Edit role",
+            "displayNameLabel": "Display name",
+            "rankLabel": "Rank",
+            "descLabel": "Description",
+            "descPlaceholder": "Optional description",
+            "capabilitiesLabel": "Capabilities",
+            "saving": "Saving...",
+            "save": "Save",
+            "success": "Role \"{{name}}\" updated",
+            "error": "Error during update"
+        },
+        "deleteDialog": {
+            "title": "Delete role",
+            "desc": "You are about to delete the role",
+            "descSuffix": "This action is irreversible and not possible if the role is assigned to staff members.",
+            "deleting": "Deleting...",
+            "delete": "Delete",
+            "success": "Role \"{{name}}\" deleted",
+            "error": "Error during deletion"
+        },
+        "capabilitiesDialog": {
+            "title": "Capabilities — {{name}}",
+            "noCapabilities": "No capabilities assigned."
+        },
+        "actions": {
+            "edit": "Edit",
+            "delete": "Delete"
+        }
+    },
+    "clients": {
+        "title": "Clients",
+        "subtitle": "Manage clients registered on the Simulator.",
+        "noResults": "No clients found",
+        "table": {
+            "email": "Email",
+            "name": "First name",
+            "surname": "Last name",
+            "id": "Cognito ID"
+        },
+        "filters": {
+            "search": "Search by name, surname, email or cognitoId..."
+        },
+        "actions": {
+            "orders": "Unlocked packages",
+            "impersonate": "Impersonate client",
+            "delete": "Delete client",
+            "actionsLabel": "Actions"
+        },
+        "deleteDialog": {
+            "title": "Delete client",
+            "desc": "You are about to delete",
+            "descSuffix": "This action is irreversible.",
+            "deleting": "Deleting...",
+            "delete": "Delete",
+            "success": "Client {{name}} deleted"
+        },
+        "ordersDialog": {
+            "title": "Unlocked packages — {{client}}",
+            "package": "Package",
+            "sku": "SKU",
+            "noOrders": "No unlocked packages",
+            "retry": "Retry"
+        },
+        "promoteDialog": {
+            "title": "Promote to staff",
+            "desc": "You are about to promote",
+            "descMiddle": "to a staff member. This action cannot be undone from this interface.",
+            "confirm": "Confirm promotion"
+        },
+        "impersonate": {
+            "loading": "Opening session for {{email}}...",
+            "success": "Session opened for {{email}}",
+            "error": "Unable to start impersonated session"
+        },
+        "promoteSuccess": "{{name}} added to staff. Assign roles from the Staff page."
+    },
+    "questions": {
+        "title": "Questions",
+        "subtitle": "Manage the question catalogue",
+        "createBtn": "Create question",
+        "noResults": "No questions found",
+        "noResultsFiltered": "No results for the selected filters",
+        "resetFilters": "Reset filters",
+        "table": {
+            "id": "ID",
+            "text": "Text",
+            "subject": "Subject",
+            "topic": "Topic",
+            "difficulty": "Difficulty",
+            "status": "Status",
+            "associations": "Associations",
+            "updatedAt": "Updated at",
+            "actions": "Actions",
+            "selectAll": "Select all questions on this page",
+            "selectRow": "Select question {{id}}"
+        },
+        "filters": {
+            "period": "Period",
+            "subject": "Subject",
+            "topic": "Topic",
+            "status": "Status",
+            "type": "Type",
+            "author": "Author",
+            "difficulty": "Difficulty",
+            "language": "Language",
+            "tags": "Tags",
+            "tagsSearch": "Search or add...",
+            "loadingSubjects": "Loading...",
+            "errorSubjects": "Subject error",
+            "loadingTopics": "Loading...",
+            "errorTopics": "Topic error",
+            "loadingAuthors": "Loading...",
+            "resetAll": "Reset all filters",
+            "removePeriod": "Remove period",
+            "retrySubjects": "Retry subjects",
+            "retryTopics": "Retry topics"
+        },
+        "bulk": {
+            "toggle": "Bulk select",
+            "todoBadge": "TODO backend",
+            "selected_one": "{{count}} selected",
+            "selected_other": "{{count}} selected",
+            "actions": "Actions",
+            "importCsv": "Select from CSV",
+            "addToCollection": "Add to collection",
+            "export": "Export",
+            "exporting": "Exporting...",
+            "remove": "Remove",
+            "exit": "Exit"
+        },
+        "addToCollection": {
+            "title": "Add to collection",
+            "subtitle_one": "{{count}} question selected",
+            "subtitle_other": "{{count}} questions selected",
+            "step1": "Collection",
+            "step2": "Section",
+            "step3": "Score",
+            "step1Label": "Choose the target collection",
+            "step1Hint": "Questions are appended to the end of the section you pick.",
+            "step2Label": "Choose the section",
+            "step3Label": "Score to assign to the imported questions",
+            "selectCollection": "Select collection...",
+            "searchCollection": "Search collection...",
+            "noSections": "This collection has no sections. Creating one requires the create permission.",
+            "sectionsError": "Could not load the sections.",
+            "sectionQuestions_one": "{{count}} question",
+            "sectionQuestions_other": "{{count}} questions",
+            "sectionAddable_one": "{{count}} to add",
+            "sectionAddable_other": "{{count}} to add",
+            "newSection": "New section",
+            "newSectionHint": "Create Section {{index}} with the selected questions",
+            "pointsCorrect": "Correct",
+            "pointsWrong": "Wrong",
+            "pointsEmpty": "Blank",
+            "pointsHint": "Applies only to the questions you are adding: questions already in the section keep their own score.",
+            "summaryCollection": "Collection",
+            "summarySection": "Section",
+            "summaryAdding": "Questions to add",
+            "summaryAlreadyPresent_one": "{{count}} question is already in this section and will be skipped.",
+            "summaryAlreadyPresent_other": "{{count}} questions are already in this section and will be skipped.",
+            "summaryInOtherSection_one": "{{count}} question is already in another section of this collection and will be skipped: a question can belong to only one section.",
+            "summaryInOtherSection_other": "{{count}} questions are already in another section of this collection and will be skipped: a question can belong to only one section.",
+            "adding": "Adding...",
+            "confirm_one": "Add {{count}} question",
+            "confirm_other": "Add {{count}} questions",
+            "success_one": "{{count}} question added to {{collection}}",
+            "success_other": "{{count}} questions added to {{collection}}",
+            "nothingAdded": "No questions added: they were all already in the collection.",
+            "error": "Could not add the questions to the collection."
+        },
+        "deleteDialog": {
+            "title": "Remove question",
+            "desc": "You are about to remove question",
+            "descSuffix": "This action is irreversible and the question will be removed from the catalogue.",
+            "deleting": "Removing...",
+            "confirm": "Confirm removal"
+        },
+        "bulkDeleteDialog": {
+            "title": "Bulk removal",
+            "desc": "You are about to remove",
+            "question_one": "{{count}} question",
+            "question_other": "{{count}} questions",
+            "descSuffix": "from the catalogue. This action is irreversible.",
+            "deleting": "Removing...",
+            "confirm": "Confirm removal ({{count}})"
+        },
+        "exportDialog": {
+            "title": "Export questions",
+            "desc_one": "Export {{count}} selected question",
+            "desc_other": "Export {{count}} selected questions",
+            "format": "Format",
+            "content": "Content",
+            "contentQuestions": "Questions and alternatives only",
+            "contentExplanations": "Commented answer key only (no questions or alternatives)",
+            "headerColor": "Header colour",
+            "answerIndex": "Answer index",
+            "answerIndexNumeric": "Numeric (1, 2, 3…)",
+            "answerIndexLetter": "Letters (A, B, C…)",
+            "answerIndexNone": "None (text only)",
+            "splitBySubject": "Split by subject",
+            "splitByTopic": "Split by topic",
+            "generating": "Generating…",
+            "exporting": "Exporting...",
+            "export": "Export",
+            "empty": "No questions found for export",
+            "progress": "{{done}} / {{total}} questions loaded",
+            "progressFailed_one": "{{count}} failed",
+            "progressFailed_other": "{{count}} failed"
+        },
+        "viewDialog": {
+            "title": "Question Preview",
+            "questionText": "Question text",
+            "alternatives": "Alternatives",
+            "correctAnswer": "Correct answer",
+            "author": "Author",
+            "updatedAt": "Last updated",
+            "createdAt": "Created at",
+            "explanationText": "Commented correction",
+            "noExplanation": "No commented correction available",
+            "noAlternatives": "No alternatives available",
+            "noAnswer": "No answer available",
+            "loading": "Loading..."
+        },
+        "hierarchy": {
+            "subjectLabel": "Subject",
+            "topicLabel": "Topic",
+            "subtopicLabel": "Subtopic",
+            "selectSubject": "Select subject",
+            "selectTopicFirst": "Select a subject first",
+            "selectTopic": "Select topic",
+            "selectSubtopicFirst": "Select a topic first",
+            "selectSubtopic": "Select subtopic (optional)"
+        },
+        "editor": {
+            "textLabel": "Question text",
+            "textPlaceholder": "Enter the question text. Use $...$ for inline formulas and $$...$$ for block formulas.",
+            "correctAnswer": "Correct answer",
+            "correctAnswerPlaceholder": "Write the answer without spaces",
+            "noSpaces": "The answer must not contain spaces.",
+            "noSpacesHint": "The answer cannot contain spaces. Spaces are removed automatically.",
+            "explanationLabel": "Commented correction",
+            "explanationPlaceholder": "Enter the explanation for the correct answer. Use $...$ for inline formulas and $$...$$ for block formulas."
+        },
+        "difficultyLabel": "Difficulty",
+        "typeLabel": "Question type",
+        "alternatives": {
+            "label": "Alternatives",
+            "altStyleLabel": "Alternative style",
+            "add": "Add alternative",
+            "maxReached": "(max reached)",
+            "correctTitle": "Correct answer",
+            "markCorrect": "Mark as correct",
+            "placeholder": "Alternative {{ordinal}}"
+        },
+        "autosave": {
+            "saving": "Saving...",
+            "error": "Save error",
+            "saved": "Saved",
+            "savedAt": "Saved at {{time}}",
+            "unsaved": "Unsaved changes"
+        },
+        "formActions": {
+            "saveDraft": "Save Draft",
+            "saveQuestion": "Save and send to review"
+        },
+        "rowActions": {
+            "actions": "Actions",
+            "view": "View",
+            "copyId": "Copy ID",
+            "edit": "Edit",
+            "remove": "Remove",
+            "noPermission": "You don't have permission for this action"
+        },
+        "reviewer": {
+            "title": "Assign reviewer",
+            "desc": "Select a reviewer to send the question for review.",
+            "label": "Reviewer",
+            "loading": "Loading reviewers...",
+            "select": "Select reviewer",
+            "cancel": "Cancel",
+            "submit": "Send for review"
+        },
+        "create": {
+            "title": "Create Question",
+            "editTitle": "Edit Question",
+            "readOnly": "Read only",
+            "classification": "Classification",
+            "content": "Content",
+            "disabledHint": "Select brand, subject, topic and subtopic to enable the creation form.",
+            "draftSaved": "Draft saved",
+            "errorSave": "Error while saving",
+            "allFieldsRequired": "Complete all required fields before submitting",
+            "submitted": "Question submitted for review",
+            "errorSubmit": "Error while submitting",
+            "error": "Error"
+        },
+        "toasts": {
+            "idCopied": "ID copied to clipboard",
+            "copyError": "Error while copying",
+            "removeSuccess": "Question removed from catalogue",
+            "removeInProgress": "Removing...",
+            "bulkRemove_one": "{{count}} question removed",
+            "bulkRemove_other": "{{count}} questions removed from catalogue",
+            "bulkRemoveFailed": "{{count}} questions could not be removed",
+            "bulkRemoveError": "Error during bulk removal",
+            "exportSuccess": "{{count}} questions exported",
+            "exportError": "Error during export",
+            "exportMissing": "{{count}} IDs not found and skipped",
+            "selectAllTruncated": "Only the first {{count}} of {{total}} questions were selected (limit reached)",
+            "importSuccess_one": "{{count}} question selected from CSV",
+            "importSuccess_other": "{{count}} questions selected from CSV",
+            "importEmpty": "No valid ID found in the CSV",
+            "importError": "Error while reading the CSV",
+            "importMissingColumn": "Malformed CSV: missing questionId column"
+        },
+        "bannerPageSelected": "All {{count}} questions on this page are selected.",
+        "bannerSelectAll": "Select all {{total}} questions matching the filters",
+        "bannerSelectAllLoading": "Loading…",
+        "bannerAllSelected": "All {{total}} questions matching the filters are selected."
+    },
+    "subjects": {
+        "title": "Subjects",
+        "subtitle": "Manage subjects and topics.",
+        "add": "Add subject",
+        "search": "Search subject...",
+        "empty": "No subjects",
+        "emptyHint": "Add the first subject to get started.",
+        "noResults": "No subjects found",
+        "table": {
+            "name": "Name",
+            "topic_one": "{{count}} topic",
+            "topic_other": "{{count}} topics",
+            "noTopics": "No topics.",
+            "collapse": "Collapse",
+            "expand": "Expand"
+        },
+        "actions": {
+            "edit": "Edit",
+            "delete": "Delete",
+            "addTopic": "Topic",
+            "actionsLabel": "Actions"
+        },
+        "addDialog": {
+            "title": "Add subject",
+            "nameLabel": "Name",
+            "namePlaceholder": "Subject name",
+            "creating": "Creating...",
+            "add": "Add",
+            "success": "Subject \"{{name}}\" added",
+            "error": "Error during creation"
+        },
+        "addTopicDialog": {
+            "title": "Add topic",
+            "subjectLabel": "Subject:",
+            "nameLabel": "Topic name",
+            "namePlaceholder": "Topic name",
+            "adding": "Adding...",
+            "add": "Add",
+            "success": "Topic \"{{name}}\" added",
+            "error": "Error adding topic"
+        },
+        "editDialog": {
+            "title": "Edit subject",
+            "nameLabel": "Subject name",
+            "namePlaceholder": "Subject name",
+            "topicsLabel": "Topics",
+            "noTopics": "No topics.",
+            "topicNamePlaceholder": "Topic name",
+            "newTopicPlaceholder": "New topic...",
+            "addTopicAria": "Add topic",
+            "removeTopicAria": "Remove topic",
+            "allTopicsRequired": "All topics must have a name",
+            "saving": "Saving...",
+            "save": "Save",
+            "success": "Subject updated",
+            "error": "Error while saving"
+        },
+        "deleteDialog": {
+            "title": "Delete subject",
+            "confirm": "Are you sure you want to delete the subject",
+            "confirmSuffix": "This action cannot be undone.",
+            "deleting": "Deleting...",
+            "delete": "Delete",
+            "success": "Subject \"{{name}}\" deleted",
+            "error": "Error during deletion"
+        }
+    },
+    "pools": {
+        "title": "Pools",
+        "noResults": "No pools found",
+        "loading": "Loading...",
+        "count_one": "{{count}} pool",
+        "count_other": "{{count}} pools",
+        "countSuffix": "of {{total}} total",
+        "pagination": "Page {{page}} of {{totalPages}} ({{total}} results)",
+        "bulkSelect": "Bulk select",
+        "exitBulk": "Exit selection",
+        "create": "Create Pool",
+        "statusActive": "active",
+        "statusInactive": "inactive",
+        "statusActivePlural": "active",
+        "statusInactivePlural": "inactive",
+        "table": {
+            "name": "Name",
+            "description": "Description",
+            "status": "Status",
+            "totalQuestions": "Questions"
+        },
+        "filters": {
+            "search": "Search by name or ID...",
+            "status": "Status",
+            "subject": "Subject",
+            "questions": "Questions",
+            "reset": "Reset"
+        },
+        "bulk": {
+            "selected_one": "{{count}} selected",
+            "selected_other": "{{count}} selected",
+            "setActive": "Set active",
+            "setInactive": "Set inactive",
+            "deselectAll": "Deselect all"
+        },
+        "grid": {
+            "actions": "Actions",
+            "question_one": "{{count}} question",
+            "question_other": "{{count}} questions",
+            "select": "Select {{name}}",
+            "setStatus": "Set {{status}}"
+        },
+        "detail": {
+            "back": "Back to pools",
+            "loading": "Loading...",
+            "totalQuestions": "{{total}} total questions",
+            "addQuestions": "Add questions"
+        },
+        "deleteDialog": {
+            "title": "Delete pool",
+            "desc": "You are about to delete \"{{name}}\". This action is irreversible. Confirm?",
+            "deleting": "Deleting...",
+            "delete": "Delete",
+            "success": "Pool \"{{name}}\" deleted",
+            "error": "Error during deletion"
+        },
+        "statusDialog": {
+            "title": "Change pool status",
+            "desc": "You are about to set \"{{name}}\" as {{status}}. Confirm?",
+            "saving": "Saving...",
+            "confirm": "Confirm",
+            "success": "Pool set as {{status}}",
+            "error": "Error while saving"
+        },
+        "bulkDialog": {
+            "activateTitle": "Activate pools",
+            "activateDesc_one": "You are about to set {{count}} pool as active. Confirm?",
+            "activateDesc_other": "You are about to set {{count}} pools as active. Confirm?",
+            "deactivateTitle": "Deactivate pools",
+            "deactivateDesc_one": "You are about to set {{count}} pool as inactive. Confirm?",
+            "deactivateDesc_other": "You are about to set {{count}} pools as inactive. Confirm?",
+            "saving": "Saving...",
+            "confirm": "Confirm",
+            "success_active_one": "{{count}} pool set as active",
+            "success_active_other": "{{count}} pools set as active",
+            "success_inactive_one": "{{count}} pool set as inactive",
+            "success_inactive_other": "{{count}} pools set as inactive",
+            "error": "Error during operation"
+        },
+        "createSheet": {
+            "title": "Create new pool",
+            "desc": "Define name, status and brand. You can add questions in the next step.",
+            "nameLabel": "Name",
+            "namePlaceholder": "E.g. Biology 2026 – Session A",
+            "statusLabel": "Status",
+            "brandLabel": "Brand",
+            "brandLoading": "Loading brands...",
+            "brandEmpty": "No brands available",
+            "createAndAdd": "Create and add questions",
+            "createdHint": "Pool created. Add questions using the filters below.",
+            "goToDetail": "Go to detail",
+            "done": "Done",
+            "scoresLabel": "Scoring",
+            "scoresHint": "Points assigned per answer. Default: Correct +1, Wrong -0.25, Empty 0."
+        },
+        "scores": {
+            "title": "Scoring",
+            "correct": "Correct",
+            "wrong": "Wrong",
+            "empty": "Empty",
+            "saveSuccess": "Scoring updated",
+            "saveError": "Error saving scoring"
+        },
+        "questions": {
+            "remove": "Remove from pool",
+            "removeSuccess": "Question removed from pool",
+            "removeError": "Error during removal",
+            "addSheet": {
+                "title": "Add questions to pool",
+                "desc": "Filter questions and add them to the pool. Filters are combined with AND."
+            },
+            "table": {
+                "questionId": "Question ID",
+                "subject": "Subject",
+                "topic": "Topic",
+                "subtopic": "Subtopic",
+                "difficulty": "Difficulty",
+                "type": "Type",
+                "language": "Language",
+                "addedAt": "Added at",
+                "noResults": "No results for the selected filters",
+                "empty": "No questions in this pool"
+            },
+            "filters": {
+                "search": "Search by text or ID...",
+                "type": "Type",
+                "subject": "Subject",
+                "topic": "Topic",
+                "difficulty": "Difficulty",
+                "language": "Language",
+                "reset": "Reset filters"
+            },
+            "picker": {
+                "search": "Search by text or question ID…",
+                "addAll": "Add all ({{count}})",
+                "added": "Added",
+                "add": "Add",
+                "noResults": "No questions found",
+                "addSuccess": "Question added to pool",
+                "alreadyInPool": "Question already in pool",
+                "addError": "Error adding question",
+                "bulkConfirmTitle": "Add all questions",
+                "bulkConfirmDesc": "You are about to add <strong>{{count}} questions</strong> to the pool based on the selected filters. Questions already in the pool will be skipped.",
+                "bulkConfirm": "Add all",
+                "bulkSuccess": "{{added}} questions added to pool",
+                "bulkPartial": "{{added}} added, {{alreadyIn}} already in pool",
+                "bulkWarning": "{{added}} added, {{alreadyIn}} already present, {{failed}} errors",
+                "bulkError": "Error adding questions in bulk",
+                "pageInfo": "{{total}} questions · page {{page}} of {{totalPages}}"
+            },
+            "bulkRemove": {
+                "button": "Remove selected ({{count}})",
+                "confirmTitle": "Remove questions from pool",
+                "confirmDesc": "You are about to remove <strong>{{count}} questions</strong> from this pool. This action cannot be undone.",
+                "confirm": "Remove",
+                "success": "{{removed}} questions removed from pool",
+                "error": "Error removing questions"
+            }
+        }
+    },
+    "packages": {
+        "title": "Packages & SKUs",
+        "subtitle": "Manage available packages and their SKUs.",
+        "createPackage": "Create package",
+        "createSku": "Create SKU",
+        "tabPackages": "Packages",
+        "tabSkus": "SKUs",
+        "noPackages": "No packages found",
+        "noSkus": "No SKUs found",
+        "packageTable": {
+            "select": "Select {{name}}",
+            "selectAll": "Select all packages on this page",
+            "name": "Name",
+            "skuCode": "SKU Code",
+            "active": "Active",
+            "free": "Free",
+            "timed": "Timed",
+            "associations": "Associations",
+            "collections": "Collections ({{count}})",
+            "noCollections": "No collections",
+            "pools": "Pools ({{count}})",
+            "noPools": "No pools"
+        },
+        "skuTable": {
+            "select": "Select {{name}}",
+            "selectAll": "Select all SKUs on this page",
+            "name": "Name",
+            "code": "Code",
+            "brand": "Brand"
+        },
+        "packageBulk": {
+            "selected_one": "{{count}} selected",
+            "selected_other": "{{count}} selected",
+            "activate": "Activate",
+            "deactivate": "Deactivate",
+            "free": "Free",
+            "paid": "Paid",
+            "delete": "Delete",
+            "deselectAll": "Deselect all"
+        },
+        "skuBulk": {
+            "selected_one": "{{count}} selected",
+            "selected_other": "{{count}} selected",
+            "delete": "Delete",
+            "deselectAll": "Deselect all"
+        },
+        "createPackageDialog": {
+            "title": "Create package",
+            "skuLabel": "Associated SKU",
+            "skuLoading": "Loading...",
+            "skuSelect": "Select a SKU",
+            "skuSearch": "Search SKU...",
+            "skuNotFound": "No SKUs found.",
+            "skuEmpty": "No SKUs available. Create one from the SKU tab before creating a package.",
+            "nameLabel": "Name",
+            "namePlaceholder": "Package name",
+            "collectionsLabel": "Collections (at least one of collections or pools)",
+            "collectionsSelect": "Select collections...",
+            "collectionsSearch": "Search collection...",
+            "collectionsNotFound": "No collections found.",
+            "poolsLabel": "Pools",
+            "poolsLoading": "Loading...",
+            "poolsSelect": "Select pools...",
+            "poolsSearch": "Search pool...",
+            "poolsNotFound": "No pools found.",
+            "activeLabel": "Active",
+            "activeDesc": "The package will be immediately available",
+            "freeLabel": "Free",
+            "freeDesc": "The package does not require purchase",
+            "timedLabel": "Timed",
+            "timedDesc": "The package's availability window (from BigCommerce module dates) is enforced",
+            "expiryLabel": "Expiry (optional)",
+            "expiryDesc": "If set, the package will automatically become inactive at this date and time.",
+            "creating": "Creating...",
+            "create": "Create",
+            "success": "Package created",
+            "error": "Error during creation"
+        },
+        "editPackageDialog": {
+            "title": "Edit package",
+            "skuLabel": "SKU",
+            "nameLabel": "Name",
+            "namePlaceholder": "Package name",
+            "collectionsLabel": "Collections",
+            "collectionsLoading": "Loading...",
+            "collectionsSelect": "Select collections...",
+            "collectionsSearch": "Search...",
+            "collectionsNotFound": "No collections found.",
+            "poolsLabel": "Pools",
+            "poolsLoading": "Loading...",
+            "poolsSelect": "Select pools...",
+            "poolsSearch": "Search pool...",
+            "poolsNotFound": "No pools found.",
+            "timedLabel": "Timed",
+            "timedDesc": "The package's availability window (from BigCommerce module dates) is enforced",
+            "expiryLabel": "Expiry (optional)",
+            "saving": "Saving...",
+            "save": "Save",
+            "success": "Package updated",
+            "error": "Error while saving"
+        },
+        "deletePackageDialog": {
+            "title": "Delete package",
+            "desc": "You are about to delete <strong>{{name}}</strong>. This action is irreversible. Confirm?",
+            "deleting": "Deleting...",
+            "delete": "Delete",
+            "success": "Package \"{{name}}\" deleted",
+            "error": "Error during deletion"
+        },
+        "toggleDialog": {
+            "activeTitle": "Change active status",
+            "freeTitle": "Change free status",
+            "timedTitle": "Change timed status",
+            "activeOn": "active",
+            "activeOff": "inactive",
+            "freeOn": "free",
+            "freeOff": "paid",
+            "timedOn": "timed",
+            "timedOff": "not timed",
+            "fallbackName": "this package",
+            "desc": "You are about to set <strong>{{name}}</strong> as <strong>{{status}}</strong>. Confirm?",
+            "saving": "Saving...",
+            "confirm": "Confirm",
+            "success": "Package \"{{name}}\" set as {{status}}",
+            "featureNotAvailable": "Feature not yet available",
+            "error": "Error while saving"
+        },
+        "bulkPackageDialog": {
+            "activateTitle": "Activate packages",
+            "activateDesc_one": "You are about to set {{count}} package as active. Confirm?",
+            "activateDesc_other": "You are about to set {{count}} packages as active. Confirm?",
+            "deactivateTitle": "Deactivate packages",
+            "deactivateDesc_one": "You are about to set {{count}} package as inactive. Confirm?",
+            "deactivateDesc_other": "You are about to set {{count}} packages as inactive. Confirm?",
+            "freeTitle": "Set as free",
+            "freeDesc_one": "You are about to set {{count}} package as free. Confirm?",
+            "freeDesc_other": "You are about to set {{count}} packages as free. Confirm?",
+            "paidTitle": "Set as paid",
+            "paidDesc_one": "You are about to set {{count}} package as paid. Confirm?",
+            "paidDesc_other": "You are about to set {{count}} packages as paid. Confirm?",
+            "deleteTitle": "Delete packages",
+            "deleteDesc_one": "You are about to delete {{count}} package. This action is irreversible. Confirm?",
+            "deleteDesc_other": "You are about to delete {{count}} packages. This action is irreversible. Confirm?",
+            "saving": "Saving...",
+            "confirm": "Confirm",
+            "error": "Error during operation"
+        },
+        "createSkuDialog": {
+            "title": "Create SKU",
+            "nameLabel": "Name",
+            "namePlaceholder": "SKU name",
+            "codeLabel": "Code",
+            "codePlaceholder": "Unique code",
+            "brandLabel": "Brand",
+            "brandLoading": "Loading brands...",
+            "brandEmpty": "No brands available",
+            "urlLabel": "URL (optional)",
+            "urlPlaceholder": "https://...",
+            "creating": "Creating...",
+            "create": "Create",
+            "success": "SKU created",
+            "error": "Error during creation"
+        },
+        "editSkuDialog": {
+            "title": "Edit SKU",
+            "nameLabel": "Name",
+            "namePlaceholder": "SKU name",
+            "codeLabel": "Code",
+            "codePlaceholder": "SKU code",
+            "saving": "Saving...",
+            "save": "Save",
+            "success": "SKU updated",
+            "error": "Error while saving"
+        },
+        "deleteSkuDialog": {
+            "title": "Delete SKU",
+            "desc": "You are about to delete SKU <strong>{{name}}</strong> (<code>{{code}}</code>). This action is irreversible. Confirm?",
+            "deleting": "Deleting...",
+            "delete": "Delete",
+            "success": "SKU \"{{name}}\" deleted",
+            "error": "Error during deletion"
+        },
+        "bulkSkuDialog": {
+            "title": "Delete SKUs",
+            "desc": "You are about to delete {{count}} SKUs. This action is irreversible. Confirm?",
+            "deleting": "Deleting...",
+            "delete": "Delete",
+            "success_one": "{{count}} SKU deleted",
+            "success_other": "{{count}} SKUs deleted",
+            "error": "Error during deletion"
+        },
+        "searchPlaceholderPackages": "Search by name, ID, SKU code…",
+        "searchPlaceholderSkus": "Search by name, ID, code…",
+        "searchFieldName": "Name",
+        "searchFieldCode": "Code",
+        "searchFieldSkuCode": "SKU Code"
+    },
+    "questionTypes": {
+        "completamento": "Fill in the blank",
+        "risposta_chiusa": "Multiple choice"
+    },
+    "difficulties": {
+        "facile": "Easy",
+        "medio_facile": "Medium-easy",
+        "medio": "Medium",
+        "medio_difficile": "Medium-hard",
+        "difficile": "Hard",
+        "non_ancora_valutata": "Not yet rated"
+    },
+    "statuses": {
+        "ACTIVE": "Active",
+        "TO_REVIEW": "To review",
+        "REVIEWED": "Reviewed",
+        "ARCHIVED": "Archived"
+    },
+    "questionLanguages": {
+        "it": "Italian",
+        "en": "English"
+    },
+    "alternativeStyles": {
+        "numeric": "Numeric",
+        "alpha": "Alphabetic"
+    },
+    "campaigns": {
+        "title": "Production campaigns",
+        "subtitle": "Manage question production campaigns",
+        "noResults": "No campaigns found",
+        "noResultsFiltered": "No results for your search",
+        "create": "New campaign",
+        "searchPlaceholder": "Search by name or ID...",
+        "table": {
+            "name": "Name",
+            "totalQuestions": "Total questions",
+            "remainingQuestions": "Remaining",
+            "createdAt": "Created at",
+            "actions": "Actions"
+        },
+        "detail": {
+            "back": "Back to campaigns",
+            "loading": "Loading...",
+            "slots": "Questions",
+            "noSlots": "No questions configured",
+            "subject": "Subject",
+            "topic": "Topic",
+            "difficulty": "Difficulty",
+            "status": "Status",
+            "assignee": "Assignee",
+            "revisor": "Reviewer",
+            "dueDate": "Due date",
+            "collection": "Collection",
+            "pool": "Pool",
+            "addSlot": "Add question",
+            "deleteSlot": {
+                "title": "Delete question",
+                "description": "Are you sure you want to delete the question for {{subject}} / {{topic}}? This action cannot be undone."
+            }
+        },
+        "status": {
+            "draft": "To produce",
+            "in_review": "In review",
+            "approved": "Approved",
+            "rejected": "Rejected"
+        },
+        "addSlotSheet": {
+            "title": "Add question",
+            "subject": "Subject",
+            "subjectPlaceholder": "Select subject...",
+            "topic": "Topic",
+            "topicPlaceholder": "Select topic...",
+            "subjectFirst": "Select a subject first",
+            "difficulty": "Difficulty (optional)",
+            "difficultyPlaceholder": "Any",
+            "assignee": "Producer",
+            "assigneePlaceholder": "Select producer...",
+            "revisor": "Reviewer",
+            "revisorPlaceholder": "Select reviewer...",
+            "collection": "Collection (optional)",
+            "collectionPlaceholder": "Select collection...",
+            "pool": "Pool (optional)",
+            "poolPlaceholder": "Select pool...",
+            "dueDate": "Due date (optional)",
+            "add": "Add question",
+            "adding": "Adding...",
+            "editTitle": "Edit question",
+            "save": "Save changes",
+            "error": "Error adding question"
+        },
+        "editDialog": {
+            "title": "Rename campaign",
+            "nameLabel": "Name",
+            "error": "Error updating campaign"
+        },
+        "deleteDialog": {
+            "title": "Delete campaign",
+            "description": "Are you sure you want to delete the campaign \"{{name}}\"? All associated questions will also be deleted. This action cannot be undone."
+        },
+        "createDialog": {
+            "title": "New campaign",
+            "nameLabel": "Name",
+            "namePlaceholder": "E.g. Biology Campaign 2026",
+            "creating": "Creating...",
+            "create": "Create campaign",
+            "success": "Campaign created",
+            "error": "Error during creation"
+        }
+    },
+    "mySlots": {
+        "title": "Questions to produce",
+        "subtitle": "Questions assigned to you that need to be produced.",
+        "empty": "No questions assigned. Great work! 🎉",
+        "slotsCount_one": "{{count}} question",
+        "slotsCount_other": "{{count}} questions",
+        "produce": "Produce",
+        "dueDate": "Due",
+        "campaignContext": "You are producing a question for a campaign. After submitting to the reviewer, the campaign slot will be updated automatically.",
+        "errorTitle": "Loading error",
+        "errorDesc": "Failed to load your assigned questions. Please try again."
+    },
+    "attributes": {
+        "title": "Attributes",
+        "subtitle": "Manage custom attributes for each resource.",
+        "add": "Add attribute",
+        "empty": "No resources available",
+        "noResults": "No attributes defined",
+        "resourceSubtitle": "Attributes configured for {{resource}}.",
+        "deleteSuccess": "Attribute \"{{name}}\" deleted",
+        "deleteError": "Error while deleting",
+        "table": {
+            "name": "Name",
+            "type": "Type"
+        },
+        "actions": {
+            "edit": "Edit",
+            "delete": "Delete"
+        },
+        "types": {
+            "boolean": "Boolean",
+            "string": "Text",
+            "number": "Number",
+            "select": "Single select",
+            "multiSelect": "Multi select",
+            "date": "Date"
+        },
+        "resources": {
+            "collections": "Collections",
+            "questions": "Questions",
+            "subjects": "Subjects",
+            "users": "Users",
+            "brands": "Brands"
+        },
+        "addDialog": {
+            "title": "Add attribute",
+            "nameLabel": "Name",
+            "namePlaceholder": "e.g. difficulty",
+            "typeLabel": "Type",
+            "typePlaceholder": "Select type...",
+            "valuesLabel": "Enum values",
+            "valuesPlaceholder": "Type and press Enter...",
+            "add": "Add",
+            "success": "Attribute \"{{name}}\" added",
+            "error": "Error while creating"
+        },
+        "editDialog": {
+            "title": "Edit attribute",
+            "save": "Save",
+            "success": "Attribute \"{{name}}\" updated",
+            "error": "Error while saving"
+        }
+    }
+}

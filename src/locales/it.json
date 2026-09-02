@@ -1,0 +1,1126 @@
+{
+    "common": {
+        "save": "Salva",
+        "saving": "Salvataggio...",
+        "cancel": "Annulla",
+        "delete": "Elimina",
+        "deleting": "Eliminazione...",
+        "create": "Crea",
+        "creating": "Creazione...",
+        "add": "Aggiungi",
+        "adding": "Aggiunta...",
+        "edit": "Modifica",
+        "confirm": "Conferma",
+        "confirming": "Salvataggio...",
+        "retry": "Riprova",
+        "close": "Chiudi",
+        "error": "Errore",
+        "loading": "Caricamento...",
+        "next": "Avanti",
+        "back": "Indietro",
+        "actions": "Azioni",
+        "signOut": "Sign out",
+        "pagination": "Pagina {{page}} di {{totalPages}} ({{total}} risultati)",
+        "deselectAll": "Deseleziona tutto",
+        "bulkExit": "Esci",
+        "noResults": "Nessun risultato",
+        "copy": "Copia",
+        "search": "Cerca...",
+        "selectAll": "Seleziona tutto",
+        "selectRow": "Seleziona riga"
+    },
+    "nav": {
+        "title": "Peerpetual Backoffice",
+        "home": "Home",
+        "staff": "Staff",
+        "roles": "Ruoli",
+        "clients": "Clienti",
+        "questions": "Domande",
+        "questionsList": "Lista Domande",
+        "questionsCreate": "Crea Domanda",
+        "subjects": "Materie e argomenti",
+        "pools": "Pool",
+        "packages": "Pacchetti e SKU",
+        "tests": "Test",
+        "collections": "Collezioni",
+        "campaigns": "Campagne di produzione",
+        "mySlots": "Domande da produrre",
+        "myReviews": "Domande da revisionare",
+        "settings": "Impostazioni",
+        "lightMode": "Modalità chiara",
+        "darkMode": "Modalità scura",
+        "language": "Lingua",
+        "attributes": "Attributi"
+    },
+    "auth": {
+        "unauthorized": "Accesso non autorizzato",
+        "unauthorizedDesc": "Il tuo account non è associato a nessun profilo staff. Contatta un amministratore per richiedere l'accesso.",
+        "logout": "Esci",
+        "userFallback": "User",
+        "login": {
+            "title": "Backoffice Login",
+            "desc": "Accedi per entrare nel backoffice.",
+            "button": "Accedi"
+        },
+        "callback": {
+            "error": "Errore di autenticazione",
+            "errorHeading": "Errore durante l'autenticazione",
+            "retry": "Riprova",
+            "loading": "Autenticazione in corso..."
+        }
+    },
+    "settings": {
+        "title": "Impostazioni",
+        "subtitle": "Configurazioni e strumenti di debug per gli amministratori.",
+        "accessDenied": "Accesso non autorizzato",
+        "accessDeniedDesc": "Questa pagina è riservata agli amministratori.",
+        "language": {
+            "title": "Lingua",
+            "desc": "Scegli la lingua dell'interfaccia.",
+            "it": "Italiano",
+            "en": "English"
+        },
+        "roleSimulation": {
+            "title": "Simulazione Ruolo",
+            "desc": "Seleziona un ruolo per simulare le sue capabilities nell'interfaccia. Non modifica il database — la simulazione si resetta alla chiusura del browser.",
+            "noCapabilities": "Nessuna capability",
+            "noRoles": "Nessun ruolo disponibile.",
+            "active": "Stai simulando",
+            "end": "Termina",
+            "endAria": "Termina simulazione"
+        }
+    },
+    "impersonation": {
+        "endAria": "Termina simulazione"
+    },
+    "staff": {
+        "title": "Staff",
+        "subtitle": "Gestisci i membri dello staff.",
+        "add": "Aggiungi membro staff",
+        "noResults": "Nessun membro staff trovato",
+        "table": {
+            "cognitoId": "Cognito ID",
+            "name": "Nome",
+            "surname": "Cognome",
+            "email": "Email",
+            "roles": "Ruoli",
+            "copyCognitoId": "Copia Cognito ID",
+            "rolesCount_one": "{{count}} ruolo",
+            "rolesCount_other": "{{count}} ruoli"
+        },
+        "filters": {
+            "search": "Cerca per id, email, nome, cognome...",
+            "allRoles": "Tutti i ruoli"
+        },
+        "addDialog": {
+            "stepSelectUsers": "Seleziona utenti",
+            "stepAssignRoles": "Assegna ruoli",
+            "searchPlaceholder": "Cerca per nome, cognome o email...",
+            "noUsers": "Nessun utente trovato",
+            "searchHint": "Cerca un utente per aggiungerlo",
+            "selected_one": "{{count}} utente selezionato",
+            "selected_other": "{{count}} utenti selezionati",
+            "noRole": "nessun ruolo",
+            "nextCount": "Avanti ({{count}})",
+            "adding": "Aggiunta in corso...",
+            "addBtn": "Aggiungi",
+            "success_one": "Membro staff aggiunto con successo",
+            "success_other": "{{count}} membri staff aggiunti con successo",
+            "errorCreate": "Errore durante la creazione",
+            "errorPartial_one": "{{count}} aggiunta fallita",
+            "errorPartial_other": "{{count}} aggiunte fallite"
+        },
+        "changeRole": {
+            "title": "Modifica ruoli",
+            "desc": "Modifica i ruoli assegnati a",
+            "validation": "Seleziona almeno un ruolo",
+            "saving": "Salvataggio...",
+            "save": "Salva",
+            "successToast": "Ruoli aggiornati per {{label}}",
+            "errorToast": "Errore durante la modifica del ruolo"
+        },
+        "delete": {
+            "title": "Elimina membro staff",
+            "confirm": "Sei sicuro di voler eliminare",
+            "confirmSuffix": "dallo staff? Questa operazione non può essere annullata.",
+            "deleting": "Eliminazione...",
+            "delete": "Elimina",
+            "successToast": "{{label}} eliminato dallo staff"
+        },
+        "actions": {
+            "editRoles": "Modifica ruoli",
+            "delete": "Elimina"
+        }
+    },
+    "roles": {
+        "title": "Ruoli",
+        "subtitle": "Lista dei ruoli community disponibili.",
+        "create": "Crea ruolo",
+        "noResults": "Nessun ruolo trovato",
+        "table": {
+            "rank": "Rank",
+            "name": "Nome",
+            "description": "Descrizione",
+            "capabilities": "Capabilities",
+            "capabilitiesCount_one": "{{count}} capability",
+            "capabilitiesCount_other": "{{count}} capabilities"
+        },
+        "createDialog": {
+            "title": "Crea nuovo ruolo",
+            "nameLabel": "Nome (slug)",
+            "namePlaceholder": "es. admin",
+            "rankLabel": "Rank",
+            "rankPlaceholder": "es. 10",
+            "displayNameLabel": "Display name",
+            "displayNamePlaceholder": "es. Amministratore",
+            "descLabel": "Descrizione",
+            "descPlaceholder": "Descrizione opzionale",
+            "capabilitiesLabel": "Capabilities",
+            "capResourcePlaceholder": "resource (es. questions)",
+            "addCapability": "Aggiungi capability",
+            "creating": "Creazione...",
+            "create": "Crea ruolo",
+            "success": "Ruolo \"{{name}}\" creato",
+            "error": "Errore durante la creazione"
+        },
+        "editDialog": {
+            "title": "Modifica ruolo",
+            "displayNameLabel": "Display name",
+            "rankLabel": "Rank",
+            "descLabel": "Descrizione",
+            "descPlaceholder": "Descrizione opzionale",
+            "capabilitiesLabel": "Capabilities",
+            "saving": "Salvataggio...",
+            "save": "Salva",
+            "success": "Ruolo \"{{name}}\" aggiornato",
+            "error": "Errore durante l'aggiornamento"
+        },
+        "deleteDialog": {
+            "title": "Elimina ruolo",
+            "desc": "Stai per eliminare il ruolo",
+            "descSuffix": "Questa operazione è irreversibile e non è possibile se il ruolo è assegnato a dei membri staff.",
+            "deleting": "Eliminazione...",
+            "delete": "Elimina",
+            "success": "Ruolo \"{{name}}\" eliminato",
+            "error": "Errore durante l'eliminazione"
+        },
+        "capabilitiesDialog": {
+            "title": "Capabilities — {{name}}",
+            "noCapabilities": "Nessuna capability assegnata."
+        },
+        "actions": {
+            "edit": "Modifica",
+            "delete": "Elimina"
+        }
+    },
+    "clients": {
+        "title": "Clienti",
+        "subtitle": "Gestisci i clienti iscritti al Simulatore.",
+        "noResults": "Nessun cliente trovato",
+        "table": {
+            "email": "Email",
+            "name": "Nome",
+            "surname": "Cognome",
+            "id": "Cognito ID"
+        },
+        "filters": {
+            "search": "Cerca per nome, cognome, email o cognitoId..."
+        },
+        "actions": {
+            "orders": "Pacchetti sbloccati",
+            "impersonate": "Impersona cliente",
+            "delete": "Elimina cliente",
+            "actionsLabel": "Azioni"
+        },
+        "deleteDialog": {
+            "title": "Elimina cliente",
+            "desc": "Stai per eliminare",
+            "descSuffix": "Questa operazione è irreversibile.",
+            "deleting": "Eliminazione...",
+            "delete": "Elimina",
+            "success": "Cliente {{name}} eliminato"
+        },
+        "ordersDialog": {
+            "title": "Pacchetti sbloccati — {{client}}",
+            "package": "Pacchetto",
+            "sku": "SKU",
+            "noOrders": "Nessun pacchetto sbloccato",
+            "retry": "Riprova"
+        },
+        "promoteDialog": {
+            "title": "Promuovi a staff",
+            "desc": "Stai per promuovere",
+            "descMiddle": "a membro dello staff. Questa azione non può essere annullata da questa interfaccia.",
+            "confirm": "Conferma promozione"
+        },
+        "impersonate": {
+            "loading": "Apertura sessione per {{email}}...",
+            "success": "Sessione aperta per {{email}}",
+            "error": "Impossibile avviare la sessione impersonificata"
+        },
+        "promoteSuccess": "{{name}} aggiunto allo staff. Assegna i ruoli dalla pagina Staff."
+    },
+    "questions": {
+        "title": "Domande",
+        "subtitle": "Gestisci le domande del catalogo",
+        "createBtn": "Crea domanda",
+        "noResults": "Nessuna domanda presente",
+        "noResultsFiltered": "Nessun risultato per i filtri selezionati",
+        "resetFilters": "Reset filtri",
+        "table": {
+            "id": "ID",
+            "text": "Testo",
+            "subject": "Materia",
+            "topic": "Argomento",
+            "difficulty": "Difficoltà",
+            "status": "Stato",
+            "associations": "Associazioni",
+            "updatedAt": "Aggiornata il",
+            "actions": "Azioni",
+            "selectAll": "Seleziona tutte le domande della pagina",
+            "selectRow": "Seleziona domanda {{id}}"
+        },
+        "filters": {
+            "period": "Periodo",
+            "subject": "Materia",
+            "topic": "Argomento",
+            "status": "Stato",
+            "type": "Tipo",
+            "author": "Autore",
+            "difficulty": "Difficoltà",
+            "language": "Lingua",
+            "tags": "Tag",
+            "tagsSearch": "Cerca o aggiungi...",
+            "loadingSubjects": "Caricamento...",
+            "errorSubjects": "Errore materie",
+            "loadingTopics": "Caricamento...",
+            "errorTopics": "Errore argomenti",
+            "loadingAuthors": "Caricamento...",
+            "resetAll": "Reset tutti i filtri",
+            "removePeriod": "Rimuovi periodo",
+            "retrySubjects": "Riprova materie",
+            "retryTopics": "Riprova argomenti"
+        },
+        "bulk": {
+            "toggle": "Selezione multipla",
+            "todoBadge": "TODO backend",
+            "selected_one": "{{count}} selezionata",
+            "selected_other": "{{count}} selezionate",
+            "actions": "Azioni",
+            "importCsv": "Seleziona da CSV",
+            "addToCollection": "Aggiungi alla collezione",
+            "export": "Esporta",
+            "exporting": "Esportazione...",
+            "remove": "Rimuovi",
+            "exit": "Esci"
+        },
+        "addToCollection": {
+            "title": "Aggiungi alla collezione",
+            "subtitle_one": "{{count}} domanda selezionata",
+            "subtitle_other": "{{count}} domande selezionate",
+            "step1": "Collezione",
+            "step2": "Sezione",
+            "step3": "Punteggio",
+            "step1Label": "Scegli la collezione di destinazione",
+            "step1Hint": "Le domande verranno aggiunte in coda alla sezione che selezionerai.",
+            "step2Label": "Scegli la sezione",
+            "step3Label": "Punteggio da assegnare alle domande importate",
+            "selectCollection": "Seleziona collezione...",
+            "searchCollection": "Cerca collezione...",
+            "noSections": "Questa collezione non ha sezioni. Serve il permesso di creazione per aggiungerne una.",
+            "sectionsError": "Impossibile caricare le sezioni.",
+            "sectionQuestions_one": "{{count}} domanda",
+            "sectionQuestions_other": "{{count}} domande",
+            "sectionAddable_one": "{{count}} da aggiungere",
+            "sectionAddable_other": "{{count}} da aggiungere",
+            "newSection": "Nuova sezione",
+            "newSectionHint": "Crea la Sezione {{index}} con le domande selezionate",
+            "pointsCorrect": "Corretta",
+            "pointsWrong": "Errata",
+            "pointsEmpty": "Non data",
+            "pointsHint": "Si applica solo alle domande che stai aggiungendo: le domande già presenti nella sezione mantengono il loro punteggio.",
+            "summaryCollection": "Collezione",
+            "summarySection": "Sezione",
+            "summaryAdding": "Domande da aggiungere",
+            "summaryAlreadyPresent_one": "{{count}} domanda è già in questa sezione e verrà ignorata.",
+            "summaryAlreadyPresent_other": "{{count}} domande sono già in questa sezione e verranno ignorate.",
+            "summaryInOtherSection_one": "{{count}} domanda è già in un'altra sezione di questa collezione e verrà ignorata: una domanda può appartenere a una sola sezione.",
+            "summaryInOtherSection_other": "{{count}} domande sono già in un'altra sezione di questa collezione e verranno ignorate: una domanda può appartenere a una sola sezione.",
+            "adding": "Aggiunta in corso...",
+            "confirm_one": "Aggiungi {{count}} domanda",
+            "confirm_other": "Aggiungi {{count}} domande",
+            "success_one": "{{count}} domanda aggiunta a {{collection}}",
+            "success_other": "{{count}} domande aggiunte a {{collection}}",
+            "nothingAdded": "Nessuna domanda aggiunta: erano già tutte presenti nella collezione.",
+            "error": "Impossibile aggiungere le domande alla collezione."
+        },
+        "deleteDialog": {
+            "title": "Rimuovi domanda",
+            "desc": "Stai per rimuovere la domanda",
+            "descSuffix": "Questa azione è irreversibile e la domanda verrà rimossa dal catalogo.",
+            "deleting": "Rimozione...",
+            "confirm": "Conferma rimozione"
+        },
+        "bulkDeleteDialog": {
+            "title": "Rimozione in blocco",
+            "desc": "Stai per rimuovere",
+            "question_one": "{{count}} domanda",
+            "question_other": "{{count}} domande",
+            "descSuffix": "dal catalogo. Questa azione è irreversibile.",
+            "deleting": "Rimozione...",
+            "confirm": "Conferma rimozione ({{count}})"
+        },
+        "exportDialog": {
+            "title": "Esporta domande",
+            "desc_one": "Esporta {{count}} domanda selezionata",
+            "desc_other": "Esporta {{count}} domande selezionate",
+            "format": "Formato",
+            "content": "Contenuto",
+            "contentQuestions": "Solo domande e alternative",
+            "contentExplanations": "Solo correzioni commentate (senza domande e alternative)",
+            "headerColor": "Colore intestazioni",
+            "answerIndex": "Indice risposte",
+            "answerIndexNumeric": "Numerico (1, 2, 3…)",
+            "answerIndexLetter": "Letterale (A, B, C…)",
+            "answerIndexNone": "Nessuno (solo testo)",
+            "splitBySubject": "Dividi per materia",
+            "splitByTopic": "Dividi per argomento",
+            "generating": "Generazione…",
+            "exporting": "Esportazione...",
+            "export": "Esporta",
+            "empty": "Nessuna domanda trovata per l'export",
+            "progress": "{{done}} / {{total}} domande caricate",
+            "progressFailed_one": "{{count}} in errore",
+            "progressFailed_other": "{{count}} in errore"
+        },
+        "viewDialog": {
+            "title": "Anteprima Domanda",
+            "questionText": "Testo della domanda",
+            "alternatives": "Alternative",
+            "correctAnswer": "Risposta corretta",
+            "author": "Creatore",
+            "updatedAt": "Ultima modifica",
+            "createdAt": "Data creazione",
+            "explanationText": "Correzione commentata",
+            "noExplanation": "Nessuna correzione commentata disponibile",
+            "noAlternatives": "Nessuna alternativa disponibile",
+            "noAnswer": "Nessuna risposta disponibile",
+            "loading": "Caricamento..."
+        },
+        "hierarchy": {
+            "subjectLabel": "Materia",
+            "topicLabel": "Argomento",
+            "subtopicLabel": "Sotto-argomento",
+            "selectSubject": "Seleziona materia",
+            "selectTopicFirst": "Seleziona prima la materia",
+            "selectTopic": "Seleziona argomento",
+            "selectSubtopicFirst": "Seleziona prima l'argomento",
+            "selectSubtopic": "Seleziona sotto-argomento (opzionale)"
+        },
+        "editor": {
+            "textLabel": "Testo della domanda",
+            "textPlaceholder": "Inserisci il testo della domanda. Usa $...$ per formule inline e $$...$$ per formule a blocco.",
+            "correctAnswer": "Risposta corretta",
+            "correctAnswerPlaceholder": "Scrivi la risposta senza spazi",
+            "noSpaces": "La risposta non deve contenere spazi.",
+            "noSpacesHint": "La risposta non può contenere spazi. Gli spazi vengono rimossi automaticamente.",
+            "explanationLabel": "Correzione commentata",
+            "explanationPlaceholder": "Inserisci la spiegazione della risposta corretta. Usa $...$ per formule inline e $$...$$ per formule a blocco."
+        },
+        "difficultyLabel": "Difficoltà",
+        "typeLabel": "Tipo di domanda",
+        "alternatives": {
+            "label": "Alternative",
+            "altStyleLabel": "Stile alternativa",
+            "add": "Aggiungi alternativa",
+            "maxReached": "(max raggiunto)",
+            "correctTitle": "Risposta corretta",
+            "markCorrect": "Segna come corretta",
+            "placeholder": "Alternativa {{ordinal}}"
+        },
+        "autosave": {
+            "saving": "Salvataggio...",
+            "error": "Errore salvataggio",
+            "saved": "Salvato",
+            "savedAt": "Salvato alle {{time}}",
+            "unsaved": "Modifiche non salvate"
+        },
+        "formActions": {
+            "saveDraft": "Salva Bozza",
+            "saveQuestion": "Salva e manda in revisione"
+        },
+        "readOnly": "Sola lettura",
+        "rowActions": {
+            "actions": "Azioni",
+            "view": "Visualizza",
+            "copyId": "Copia ID",
+            "edit": "Modifica",
+            "remove": "Rimuovi",
+            "noPermission": "Non hai i permessi per questa azione"
+        },
+        "reviewer": {
+            "title": "Assegna revisore",
+            "desc": "Seleziona un revisore a cui inviare la domanda per la revisione.",
+            "label": "Revisore",
+            "loading": "Caricamento revisori...",
+            "select": "Seleziona revisore",
+            "cancel": "Annulla",
+            "submit": "Invia al revisore"
+        },
+        "create": {
+            "title": "Crea Domanda",
+            "editTitle": "Modifica Domanda",
+            "readOnly": "Sola lettura",
+            "classification": "Classificazione",
+            "content": "Contenuto",
+            "disabledHint": "Seleziona brand, materia, argomento e sotto-argomento per abilitare il modulo di creazione.",
+            "draftSaved": "Bozza salvata",
+            "errorSave": "Errore durante il salvataggio",
+            "allFieldsRequired": "Completa tutti i campi obbligatori prima di inviare",
+            "submitted": "Domanda inviata al revisore",
+            "errorSubmit": "Errore durante l'invio",
+            "error": "Errore"
+        },
+        "toasts": {
+            "idCopied": "ID copiato negli appunti",
+            "copyError": "Errore durante la copia",
+            "removeSuccess": "Domanda rimossa dal catalogo",
+            "removeInProgress": "Rimozione...",
+            "bulkRemove_one": "{{count}} domanda rimossa",
+            "bulkRemove_other": "{{count}} domande rimosse dal catalogo",
+            "bulkRemoveFailed": "{{count}} domande non rimosse",
+            "bulkRemoveError": "Errore durante la rimozione in blocco",
+            "exportSuccess": "{{count}} domande esportate",
+            "exportError": "Errore durante l'esportazione",
+            "exportMissing": "{{count}} ID non trovati e ignorati",
+            "selectAllTruncated": "Selezionate solo le prime {{count}} domande su {{total}} (limite raggiunto)",
+            "importSuccess_one": "{{count}} domanda selezionata dal CSV",
+            "importSuccess_other": "{{count}} domande selezionate dal CSV",
+            "importEmpty": "Nessun ID valido trovato nel CSV",
+            "importError": "Errore durante la lettura del CSV",
+            "importMissingColumn": "CSV mal formato: manca la colonna questionId"
+        },
+        "bannerPageSelected": "Tutte le {{count}} domande di questa pagina sono selezionate.",
+        "bannerSelectAll": "Seleziona tutte le {{total}} domande corrispondenti ai filtri",
+        "bannerSelectAllLoading": "Caricamento…",
+        "bannerAllSelected": "Tutte le {{total}} domande corrispondenti ai filtri sono selezionate."
+    },
+    "subjects": {
+        "title": "Materie",
+        "subtitle": "Gestisci materie e argomenti.",
+        "add": "Aggiungi materia",
+        "search": "Cerca materia...",
+        "empty": "Nessuna materia",
+        "emptyHint": "Aggiungi la prima materia per iniziare.",
+        "noResults": "Nessuna materia trovata",
+        "table": {
+            "name": "Nome",
+            "topic_one": "{{count}} argomento",
+            "topic_other": "{{count}} argomenti",
+            "noTopics": "Nessun argomento.",
+            "collapse": "Riduci",
+            "expand": "Espandi"
+        },
+        "actions": {
+            "edit": "Modifica",
+            "delete": "Elimina",
+            "addTopic": "Argomento",
+            "actionsLabel": "Azioni"
+        },
+        "addDialog": {
+            "title": "Aggiungi materia",
+            "nameLabel": "Nome",
+            "namePlaceholder": "Nome della materia",
+            "creating": "Creazione...",
+            "add": "Aggiungi",
+            "success": "Materia \"{{name}}\" aggiunta",
+            "error": "Errore durante la creazione"
+        },
+        "addTopicDialog": {
+            "title": "Aggiungi argomento",
+            "subjectLabel": "Materia:",
+            "nameLabel": "Nome argomento",
+            "namePlaceholder": "Nome dell'argomento",
+            "adding": "Aggiunta...",
+            "add": "Aggiungi",
+            "success": "Argomento \"{{name}}\" aggiunto",
+            "error": "Errore durante l'aggiunta"
+        },
+        "editDialog": {
+            "title": "Modifica materia",
+            "nameLabel": "Nome materia",
+            "namePlaceholder": "Nome della materia",
+            "topicsLabel": "Argomenti",
+            "noTopics": "Nessun argomento.",
+            "topicNamePlaceholder": "Nome argomento",
+            "newTopicPlaceholder": "Nuovo argomento...",
+            "addTopicAria": "Aggiungi argomento",
+            "removeTopicAria": "Rimuovi argomento",
+            "allTopicsRequired": "Tutti i topic devono avere un nome",
+            "saving": "Salvataggio...",
+            "save": "Salva",
+            "success": "Materia aggiornata",
+            "error": "Errore durante il salvataggio"
+        },
+        "deleteDialog": {
+            "title": "Elimina materia",
+            "confirm": "Sei sicuro di voler eliminare la materia",
+            "confirmSuffix": "Questa operazione non può essere annullata.",
+            "deleting": "Eliminazione...",
+            "delete": "Elimina",
+            "success": "Materia \"{{name}}\" eliminata",
+            "error": "Errore durante l'eliminazione"
+        }
+    },
+    "pools": {
+        "title": "Pools",
+        "noResults": "Nessuna banca dati trovata",
+        "loading": "Caricamento...",
+        "count_one": "{{count}} pool",
+        "count_other": "{{count}} pools",
+        "countSuffix": "su {{total}} totali",
+        "pagination": "Pagina {{page}} di {{totalPages}} ({{total}} risultati)",
+        "bulkSelect": "Selezione multipla",
+        "exitBulk": "Esci dalla selezione",
+        "create": "Crea Pool",
+        "statusActive": "attivo",
+        "statusInactive": "inattivo",
+        "statusActivePlural": "attivi",
+        "statusInactivePlural": "inattivi",
+        "table": {
+            "name": "Nome",
+            "description": "Descrizione",
+            "status": "Stato",
+            "totalQuestions": "Domande"
+        },
+        "filters": {
+            "search": "Cerca per nome o ID...",
+            "status": "Stato",
+            "subject": "Materia",
+            "questions": "Domande",
+            "reset": "Reset"
+        },
+        "bulk": {
+            "selected_one": "{{count}} selezionato",
+            "selected_other": "{{count}} selezionati",
+            "setActive": "Imposta attivo",
+            "setInactive": "Imposta inattivo",
+            "deselectAll": "Deseleziona tutto"
+        },
+        "grid": {
+            "actions": "Azioni",
+            "question_one": "{{count}} domanda",
+            "question_other": "{{count}} domande",
+            "select": "Seleziona {{name}}",
+            "setStatus": "Imposta {{status}}"
+        },
+        "detail": {
+            "back": "Torna alle banche dati",
+            "loading": "Caricamento...",
+            "totalQuestions": "{{total}} domande totali",
+            "addQuestions": "Aggiungi domande"
+        },
+        "deleteDialog": {
+            "title": "Elimina pool",
+            "desc": "Stai per eliminare \"{{name}}\". Questa operazione è irreversibile. Confermi?",
+            "deleting": "Eliminazione...",
+            "delete": "Elimina",
+            "success": "Pool \"{{name}}\" eliminato",
+            "error": "Errore durante l'eliminazione"
+        },
+        "statusDialog": {
+            "title": "Cambia stato pool",
+            "desc": "Stai per impostare \"{{name}}\" come {{status}}. Confermi?",
+            "saving": "Salvataggio...",
+            "confirm": "Conferma",
+            "success": "Pool impostato come {{status}}",
+            "error": "Errore durante il salvataggio"
+        },
+        "bulkDialog": {
+            "activateTitle": "Attiva pool",
+            "activateDesc_one": "Stai per impostare {{count}} pool come attivo. Confermi?",
+            "activateDesc_other": "Stai per impostare {{count}} pool come attivi. Confermi?",
+            "deactivateTitle": "Disattiva pool",
+            "deactivateDesc_one": "Stai per impostare {{count}} pool come inattivo. Confermi?",
+            "deactivateDesc_other": "Stai per impostare {{count}} pool come inattivi. Confermi?",
+            "saving": "Salvataggio...",
+            "confirm": "Conferma",
+            "success_active_one": "{{count}} pool impostato come attivo",
+            "success_active_other": "{{count}} pool impostati come attivi",
+            "success_inactive_one": "{{count}} pool impostato come inattivo",
+            "success_inactive_other": "{{count}} pool impostati come inattivi",
+            "error": "Errore durante l'operazione"
+        },
+        "createSheet": {
+            "title": "Crea nuovo pool",
+            "desc": "Definisci nome, stato e brand. Potrai aggiungere le domande nel passo successivo.",
+            "nameLabel": "Nome",
+            "namePlaceholder": "Es. Biologia 2026 – Sessione A",
+            "statusLabel": "Stato",
+            "brandLabel": "Brand",
+            "brandLoading": "Caricamento brand...",
+            "brandEmpty": "Nessun brand disponibile",
+            "createAndAdd": "Crea e aggiungi domande",
+            "createdHint": "Pool creato. Aggiungi le domande con i filtri qui sotto.",
+            "goToDetail": "Vai al dettaglio",
+            "done": "Fatto",
+            "scoresLabel": "Punteggio",
+            "scoresHint": "Punti assegnati per ogni risposta. Predefinito: Corretta +1, Errata -0.25, Vuota 0."
+        },
+        "scores": {
+            "title": "Punteggio",
+            "correct": "Corretta",
+            "wrong": "Errata",
+            "empty": "Vuota",
+            "saveSuccess": "Punteggio aggiornato",
+            "saveError": "Errore durante il salvataggio"
+        },
+        "questions": {
+            "remove": "Rimuovi dal pool",
+            "removeSuccess": "Domanda rimossa dal pool",
+            "removeError": "Errore durante la rimozione",
+            "addSheet": {
+                "title": "Aggiungi domande al pool",
+                "desc": "Filtra le domande e aggiungile al pool. I filtri sono combinati in AND."
+            },
+            "table": {
+                "questionId": "ID Domanda",
+                "subject": "Materia",
+                "topic": "Argomento",
+                "subtopic": "Sotto-argomento",
+                "difficulty": "Difficoltà",
+                "type": "Tipo",
+                "language": "Lingua",
+                "addedAt": "Aggiunta il",
+                "noResults": "Nessun risultato per i filtri selezionati",
+                "empty": "Nessuna domanda presente in questa banca dati"
+            },
+            "filters": {
+                "search": "Cerca per testo o ID...",
+                "type": "Tipo",
+                "subject": "Materia",
+                "topic": "Argomento",
+                "difficulty": "Difficoltà",
+                "language": "Lingua",
+                "reset": "Reset filtri"
+            },
+            "picker": {
+                "search": "Cerca per testo o ID domanda…",
+                "addAll": "Aggiungi tutte ({{count}})",
+                "added": "Aggiunta",
+                "add": "Aggiungi",
+                "noResults": "Nessuna domanda trovata",
+                "addSuccess": "Domanda aggiunta al pool",
+                "alreadyInPool": "Domanda già presente nel pool",
+                "addError": "Errore durante l'aggiunta",
+                "bulkConfirmTitle": "Aggiungi tutte le domande",
+                "bulkConfirmDesc": "Stai per aggiungere <strong>{{count}} domande</strong> al pool in base ai filtri selezionati. Le domande già presenti verranno ignorate.",
+                "bulkConfirm": "Aggiungi tutte",
+                "bulkSuccess": "{{added}} domande aggiunte al pool",
+                "bulkPartial": "{{added}} aggiunte, {{alreadyIn}} già presenti nel pool",
+                "bulkWarning": "{{added}} aggiunte, {{alreadyIn}} già presenti, {{failed}} errori",
+                "bulkError": "Errore durante l'aggiunta in blocco",
+                "pageInfo": "{{total}} domande · pagina {{page}} di {{totalPages}}"
+            },
+            "bulkRemove": {
+                "button": "Rimuovi selezionate ({{count}})",
+                "confirmTitle": "Rimuovi domande dal pool",
+                "confirmDesc": "Stai per rimuovere <strong>{{count}} domande</strong> da questo pool. L'operazione non può essere annullata.",
+                "confirm": "Rimuovi",
+                "success": "{{removed}} domande rimosse dal pool",
+                "error": "Errore durante la rimozione delle domande"
+            }
+        }
+    },
+    "packages": {
+        "title": "Pacchetti e SKU",
+        "subtitle": "Gestisci i pacchetti disponibili e i loro SKU.",
+        "createPackage": "Crea pacchetto",
+        "createSku": "Crea SKU",
+        "tabPackages": "Pacchetti",
+        "tabSkus": "SKU",
+        "noPackages": "Nessun pacchetto trovato",
+        "noSkus": "Nessuno SKU trovato",
+        "packageTable": {
+            "select": "Seleziona {{name}}",
+            "selectAll": "Seleziona tutti i pacchetti della pagina",
+            "name": "Nome",
+            "skuCode": "SKU Code",
+            "active": "Attivo",
+            "free": "Gratuito",
+            "timed": "Temporizzato",
+            "associations": "Associazioni",
+            "collections": "Collections ({{count}})",
+            "noCollections": "Nessuna collection",
+            "pools": "Pool ({{count}})",
+            "noPools": "Nessun pool"
+        },
+        "skuTable": {
+            "select": "Seleziona {{name}}",
+            "selectAll": "Seleziona tutti gli SKU della pagina",
+            "name": "Nome",
+            "code": "Code",
+            "brand": "Brand"
+        },
+        "packageBulk": {
+            "selected_one": "{{count}} selezionato",
+            "selected_other": "{{count}} selezionati",
+            "activate": "Attiva",
+            "deactivate": "Disattiva",
+            "free": "Gratuito",
+            "paid": "A pagamento",
+            "delete": "Elimina",
+            "deselectAll": "Deseleziona tutto"
+        },
+        "skuBulk": {
+            "selected_one": "{{count}} selezionato",
+            "selected_other": "{{count}} selezionati",
+            "delete": "Elimina",
+            "deselectAll": "Deseleziona tutto"
+        },
+        "createPackageDialog": {
+            "title": "Crea pacchetto",
+            "skuLabel": "SKU associato",
+            "skuLoading": "Caricamento...",
+            "skuSelect": "Seleziona uno SKU",
+            "skuSearch": "Cerca SKU...",
+            "skuNotFound": "Nessun SKU trovato.",
+            "skuEmpty": "Nessuno SKU disponibile. Creane uno dalla tab SKU prima di creare un pacchetto.",
+            "nameLabel": "Nome",
+            "namePlaceholder": "Nome pacchetto",
+            "collectionsLabel": "Collections (almeno una tra collections e pools)",
+            "collectionsSelect": "Seleziona collections...",
+            "collectionsSearch": "Cerca collection...",
+            "collectionsNotFound": "Nessuna collection trovata.",
+            "poolsLabel": "Pools",
+            "poolsLoading": "Caricamento...",
+            "poolsSelect": "Seleziona pools...",
+            "poolsSearch": "Cerca pool...",
+            "poolsNotFound": "Nessun pool trovato.",
+            "activeLabel": "Attivo",
+            "activeDesc": "Il pacchetto sarà subito disponibile",
+            "freeLabel": "Gratuito",
+            "freeDesc": "Il pacchetto non richiede acquisto",
+            "timedLabel": "Temporizzato",
+            "timedDesc": "Viene applicata la finestra di disponibilità (date del modulo su BigCommerce)",
+            "expiryLabel": "Scadenza (facoltativa)",
+            "expiryDesc": "Se impostata, il pacchetto diventerà inattivo automaticamente a questa data e ora.",
+            "creating": "Creazione...",
+            "create": "Crea",
+            "success": "Pacchetto creato",
+            "error": "Errore durante la creazione"
+        },
+        "editPackageDialog": {
+            "title": "Modifica pacchetto",
+            "skuLabel": "SKU",
+            "nameLabel": "Nome",
+            "namePlaceholder": "Nome pacchetto",
+            "collectionsLabel": "Collections",
+            "collectionsLoading": "Caricamento...",
+            "collectionsSelect": "Seleziona collections...",
+            "collectionsSearch": "Ricerca...",
+            "collectionsNotFound": "Nessuna collection trovata.",
+            "poolsLabel": "Pools",
+            "poolsLoading": "Caricamento...",
+            "poolsSelect": "Seleziona pools...",
+            "poolsSearch": "Cerca pool...",
+            "poolsNotFound": "Nessun pool trovato.",
+            "timedLabel": "Temporizzato",
+            "timedDesc": "Viene applicata la finestra di disponibilità (date del modulo su BigCommerce)",
+            "expiryLabel": "Scadenza (facoltativa)",
+            "saving": "Salvataggio...",
+            "save": "Salva",
+            "success": "Pacchetto aggiornato",
+            "error": "Errore durante il salvataggio"
+        },
+        "deletePackageDialog": {
+            "title": "Elimina pacchetto",
+            "desc": "Stai per eliminare <strong>{{name}}</strong>. Questa operazione è irreversibile. Confermi?",
+            "deleting": "Eliminazione...",
+            "delete": "Elimina",
+            "success": "Pacchetto \"{{name}}\" eliminato",
+            "error": "Errore durante l'eliminazione"
+        },
+        "toggleDialog": {
+            "activeTitle": "Modifica stato attivo",
+            "freeTitle": "Modifica stato gratuito",
+            "timedTitle": "Modifica stato temporizzato",
+            "activeOn": "attivo",
+            "activeOff": "non attivo",
+            "freeOn": "gratuito",
+            "freeOff": "a pagamento",
+            "timedOn": "temporizzato",
+            "timedOff": "non temporizzato",
+            "fallbackName": "questo pacchetto",
+            "desc": "Stai per impostare <strong>{{name}}</strong> come <strong>{{status}}</strong>. Confermi?",
+            "saving": "Salvataggio...",
+            "confirm": "Conferma",
+            "success": "Pacchetto \"{{name}}\" impostato come {{status}}",
+            "featureNotAvailable": "Funzionalità non ancora disponibile",
+            "error": "Errore durante il salvataggio"
+        },
+        "bulkPackageDialog": {
+            "activateTitle": "Attiva pacchetti",
+            "activateDesc_one": "Stai per impostare {{count}} pacchetto come attivo. Confermi?",
+            "activateDesc_other": "Stai per impostare {{count}} pacchetti come attivi. Confermi?",
+            "deactivateTitle": "Disattiva pacchetti",
+            "deactivateDesc_one": "Stai per impostare {{count}} pacchetto come non attivo. Confermi?",
+            "deactivateDesc_other": "Stai per impostare {{count}} pacchetti come non attivi. Confermi?",
+            "freeTitle": "Imposta gratuiti",
+            "freeDesc_one": "Stai per impostare {{count}} pacchetto come gratuito. Confermi?",
+            "freeDesc_other": "Stai per impostare {{count}} pacchetti come gratuiti. Confermi?",
+            "paidTitle": "Imposta a pagamento",
+            "paidDesc_one": "Stai per impostare {{count}} pacchetto come a pagamento. Confermi?",
+            "paidDesc_other": "Stai per impostare {{count}} pacchetti come a pagamento. Confermi?",
+            "deleteTitle": "Elimina pacchetti",
+            "deleteDesc_one": "Stai per eliminare {{count}} pacchetto. Questa operazione è irreversibile. Confermi?",
+            "deleteDesc_other": "Stai per eliminare {{count}} pacchetti. Questa operazione è irreversibile. Confermi?",
+            "saving": "Salvataggio...",
+            "confirm": "Conferma",
+            "error": "Errore durante l'operazione"
+        },
+        "createSkuDialog": {
+            "title": "Crea SKU",
+            "nameLabel": "Nome",
+            "namePlaceholder": "Nome SKU",
+            "codeLabel": "Code",
+            "codePlaceholder": "Codice univoco",
+            "brandLabel": "Brand",
+            "brandLoading": "Caricamento brand...",
+            "brandEmpty": "Nessun brand disponibile",
+            "urlLabel": "URL (opzionale)",
+            "urlPlaceholder": "https://...",
+            "creating": "Creazione...",
+            "create": "Crea",
+            "success": "SKU creato",
+            "error": "Errore durante la creazione"
+        },
+        "editSkuDialog": {
+            "title": "Modifica SKU",
+            "nameLabel": "Nome",
+            "namePlaceholder": "Nome SKU",
+            "codeLabel": "Code",
+            "codePlaceholder": "Codice SKU",
+            "saving": "Salvataggio...",
+            "save": "Salva",
+            "success": "SKU aggiornato",
+            "error": "Errore durante il salvataggio"
+        },
+        "deleteSkuDialog": {
+            "title": "Elimina SKU",
+            "desc": "Stai per eliminare lo SKU <strong>{{name}}</strong> (<code>{{code}}</code>). Questa operazione è irreversibile. Confermi?",
+            "deleting": "Eliminazione...",
+            "delete": "Elimina",
+            "success": "SKU \"{{name}}\" eliminato",
+            "error": "Errore durante l'eliminazione"
+        },
+        "bulkSkuDialog": {
+            "title": "Elimina SKU",
+            "desc": "Stai per eliminare {{count}} SKU. Questa operazione è irreversibile. Confermi?",
+            "deleting": "Eliminazione...",
+            "delete": "Elimina",
+            "success_one": "{{count}} SKU eliminato",
+            "success_other": "{{count}} SKU eliminati",
+            "error": "Errore durante l'eliminazione"
+        },
+        "searchPlaceholderPackages": "Cerca per nome, ID, codice…",
+        "searchPlaceholderSkus": "Cerca per nome, ID, codice…",
+        "searchFieldName": "Nome",
+        "searchFieldCode": "Codice",
+        "searchFieldSkuCode": "Codice SKU"
+    },
+    "questionTypes": {
+        "completamento": "Completamento",
+        "risposta_chiusa": "Risposta chiusa"
+    },
+    "difficulties": {
+        "facile": "Facile",
+        "medio_facile": "Medio-facile",
+        "medio": "Medio",
+        "medio_difficile": "Medio-difficile",
+        "difficile": "Difficile",
+        "non_ancora_valutata": "Non ancora valutata"
+    },
+    "statuses": {
+        "ACTIVE": "Attiva",
+        "TO_REVIEW": "Da revisionare",
+        "REVIEWED": "Revisionata",
+        "ARCHIVED": "Archiviata"
+    },
+    "questionLanguages": {
+        "it": "Italiano",
+        "en": "Inglese"
+    },
+    "alternativeStyles": {
+        "numeric": "Numerico",
+        "alpha": "Letterale"
+    },
+    "campaigns": {
+        "title": "Campagne di produzione",
+        "subtitle": "Gestisci le campagne di produzione domande",
+        "noResults": "Nessuna campagna presente",
+        "noResultsFiltered": "Nessun risultato per la ricerca",
+        "create": "Nuova campagna",
+        "searchPlaceholder": "Cerca per nome o ID...",
+        "table": {
+            "name": "Nome",
+            "totalQuestions": "Domande totali",
+            "remainingQuestions": "Rimanenti",
+            "createdAt": "Creata il",
+            "actions": "Azioni"
+        },
+        "detail": {
+            "back": "Torna alle campagne",
+            "loading": "Caricamento...",
+            "slots": "Domande",
+            "noSlots": "Nessuna domanda configurata",
+            "subject": "Materia",
+            "topic": "Argomento",
+            "difficulty": "Difficoltà",
+            "status": "Stato",
+            "assignee": "Produttore",
+            "revisor": "Revisore",
+            "dueDate": "Scadenza",
+            "collection": "Raccolta",
+            "pool": "Pool",
+            "addSlot": "Aggiungi domanda",
+            "deleteSlot": {
+                "title": "Elimina domanda",
+                "description": "Sei sicuro di voler eliminare la domanda su {{subject}} / {{topic}}? L'operazione non è reversibile."
+            }
+        },
+        "status": {
+            "draft": "Bozza",
+            "in_review": "In revisione",
+            "approved": "Attiva",
+            "rejected": "Inattiva"
+        },
+        "addSlotSheet": {
+            "title": "Aggiungi domanda",
+            "subject": "Materia",
+            "subjectPlaceholder": "Seleziona materia...",
+            "topic": "Argomento",
+            "topicPlaceholder": "Seleziona argomento...",
+            "subjectFirst": "Seleziona prima la materia",
+            "difficulty": "Difficoltà (opzionale)",
+            "difficultyPlaceholder": "Qualsiasi",
+            "assignee": "Produttore",
+            "assigneePlaceholder": "Seleziona produttore...",
+            "revisor": "Revisore",
+            "revisorPlaceholder": "Seleziona revisore...",
+            "collection": "Raccolta (opzionale)",
+            "collectionPlaceholder": "Seleziona raccolta...",
+            "pool": "Pool (opzionale)",
+            "poolPlaceholder": "Seleziona pool...",
+            "dueDate": "Scadenza (opzionale)",
+            "add": "Aggiungi domanda",
+            "adding": "Aggiunta...",
+            "editTitle": "Modifica domanda",
+            "save": "Salva modifiche",
+            "error": "Errore durante l'aggiunta"
+        },
+        "editDialog": {
+            "title": "Rinomina campagna",
+            "nameLabel": "Nome",
+            "error": "Errore durante la modifica"
+        },
+        "deleteDialog": {
+            "title": "Elimina campagna",
+            "description": "Sei sicuro di voler eliminare la campagna \"{{name}}\"? Verranno eliminate anche tutte le domande associate. L'operazione non è reversibile."
+        },
+        "createDialog": {
+            "title": "Nuova campagna",
+            "nameLabel": "Nome",
+            "namePlaceholder": "Es. Campagna Biologia 2026",
+            "creating": "Creazione...",
+            "create": "Crea campagna",
+            "success": "Campagna creata",
+            "error": "Errore durante la creazione"
+        }
+    },
+    "mySlots": {
+        "title": "Domande da produrre",
+        "subtitle": "Le domande assegnate a te che richiedono produzione.",
+        "empty": "Nessuna domanda assegnata",
+        "slotsCount_one": "{{count}} domanda",
+        "slotsCount_other": "{{count}} domande",
+        "produce": "Produci",
+        "dueDate": "Scadenza",
+        "campaignContext": "Stai producendo una domanda per una campagna. Dopo l'invio al revisore, la slot nella campagna verrà aggiornata automaticamente.",
+        "errorTitle": "Errore nel caricamento",
+        "errorDesc": "Non è stato possibile caricare le domande assegnate. Riprova."
+    },
+    "myReviews": {
+        "title": "Domande da revisionare",
+        "subtitle": "Le domande in attesa di revisione assegnate a te.",
+        "empty": "Nessuna domanda da revisionare",
+        "review": "Revisiona",
+        "reviewTitle": "Revisiona Domanda",
+        "readOnlyBadge": "Sola lettura",
+        "editingBadge": "Modifica attiva",
+        "approve": "Approva",
+        "edit": "Modifica",
+        "saveAndApprove": "Salva e Approva",
+        "approved": "Domanda approvata con successo",
+        "noText": "(testo vuoto)",
+        "table": {
+            "text": "Domanda",
+            "subject": "Materia / Argomento",
+            "difficulty": "Difficoltà",
+            "createdAt": "Creata il"
+        },
+        "errorTitle": "Errore nel caricamento",
+        "errorDesc": "Non è stato possibile caricare le domande da revisionare. Riprova."
+    },
+    "attributes": {
+        "title": "Attributi",
+        "subtitle": "Gestisci gli attributi personalizzati per ogni risorsa.",
+        "add": "Aggiungi attributo",
+        "empty": "Nessuna risorsa disponibile",
+        "noResults": "Nessun attributo definito",
+        "resourceSubtitle": "Attributi configurati per la risorsa {{resource}}.",
+        "deleteSuccess": "Attributo \"{{name}}\" eliminato",
+        "deleteError": "Errore durante l'eliminazione",
+        "table": {
+            "name": "Nome",
+            "type": "Tipo"
+        },
+        "actions": {
+            "edit": "Modifica",
+            "delete": "Elimina"
+        },
+        "types": {
+            "boolean": "Booleano",
+            "string": "Testo",
+            "number": "Numero",
+            "select": "Selezione singola",
+            "multiSelect": "Selezione multipla",
+            "date": "Data"
+        },
+        "resources": {
+            "collections": "Collezioni",
+            "questions": "Domande",
+            "subjects": "Materie",
+            "users": "Utenti",
+            "brands": "Brand"
+        },
+        "addDialog": {
+            "title": "Aggiungi attributo",
+            "nameLabel": "Nome",
+            "namePlaceholder": "es. difficoltà",
+            "typeLabel": "Tipo",
+            "typePlaceholder": "Seleziona tipo...",
+            "valuesLabel": "Valori enum",
+            "valuesPlaceholder": "Digita e premi Invio...",
+            "add": "Aggiungi",
+            "success": "Attributo \"{{name}}\" aggiunto",
+            "error": "Errore durante la creazione"
+        },
+        "editDialog": {
+            "title": "Modifica attributo",
+            "save": "Salva",
+            "success": "Attributo \"{{name}}\" aggiornato",
+            "error": "Errore durante il salvataggio"
+        }
+    }
+}
