@@ -1,3 +1,17 @@
+> # ⚠️ DOCUMENTO OBSOLETO — NON USARE
+>
+> Descrive un sistema di mock (`src/lib/mock/`, `mockConfig`, `isMockEnabled()`)
+> che **è stato rimosso dal codice**. Quella cartella non esiste più e nessun
+> service ha rami mock: chiamano tutti il backend vero.
+>
+> Contiene anche contratti sbagliati, che hanno confuso più di una sessione:
+> dice `/users/:userId/package` (il codice usa `/users/{id}/modules`),
+> `staff.updateRole` come `POST` con `{ roles: [role] }` (il codice fa `PUT` con
+> `{ roleIds }`), ed elenca un `clients.updateStatus` che non esiste.
+>
+> **Per far girare l'app in locale con dati finti: `mock/README.md`.**
+> Tenuto solo come storico.
+
 # Mock-to-Real Migration Guide
 
 ## How it works

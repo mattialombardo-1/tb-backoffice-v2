@@ -31,11 +31,7 @@ export function QuestionFormActions({
         {t('questions.formActions.saveDraft')}
       </Button>
       <div className="flex items-center gap-1.5">
-        <Button
-          onClick={onSubmit}
-          disabled={isSaving || hasValidationErrors}
-          title="Submit usa ancora i dati mock — il backend richiede PATCH /questions/{id}/status (non ancora cablato)."
-        >
+        <Button onClick={onSubmit} disabled={isSaving || hasValidationErrors}>
           <Send />
           {t('questions.formActions.saveQuestion')}
         </Button>

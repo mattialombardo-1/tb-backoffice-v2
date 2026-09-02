@@ -118,8 +118,9 @@ export function QuestionsBulkToolbar({
 
           <DropdownMenuSeparator />
 
-          {/* TODO(backend-questions): bulk delete still runs against the mock — the backend
-              has no equivalent endpoint yet. The badge flags this action only. */}
+          {/* TODO(backend-questions): questo bottone è rotto. `questionsService.bulkDelete`
+              lancia un errore: non esiste nessun endpoint di bulk delete lato backend,
+              né alcun mock che lo copra. Il badge segnala solo questa azione. */}
           <DropdownMenuItem
             disabled={!hasSelection}
             onClick={() => {

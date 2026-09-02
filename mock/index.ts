@@ -1,0 +1,154 @@
+/**
+ * Plugin Vite che monta il mock server e inietta la sessione finta.
+ *
+ * Attivo solo con `--mode mock` (`npm run dev:mock`): in ogni altra modalità
+ * non fa nulla e l'app parla con il backend vero configurato in `.env.local`.
+ *
+ * Il principio è che `src/` non sappia della sua esistenza: i service fanno
+ * vere chiamate HTTP a `VITE_API_BASE_URL`, che in mock mode punta a
+ * `http://localhost:3000/mock-api` e viene intercettato qui.
+ */
+import type { Plugin } from 'vite';
+import { buildAuthBootstrapScript } from './auth-bootstrap';
+import { getDb, MOCK_USER } from './db';
+import { registerCatalogRoutes } from './handlers/catalog';
+import { registerPeopleRoutes } from './handlers/people';
+import { registerQuestionRoutes } from './handlers/questions';
+import { createRouter, HttpError, readBody, sendJson } from './router';
+
+const API_PREFIX = '/mock-api';
+
+/**
+ * Porta dedicata al prototipo, imposta con `strictPort`.
+ *
+ * Non la 3000 dello script `dev`: se fosse occupata Vite ripiegherebbe in
+ * silenzio su un'altra porta, la pagina verrebbe servita da lì e continuerebbe
+ * a chiamare `VITE_API_BASE_URL` sulla 3000 — cioè qualsiasi altra cosa stia
+ * girando. Meglio una porta riservata e un fallimento esplicito.
+ */
+const MOCK_PORT = 4300;
+
+/** Ritardo artificiale: rende visibili skeleton e stati di caricamento. */
+const LATENCY_MS = 120;
+
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+export function mockApiPlugin(): Plugin {
+  let enabled = false;
+  let env: Record<string, string> = {};
+
+  const router = createRouter();
+  registerQuestionRoutes(router);
+  registerCatalogRoutes(router);
+  registerPeopleRoutes(router);
+
+  return {
+    name: 'testbusters:mock-api',
+    apply: 'serve',
+
+    config(_config, { mode }) {
+      if (mode !== 'mock') return;
+      return { server: { port: MOCK_PORT, strictPort: true } };
+    },
+
+    configResolved(config) {
+      enabled = config.mode === 'mock';
+      if (!enabled) return;
+
+      // `config.env` contiene le VITE_* già caricate da .env.mock: la chiave di
+      // localStorage dipende da authority e client_id, quindi devono essere
+      // esattamente le stesse che finiscono in `src/lib/auth/config.ts`.
+      env = config.env as Record<string, string>;
+
+      // Se .env.mock e il plugin puntano a porte diverse, l'app carica ma ogni
+      // chiamata va nel vuoto: meglio dirlo subito e a voce alta.
+      const base = env.VITE_API_BASE_URL ?? '';
+      const expected = `http://localhost:${MOCK_PORT}${API_PREFIX}`;
+      if (base !== expected) {
+        config.logger.warn(
+          `  \x1b[33m[mock]\x1b[0m VITE_API_BASE_URL è "${base}" ma il mock server ascolta su ` +
+            `"${expected}". Allinea .env.mock, altrimenti nessuna chiamata arriverà al mock.`
+        );
+      }
+    },
+
+    transformIndexHtml() {
+      if (!enabled) return;
+      const authority = env.VITE_SSO_AUTHORITY ?? 'http://localhost:3000/mock-sso';
+      const clientId = env.VITE_COGNITO_CLIENT_ID ?? 'mock-client';
+      return [
+        {
+          tag: 'script',
+          attrs: { type: 'module' },
+          children: buildAuthBootstrapScript({
+            authority,
+            clientId,
+            cognitoId: MOCK_USER.cognitoId,
+            email: MOCK_USER.email,
+            name: MOCK_USER.name,
+            surname: MOCK_USER.surname,
+          }),
+          injectTo: 'head-prepend',
+        },
+      ];
+    },
+
+    configureServer(server) {
+      if (!enabled) return;
+
+      const db = getDb();
+      server.config.logger.info(
+        `\n  \x1b[36m➜\x1b[0m  \x1b[1mmock API\x1b[0m attiva su ${API_PREFIX} — ` +
+          `${db.questions.length} domande, ${db.subjects.length} materie, ` +
+          `${db.collections.length} collection, ${db.pools.length} banche dati\n` +
+          `     loggato come ${MOCK_USER.email} (tutte le capability)\n`
+      );
+
+      server.middlewares.use(async (req, res, next) => {
+        const rawUrl = req.url ?? '';
+        if (!rawUrl.startsWith(API_PREFIX)) return next();
+
+        const url = new URL(rawUrl, 'http://localhost');
+        const path = url.pathname.slice(API_PREFIX.length) || '/';
+        const method = (req.method ?? 'GET').toUpperCase();
+
+        if (method === 'OPTIONS') {
+          res.statusCode = 204;
+          res.end();
+          return;
+        }
+
+        const matched = router.match(method, path);
+        await delay(LATENCY_MS);
+
+        if (!matched) {
+          // Meglio un 200 vuoto che un 404: il client ritenta tutto tranne
+          // 401/403 (src/lib/api/client.ts), quindi un endpoint dimenticato
+          // costerebbe 4 tentativi e ~6s prima di far fallire la schermata.
+          server.config.logger.warn(
+            `  \x1b[33m[mock]\x1b[0m nessun handler per ${method} ${path} — risposta vuota`
+          );
+          sendJson(res, 200, { data: [], total: 0, page: 1, limit: 20 });
+          return;
+        }
+
+        try {
+          const body = await readBody(req);
+          const result = await matched.handler({
+            method,
+            path,
+            params: matched.params,
+            query: url.searchParams,
+            body,
+          });
+          sendJson(res, result === undefined ? 204 : 200, result);
+        } catch (err) {
+          const status = err instanceof HttpError ? err.status : 500;
+          const message = err instanceof Error ? err.message : 'Mock server error';
+          if (status >= 500) server.config.logger.error(`  [mock] ${method} ${path}: ${message}`);
+          sendJson(res, status, { error: message, message, statusCode: status });
+        }
+      });
+    },
+  };
+}

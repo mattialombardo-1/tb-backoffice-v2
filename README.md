@@ -1,73 +1,64 @@
-# React + TypeScript + Vite
+# Backoffice Peerpetual
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Back office del simulatore Testbusters / Peer4Med / Top Squad.
+React 19 + TypeScript + Vite 8, TanStack Router e Query, Tailwind 4, shadcn/ui.
 
-Currently, two official plugins are available:
+Questa copia è la **baseline per il lavoro di design**: si avvia in locale con
+dati finti, senza backend e senza SSO, per prototipare la UI e mostrare
+schermate al cliente.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Avvio
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev:mock     # → http://localhost:4300
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Si apre direttamente sulla dashboard, popolata con ~200 domande realistiche.
+Nessuna configurazione, nessun login, nessuna chiamata verso l'esterno.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Come funziona e cosa c'è nei dati: **[mock/README.md](./mock/README.md)**.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Script
+
+| Comando | Cosa fa |
+|---|---|
+| `npm run dev:mock` | Dev server con mock API e sessione finta (porta 4300) |
+| `npm run dev` | Dev server sul backend vero (porta 3000, richiede `.env.local`) |
+| `npm run build` | Typecheck + build di produzione |
+| `npm run lint` | ESLint |
+| `npm run format` | Prettier su `src/` |
+
+> `npm run lint` riporta ~2000 errori di formattazione **preesistenti** in
+> `src/`, ereditati dal repo consegnato. `mock/` è pulito. Non correggerli in
+> blocco: un `--fix` di massa renderebbe illeggibile il diff delle modifiche di
+> design.
+
+## Backend vero
+
+Copia `.env.example` in `.env.local` e riempi i valori. Serve una sessione SSO
+valida su `sso.peerpetual.com`.
+
+Il backend vive in [Testbusters/elliotApiV2](https://github.com/Testbusters/elliotApiV2),
+branch `StagingAdminStack`. Per wirare un endpoint nuovo la fonte di verità è il
+construct CDK (`lib/constructs/modules/<name>.ts`) più il suo file di modelli.
+**Non** usare `docs/openapi.json`: è uno snapshot vecchio e punta a un URL morto.
+
+## Struttura
+
 ```
+src/
+  components/      componenti per feature (questions/, collections/, pools/, …)
+    ui/            shadcn/ui
+  lib/
+    api/           APIClient + interceptor di auth
+    auth/          OIDC (oidc-client-ts) + capability
+    services/      un file per risorsa, adatta le shape backend ↔ frontend
+    hooks/         un hook per schermata, sopra i service
+    types/         tipi di dominio
+  routes/          routing file-based TanStack (rotte protette sotto _authenticated)
+mock/              mock server locale (vedi mock/README.md)
+```
+
+Altro contesto in [`.claude/`](./.claude/): architettura, contratti dei service,
+inventario dei componenti, problemi noti.

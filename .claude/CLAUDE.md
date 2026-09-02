@@ -1,17 +1,21 @@
 # Backoffice Web App
 
-React + TypeScript + Vite backoffice application with OAuth 2.0 PKCE authentication.
+React + TypeScript + Vite backoffice application with OIDC authentication.
+
+> Questa copia è la baseline per il lavoro di design. Gira in locale con dati
+> finti: `npm run dev:mock` → http://localhost:4300. Vedi `mock/README.md`.
 
 ## Tech Stack
 
 - **Framework**: React 19, TypeScript 5.9, Vite 8
 - **Routing**: TanStack Router (file-based routing in `src/routes/`)
 - **Styling**: Tailwind CSS 4, shadcn/ui components
-- **Auth**: OAuth 2.0 + PKCE via `react-oauth2-code-pkce`
+- **Auth**: OIDC Authorization Code + PKCE via `oidc-client-ts` v3
 
 ## Commands
 
-- `npm run dev` — dev server on port 3000
+- `npm run dev:mock` — dev server con mock API + sessione finta, porta 4300 (nessun backend richiesto)
+- `npm run dev` — dev server sul backend vero, porta 3000 (richiede `.env.local`)
 - `npm run build` — typecheck + production build
 - `npm run lint` — ESLint
 - `npm run format` / `npm run format:check` — Prettier
@@ -22,39 +26,55 @@ React + TypeScript + Vite backoffice application with OAuth 2.0 PKCE authenticat
 src/
   components/ui/   # shadcn/ui components (Button, Card, Input, etc.)
   lib/
-    auth/          # OAuth config, AuthProvider, TokenRefreshSystem
+    auth/          # UserManager config, AuthProvider, CapabilitiesProvider
     api/           # API client with interceptors
     utils.ts       # cn() utility (clsx + tailwind-merge)
+    services/      # un file per risorsa (questions.ts, pools.ts, …)
+    hooks/         # un hook per schermata, sopra i service
   routes/          # TanStack file-based routes
+mock/              # mock server locale (fuori da src/, vedi mock/README.md)
 ```
 
-## Authentication (OAuth 2.0 + PKCE)
+## Authentication (OIDC + PKCE)
 
-Uses `react-oauth2-code-pkce`. Key config in `src/lib/auth/config.ts`:
+Uses **`oidc-client-ts` v3** (`UserManager`). Config in `src/lib/auth/config.ts`,
+tutto da env — non ci sono valori hardcoded:
 
-- **Client ID**: `19eekkg0921ktg7nh24ii72pcn`
-- **SSO domain**: `sso.peerpetual.com`
-- **Authorization**: `https://sso.peerpetual.com/api/oauth2/authorize`
-- **Token endpoint**: `https://sso.peerpetual.com/api/oauth2/token`
-- **Redirect**: `{origin}/callback`
-- **Scopes**: `openid profile email`
-- **Storage**: localStorage (keys prefixed `ROCP_`)
+| Env | Uso |
+|---|---|
+| `VITE_SSO_AUTHORITY` | authority + `metadataUrl` (`{authority}/api/.well-known/openid-configuration`) |
+| `VITE_COGNITO_CLIENT_ID` | client_id |
+| `VITE_SIMULATOR_PREFIX` | prefisso host del simulatore, default `stg-` |
 
-Token refresh runs automatically via `TokenRefreshSystem`:
-- Checks every 60s, refreshes 5min before expiry
-- Max 3 retries, 30min inactivity timeout
-- Queues concurrent requests during refresh
+- **Redirect**: `{origin}/callback` · **Scopes**: `openid profile email offline_access`
+- **Storage**: localStorage, chiave `oidc.user:{authority}:{client_id}`
+  (`WebStorageStateStore` usa il prefisso `oidc.`)
+- **Refresh**: `automaticSilentRenew: true` di `oidc-client-ts`, via iframe su
+  `public/silent-renew.html`. **Non esiste** nessun `TokenRefreshSystem.ts`.
+- `loadUserInfo: false` — il profilo viene dai claim dell'ID token, nessuna
+  chiamata a `/userinfo`.
 
-On 401 or expired refresh token: logout + redirect to `/login`.
+Il bearer usato nelle richieste è **`user.id_token`**, non l'access token:
+l'authorizer Cognito deployato accetta solo ID token
+(`src/lib/api/interceptors.ts`).
+
+**Attenzione ai redirect impliciti.** L'interceptor di richiesta rilegge
+`userManager.getUser()` da localStorage a *ogni* chiamata; su miss, token scaduto
+o 401 tenta `signinSilent()` e poi `signinRedirect()` — cioè un redirect duro
+verso l'SSO. Fingere lo stato React di `AuthProvider` non basta per girare
+offline: serve una sessione scritta in localStorage (è quello che fa il mock).
 
 ## API Client
 
 Configured in `src/lib/api/client.ts`:
 
-- **Base URL**: `https://tw16nt2svf.execute-api.eu-south-1.amazonaws.com/prod` (new `AdminApiStackStg` deployment)
-- **Override**: set `VITE_API_BASE_URL` in `.env.local` to point at a different stage/stack
-- **Timeout**: 30s
-- **Retry**: up to 3 attempts (network errors and 5xx only), 1s exponential delay
+- **Base URL**: solo `import.meta.env.VITE_API_BASE_URL`, **senza fallback nel
+  codice**. Se non è impostata, `buildURL()` lancia `TypeError` alla prima
+  chiamata. Il valore di staging è in `.env.example`.
+- **Timeout**: 60s (tollera i cold start dei lambda)
+- **Retry**: fino a 3 tentativi con delay crescente, per **tutto tranne 401/403**
+  e gli abort — quindi anche 404 e 5xx. Un endpoint mancante costa 4 tentativi
+  e ~6s prima di fallire.
 - **Auth**: Bearer token injected automatically via request interceptor
 - Use `skipAuth: true` for public endpoints
 
@@ -62,9 +82,21 @@ The backend lives at [Testbusters/elliotApiV2](https://github.com/Testbusters/el
 
 > **Source of truth**: when wiring a new endpoint, read the CDK route construct (`lib/constructs/modules/<name>.ts`) and its model file (`<name>.models.ts`) on the backend repo. **Do NOT** trust `docs/openapi.json` in this repo — it's stale (snapshot from 2026-02-27, points at the old `b2wl5e6k10` URL) and we cannot regenerate it locally.
 
-## Mocks
+## Mock locale
 
-The app has a per-feature mock toggle system in `src/lib/mock/index.ts`. Each service in `src/lib/services/*.ts` checks `isMockEnabled('<feature>.<op>')` before deciding mock vs. real branch. Fixtures live in `src/lib/mock/data/*-data.ts`. To wire a real endpoint, flip the matching flag from `true` → `false` and verify the service's real branch matches the backend contract. Some flags will stay `true` indefinitely because the backend has no equivalent endpoint yet (e.g. `questions.submit`, `questions.bulkDelete`, `questions.export`, `questions.hierarchy.sottoArgomenti`).
+Il vecchio sistema di flag per-feature (`src/lib/mock/`, `isMockEnabled()`) **non
+esiste più**: è stato rimosso e ogni service chiama il backend vero. Se trovi
+documentazione che lo cita, è vecchia.
+
+Al suo posto c'è un **mock server nel dev server Vite**, in `mock/`, attivo solo
+con `npm run dev:mock`. Intercetta `/mock-api` e serve ~200 domande finte da un
+seed deterministico. `src/` non lo conosce: i service fanno vere chiamate HTTP e
+non contengono nessun ramo mock.
+
+Dettagli, dati e limiti: **`mock/README.md`**.
+
+L'unica operazione davvero non implementata è `questionsService.bulkDelete`, che
+lancia un errore lato client: l'endpoint non esiste nemmeno sul backend.
 
 ## UI Components (shadcn/ui)
 
@@ -84,7 +116,8 @@ Components live in `src/components/ui/` and come from the [bundui/shadcn-ui-kit-
 
 ## Context files (read these for deeper context)
 
-- `.claude/architecture.md` — provider hierarchy, auth/permission flow, routing, data fetching pattern, mock system
+- `.claude/architecture.md` — provider hierarchy, auth/permission flow, routing, data fetching pattern
+- `mock/README.md` — mock server locale, seed, come far girare l'app offline
 - `.claude/services.md` — API contracts, endpoint table, types, shape mappings per service
 - `.claude/components.md` — inventory completo di componenti custom e hook
 - `.claude/known-issues.md` — problemi noti, feature disabilitate, impatto audit 2026-05

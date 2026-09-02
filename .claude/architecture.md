@@ -3,37 +3,67 @@
 ## Provider hierarchy (main.tsx)
 
 ```
-ThemeProvider
-  AuthProvider (react-oauth2-code-pkce)
-    CapabilitiesProvider (fetches /community-profile)
-      BrandProvider (fetches /brands)
-        RouterProvider (TanStack Router, receives auth + capabilities as context)
+PersistQueryClientProvider (cache TanStack Query persistita in localStorage)
+  ThemeProvider
+    AuthProvider (oidc-client-ts)
+      CapabilitiesProvider (fetches /community-profile)
+        ImpersonationProvider (override capability per debug, da /settings)
+          RouterProvider (TanStack Router, riceve auth + capabilities come context)
 ```
+
+**`BrandProvider` NON è montato.** Esiste in `src/lib/brand/BrandContext.tsx`, e
+`BrandPicker` esiste in `src/components/`, ma nessuno dei due è renderizzato.
+
+La cache di Query è persistita con `gcTime` 24h e **senza `buster`**: dopo un
+cambio di dati puoi vedere valori vecchi finché non pulisci
+`localStorage.REACT_QUERY_OFFLINE_CACHE`.
 
 ## Auth flow
 
-1. User clicca "Log In" → `auth.logIn()` avvia OAuth PKCE
+1. User clicca "Log In" → `auth.login()` → `userManager.signinRedirect()`
 2. SSO redirect → user autorizza → callback a `/callback`
-3. OAuth library fa code exchange → salva token in localStorage (prefisso `ROCP_`)
-4. `TokenRefreshSystem` avvia monitoring (ogni 60s, refresh 5min prima di scadenza)
-5. Redirect a `/dashboard`
+3. `userManager.signinRedirectCallback()` fa il code exchange e salva l'utente in
+   localStorage alla chiave `oidc.user:{authority}:{client_id}`
+4. Redirect a `sessionStorage.redirectAfterLogin` ?? `/dashboard`
 
-**Token Refresh System** (`src/lib/auth/TokenRefreshSystem.ts`):
-- Controlla scadenza ogni 60s
-- Refresh 5min prima della scadenza
-- Max 3 retry con backoff
-- Inattività >30min → stop monitoring
-- Concurrency: requests in coda attendono refresh
-- Fallimento dopo retry → logout + redirect `/login`
+**Refresh**: `automaticSilentRenew: true` di `oidc-client-ts`. Il timer parte
+solo quando un utente è caricato e usa `setInterval` con periodo ≤5s che
+controlla la scadenza; il rinnovo avviene in un iframe su
+`public/silent-renew.html` (che carica `oidc-client-ts` da **unpkg**, dipendenza
+CDN a runtime). Non esiste nessun `TokenRefreshSystem.ts`.
+
+**Redirect impliciti verso l'SSO** — tutti in `src/lib/api/interceptors.ts`:
+- nessun utente in localStorage → `login()` → `signinRedirect()`
+- utente scaduto → `signinSilent()`, e se fallisce `signinRedirect()`
+- risposta 401 → `signinSilent()`, e se fallisce `signinRedirect()`
+
+L'interceptor legge **sempre da localStorage**, mai dallo stato React: per
+girare offline serve una sessione scritta lì (vedi `mock/README.md`).
+
+**Quirk**: `auth.isLoading` è esposto sul context ma non è consumato da nessuno.
+`RouterProvider` monta subito con `isAuthenticated: false` mentre `getUser()` è
+ancora pendente, quindi anche un utente loggato passa per un istante da `/login`,
+da cui un `useEffect` lo rimbalza su `/dashboard`.
 
 ## Permission system
 
 - `CapabilitiesProvider` fetcha `GET /community-profile` → `Capability[]`
 - Index interno: `Map<resource, Set<action>>` per O(1) lookup
 - Pure function `can(snapshot, resource, action)` per check sincrono
-- Route guard in `_authenticated.tsx` `beforeLoad`
+- Le action sono **maiuscole**: `CREATE` / `READ` / `UPDATE` / `DELETE`
+- Route guard in `_authenticated.tsx` `beforeLoad` (solo auth), più guard di
+  capability su `questions/create`, `questions/$questionId`, `questions/import`,
+  `my-slots`
 - Nav items gated da `can()` → nascosti se non autorizzati
-- "Clienti" è l'unica voce nav non gated (nessun equivalente nel capability vocab)
+- "Clienti" e "Home" sono le uniche voci nav non gated
+- `ImpersonationProvider` (`src/lib/debug/roleImpersonation.tsx`) può sostituire
+  lo snapshot con quello di un ruolo, per provare la UI con permessi ridotti.
+  `useRealCapabilities()` bypassa l'override per i guard che non devono cedere.
+
+**`AuthenticatedLayout` fa muro finché le capability non sono pronte**: con
+`state` `idle`/`loading` mostra uno spinner a tutto schermo, con `error` la
+schermata "non autorizzato". Se `/community-profile` non risponde con un
+`MeResponse` valido, **nessuna rotta protetta è raggiungibile**.
 
 ## Data fetching pattern
 
@@ -51,26 +81,45 @@ Route component
 
 ## Mock system
 
-Ogni service controlla `isMockEnabled('<feature>.<op>')` prima di scegliere branch mock vs reale.
-Flags in `src/lib/mock/index.ts`, fixture in `src/lib/mock/data/*-data.ts`.
-Per wiring un endpoint reale: flag `true` → `false` + verifica che il branch reale corrisponda al contratto backend.
-Alcuni flag rimarranno `true` indefinitamente (endpoint backend non esiste ancora).
+Il sistema di flag per-feature (`src/lib/mock/`, `isMockEnabled()`) **è stato
+rimosso**: quella cartella non esiste e nessun service ha rami mock.
+
+Al suo posto, un mock server dentro il dev server Vite (`mock/`, attivo solo con
+`npm run dev:mock`) che intercetta `/mock-api`. `src/` non lo conosce.
+Vedi `mock/README.md`.
 
 ## File-based routing (TanStack Router)
 
 ```
 /                         redirect (auth → /dashboard, else → /login)
-/login                    pagina login OAuth
-/callback                 OAuth callback handler
+/login                    pagina login OIDC
+/callback                 OIDC callback handler
 /_authenticated           layout protetto (sidebar)
-  /dashboard              welcome page
-  /questions              lista domande (tab: approved/to_approve/rejected)
-  /questions/create       form creazione domanda
-  /clients                lista clienti
-  /staff                  lista staff
+  /dashboard              riepilogo con contatori e grafici
+  /questions              lista domande (18 parametri di filtro in validateSearch)
+  /questions/create       form creazione domanda        [questions:CREATE]
+  /questions/import       import CSV bulk               [questions:CREATE]
+  /questions/to-review    domande assegnate a me come revisore
+  /questions/$questionId  editor domanda                [questions:UPDATE]
+  /collections            lista collection
+  /collections/create     stepper creazione collection
+  /subjects               materie e argomenti
+  /campaigns              campagne di produzione
+  /campaigns/$campaignId  dettaglio campagna
+  /my-slots               slot di produzione assegnati a me
   /pools                  lista banche dati
   /pools/$poolId          dettaglio banca dati con domande paginate
+  /packages               pacchetti e SKU
+  /tests                  test
+  /attributes             attributi per risorsa
+  /clients                lista clienti (modello legacy /users)
+  /staff                  lista staff
+  /roles                  ruoli community
+  /settings               impostazioni + role impersonation
 ```
+
+Non esiste una rotta di sola lettura per la domanda: `$questionId` **è** la
+pagina di modifica e richiede `questions:UPDATE`.
 
 Il plugin `@tanstack/router-plugin` genera `routeTree.gen.ts` automaticamente a dev/build.
 Context del router: `{ auth: AuthContextValue, capabilities: CapabilitiesSnapshot }`.
