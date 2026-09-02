@@ -14,8 +14,10 @@ React + TypeScript + Vite backoffice application with OIDC authentication.
 
 ## Commands
 
-- `npm run dev:mock` — dev server con mock API + sessione finta, porta 4300 (nessun backend richiesto)
-- `npm run dev` — dev server sul backend vero, porta 3000 (richiede `.env.local`)
+- `npm run dev:mock` — **l'unico modo di avviare l'app qui**: mock API + sessione
+  finta, porta 4300, nessun backend richiesto
+- `npm run dev` — punterebbe al backend vero (porta 3000, richiede `.env.local`).
+  In questo repo non si usa: si rifiuta di partire e rimanda a `dev:mock`.
 - `npm run build` — typecheck + production build
 - `npm run lint` — ESLint
 - `npm run format` / `npm run format:check` — Prettier

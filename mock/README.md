@@ -174,15 +174,16 @@ Nessun file in `mock/` importa da `src/` — viene compilato nel bundle di
 
 ---
 
-## Puntare al backend vero
+## Se lanci `npm run dev` per sbaglio
 
-`npm run dev` (senza `:mock`) usa `.env.local`. Copia `.env.example`, riempi i
-valori e serve una sessione SSO valida.
-
-Senza `.env.local` il dev server **si rifiuta di partire** e dice cosa fare. È
-voluto: prima partiva lo stesso, e al click su "Log In" restituiva un
+Si rifiuta di partire e ti dice di usare `npm run dev:mock`. È voluto: prima
+partiva lo stesso e al click su "Log In" restituiva un
 `Unhandled Promise Rejection: Error: Not Found (404)` da `signinRedirect()`.
-La causa non era intuibile dall'errore — con `VITE_SSO_AUTHORITY` non definita,
+
+La causa non era intuibile dall'errore — senza `VITE_SSO_AUTHORITY` definita,
 `metadataUrl` diventa la stringa letterale
 `"undefined/api/.well-known/openid-configuration"`, cioè un URL relativo che
 `oidc-client-ts` chiede al dev server stesso.
+
+Questo repo non è pensato per collegarsi al backend vero. Se un giorno servisse
+davvero, la configurazione è in `.env.example`.

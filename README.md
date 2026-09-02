@@ -3,9 +3,9 @@
 Back office del simulatore Testbusters / Peer4Med / Top Squad.
 React 19 + TypeScript + Vite 8, TanStack Router e Query, Tailwind 4, shadcn/ui.
 
-Questa copia è la **baseline per il lavoro di design**: si avvia in locale con
-dati finti, senza backend e senza SSO, per prototipare la UI e mostrare
-schermate al cliente.
+Questa copia è la **baseline per il lavoro di design**: gira sempre in locale con
+dati finti, per prototipare la UI e mostrare schermate al cliente. Non si collega
+a nessun backend e non è pensata per essere deployata.
 
 ## Avvio
 
@@ -23,8 +23,7 @@ Come funziona e cosa c'è nei dati: **[mock/README.md](./mock/README.md)**.
 
 | Comando | Cosa fa |
 |---|---|
-| `npm run dev:mock` | Dev server con mock API e sessione finta (porta 4300) |
-| `npm run dev` | Dev server sul backend vero (porta 3000, richiede `.env.local`) |
+| `npm run dev:mock` | L'unico modo di avviare l'app qui dentro |
 | `npm run build` | Typecheck + build di produzione |
 | `npm run lint` | ESLint |
 | `npm run format` | Prettier su `src/` |
@@ -34,15 +33,19 @@ Come funziona e cosa c'è nei dati: **[mock/README.md](./mock/README.md)**.
 > blocco: un `--fix` di massa renderebbe illeggibile il diff delle modifiche di
 > design.
 
-## Backend vero
+`package.json` contiene anche `dev`, `preview` e `ci`, ereditati dal repo
+originale. Qui non servono: `dev` punterebbe al backend vero e si rifiuta di
+partire senza `.env.local`, spiegando cosa lanciare al suo posto.
 
-Copia `.env.example` in `.env.local` e riempi i valori. Serve una sessione SSO
-valida su `sso.peerpetual.com`.
+## Cosa sta nel repo e cosa no
 
-Il backend vive in [Testbusters/elliotApiV2](https://github.com/Testbusters/elliotApiV2),
-branch `StagingAdminStack`. Per wirare un endpoint nuovo la fonte di verità è il
-construct CDK (`lib/constructs/modules/<name>.ts`) più il suo file di modelli.
-**Non** usare `docs/openapi.json`: è uno snapshot vecchio e punta a un URL morto.
+Una domanda sola, prima di scrivere un file: **serve a chi implementa, o serve
+solo a noi per decidere?**
+
+- Serve a implementare → tracciato: `docs/specs/`, `docs/decisions/`, `.claude/*.md`
+- Serve a decidere → `design/`, che è gitignored
+
+Regole complete in **[design/CLAUDE.md](./design/CLAUDE.md)**.
 
 ## Struttura
 
@@ -58,7 +61,13 @@ src/
     types/         tipi di dominio
   routes/          routing file-based TanStack (rotte protette sotto _authenticated)
 mock/              mock server locale (vedi mock/README.md)
+docs/specs/        specifiche di cosa costruire
+docs/decisions/    decisioni prese e perché
+design/            deliberazione, gitignored
 ```
 
 Altro contesto in [`.claude/`](./.claude/): architettura, contratti dei service,
-inventario dei componenti, problemi noti.
+inventario dei componenti, problemi noti. Lì c'è anche il riferimento al backend
+vero ([Testbusters/elliotApiV2](https://github.com/Testbusters/elliotApiV2),
+branch `StagingAdminStack`), che serve quando bisogna capire la shape reale di un
+endpoint — non per collegarcisi.
