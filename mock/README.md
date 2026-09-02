@@ -178,3 +178,11 @@ Nessun file in `mock/` importa da `src/` — viene compilato nel bundle di
 
 `npm run dev` (senza `:mock`) usa `.env.local`. Copia `.env.example`, riempi i
 valori e serve una sessione SSO valida.
+
+Senza `.env.local` il dev server **si rifiuta di partire** e dice cosa fare. È
+voluto: prima partiva lo stesso, e al click su "Log In" restituiva un
+`Unhandled Promise Rejection: Error: Not Found (404)` da `signinRedirect()`.
+La causa non era intuibile dall'errore — con `VITE_SSO_AUTHORITY` non definita,
+`metadataUrl` diventa la stringa letterale
+`"undefined/api/.well-known/openid-configuration"`, cioè un URL relativo che
+`oidc-client-ts` chiede al dev server stesso.

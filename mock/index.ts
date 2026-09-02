@@ -33,6 +33,38 @@ const LATENCY_MS = 120;
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+/**
+ * Guardia per `npm run dev` (modalità backend vero) senza `.env.local`.
+ *
+ * Senza queste variabili l'app parte lo stesso e sembra funzionare, ma fallisce
+ * più tardi e in modo illeggibile:
+ *
+ *  - `VITE_SSO_AUTHORITY` mancante → `metadataUrl` diventa la stringa letterale
+ *    `"undefined/api/.well-known/openid-configuration"`, che è un URL relativo:
+ *    al click su "Log In" `signinRedirect()` lo chiede al dev server stesso e
+ *    ottiene `Unhandled Promise Rejection: Error: Not Found (404)`, senza alcun
+ *    indizio su cosa manchi davvero.
+ *  - `VITE_API_BASE_URL` mancante → `TypeError` dentro `buildURL()` alla prima
+ *    chiamata API (`src/lib/api/client.ts` non ha fallback).
+ *
+ * Meglio rifiutarsi di partire e dire cosa fare.
+ */
+function assertRealBackendEnv(env: Record<string, string>): void {
+  const required = ['VITE_API_BASE_URL', 'VITE_SSO_AUTHORITY', 'VITE_COGNITO_CLIENT_ID'];
+  const missing = required.filter((key) => !env[key]);
+  if (missing.length === 0) return;
+
+  throw new Error(
+    `\n\n  Configurazione mancante per il backend vero: ${missing.join(', ')}.\n\n` +
+      `  Per il prototipo con dati finti usa:\n` +
+      `      npm run dev:mock          → http://localhost:${MOCK_PORT}\n\n` +
+      `  Per puntare davvero allo staging:\n` +
+      `      cp .env.example .env.local\n\n` +
+      `  (Senza queste variabili l'app parte ma il login fallisce con un 404\n` +
+      `   opaco: l'URL di metadata OIDC diventa la stringa "undefined/...".)\n`
+  );
+}
+
 export function mockApiPlugin(): Plugin {
   let enabled = false;
   let env: Record<string, string> = {};
@@ -53,7 +85,11 @@ export function mockApiPlugin(): Plugin {
 
     configResolved(config) {
       enabled = config.mode === 'mock';
-      if (!enabled) return;
+
+      if (!enabled) {
+        assertRealBackendEnv(config.env as Record<string, string>);
+        return;
+      }
 
       // `config.env` contiene le VITE_* già caricate da .env.mock: la chiave di
       // localStorage dipende da authority e client_id, quindi devono essere
