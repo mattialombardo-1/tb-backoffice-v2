@@ -16,6 +16,17 @@ coverage
 !.env.example
 !.env.mock
 
+# Niente CI/CD su questo repo: è un prototipo di design, non un deploy.
+# Il workflow del cliente è recuperabile dal commit di baseline se serve:
+#   git show ca69c9a:.github/workflows/ci.yml
+.github/
+
+# Claude Code: locale, non condiviso
+# I .md in .claude/ documentano il codice e restano tracciati (sono arrivati
+# col repo del cliente). Fuori vanno solo permessi di macchina e scarti.
+.claude/settings.local.json
+.claude/worktrees/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
