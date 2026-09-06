@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "tb-backoffice-mock",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev:mock"],
+      "port": 4300
+    }
+  ]
+}
