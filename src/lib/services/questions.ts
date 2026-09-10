@@ -387,6 +387,12 @@ export const questionsService = {
     await client.patch(`/questions/${questionId}/status`, { status: 'ACTIVE' }, { signal });
   },
 
+  /** Reject a question in review: sends it back to DRAFT — esce dalla coda "da revisionare"
+   *  (che filtra solo TO_REVIEW) e torna disponibile per essere ripresa in mano. */
+  async reject(client: APIClient, questionId: string, signal?: AbortSignal): Promise<void> {
+    await client.patch(`/questions/${questionId}/status`, { status: 'DRAFT' }, { signal });
+  },
+
   /** Returns all questions assigned to the current user as reviewer with status TO_REVIEW. */
   async myReviews(client: APIClient, signal?: AbortSignal): Promise<QuestionListItem[]> {
     const [raw, subjects] = await Promise.all([

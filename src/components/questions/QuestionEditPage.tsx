@@ -45,7 +45,7 @@ export function QuestionEditPage() {
       topicId={form.loadedTopicId}
       topicName={form.loadedTopicName}
       isReviewMode={review === true}
-      onClose={() => navigate({ to: '/questions' })}
+      onClose={() => navigate({ to: review === true ? '/questions/to-review' : '/questions' })}
       onApproved={() => navigate({ to: '/questions/to-review' })}
     />
   );

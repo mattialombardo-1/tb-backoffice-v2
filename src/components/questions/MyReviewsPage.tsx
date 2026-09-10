@@ -1,81 +1,12 @@
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from '@tanstack/react-router';
-import { AlertCircle, ClipboardCheck, Loader2, ScanEye } from 'lucide-react';
+import { AlertCircle, ClipboardCheck, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { DIFFICULTY_LABELS } from '@/lib/types/questions';
-import type { QuestionListItem } from '@/lib/types/questions';
-import { useMyReviews } from '@/lib/hooks/useMyReviews';
-
-function difficultyLabel(level: QuestionListItem['difficulty']): string {
-  return DIFFICULTY_LABELS[level] ?? level;
-}
-
-function QuestionRowSkeleton() {
-  return (
-    <tr className="border-b last:border-0">
-      <td className="px-4 py-3">
-        <Skeleton className="h-4 w-64 mb-1" />
-        <Skeleton className="h-3 w-40" />
-      </td>
-      <td className="px-4 py-3"><Skeleton className="h-4 w-32" /></td>
-      <td className="px-4 py-3"><Skeleton className="h-4 w-20" /></td>
-      <td className="px-4 py-3"><Skeleton className="h-4 w-24" /></td>
-      <td className="px-4 py-3" />
-    </tr>
-  );
-}
-
-function QuestionRow({ question }: { question: QuestionListItem }) {
-  const { t } = useTranslation();
-  const navigate = useNavigate();
-
-  const preview = question.questionText.replace(/<[^>]+>/g, '').slice(0, 100);
-
-  return (
-    <tr className="border-b last:border-0 hover:bg-muted/50 transition-colors group">
-      <td className="px-4 py-3 max-w-md">
-        <div className="font-medium text-sm line-clamp-2">
-          {preview || <span className="text-muted-foreground italic">{t('myReviews.noText')}</span>}
-        </div>
-        <div className="text-xs text-muted-foreground font-mono mt-0.5">{question.id}</div>
-      </td>
-      <td className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">
-        {question.materiaName}
-        {question.argomentoName && (
-          <span className="text-muted-foreground/60"> / {question.argomentoName}</span>
-        )}
-      </td>
-      <td className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">
-        {difficultyLabel(question.difficulty)}
-      </td>
-      <td className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">
-        {new Date(question.createdAt).toLocaleDateString('it-IT')}
-      </td>
-      <td className="px-4 py-3 text-right">
-        <Button
-          size="sm"
-          className="gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity"
-          onClick={() =>
-            navigate({
-              to: '/questions/$questionId',
-              params: { questionId: question.id },
-              search: { review: true },
-            })
-          }
-        >
-          <ScanEye className="h-4 w-4" />
-          {t('myReviews.review')}
-        </Button>
-      </td>
-    </tr>
-  );
-}
+import { useReviewBatches } from '@/lib/hooks/useReviewBatches';
+import { MyReviewsBatchGroup } from './MyReviewsBatchGroup';
 
 export function MyReviewsPage() {
   const { t } = useTranslation();
-  const { questions, total, isLoading, isError, refetch } = useMyReviews();
+  const { batches, isLoading, isError, refetch } = useReviewBatches();
 
   if (isError) {
     return (
@@ -110,40 +41,16 @@ export function MyReviewsPage() {
         </Button>
       </div>
 
-      <Card>
-        <CardContent className="p-0">
-          {total === 0 && !isLoading ? (
-            <div className="py-16 text-center text-sm text-muted-foreground">
-              {t('myReviews.empty')}
-            </div>
-          ) : (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-muted/30">
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                    {t('myReviews.table.text')}
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground whitespace-nowrap">
-                    {t('myReviews.table.subject')}
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground whitespace-nowrap">
-                    {t('myReviews.table.difficulty')}
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground whitespace-nowrap">
-                    {t('myReviews.table.createdAt')}
-                  </th>
-                  <th className="w-28" />
-                </tr>
-              </thead>
-              <tbody>
-                {isLoading
-                  ? Array.from({ length: 5 }).map((_, i) => <QuestionRowSkeleton key={i} />)
-                  : questions.map((q) => <QuestionRow key={q.id} question={q} />)}
-              </tbody>
-            </table>
-          )}
-        </CardContent>
-      </Card>
+      {/* Proposta di design: il "listone" piatto delle revisioni singole è nascosto per
+          ora — interfaccia pulita per concentrarsi sui batch generati insieme (stessa
+          materia, stesso giorno). Vedi useReviewBatches. */}
+      {batches.length > 0 && (
+        <div className="space-y-3">
+          {batches.map((batch) => (
+            <MyReviewsBatchGroup key={batch.key} batch={batch} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

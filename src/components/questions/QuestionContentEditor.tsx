@@ -4,8 +4,9 @@ import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RichContentEditor } from '@/components/rich-editor';
-import { QuestionTypeSelector } from './QuestionTypeSelector';
+import type { DifficultyLevel } from '@/lib/types/questions';
 import { DifficultySelector } from './DifficultySelector';
+import { QuestionTypeSelector } from './QuestionTypeSelector';
 import { AlternativesList } from './AlternativesList';
 import { QuestionImagesManager } from './QuestionImagesManager';
 import type { useQuestionForm } from '@/lib/hooks/useQuestionForm';
@@ -22,12 +23,20 @@ export function QuestionContentEditor({ form }: QuestionContentEditorProps) {
   const hasSpaces = form.completionAnswer.includes(' ');
 
   const availableImages = useMemo(
-    () => form.questionImageEntries.map((entry, idx) => ({ id: `image${idx + 1}`, url: entry.viewUrl })),
+    () =>
+      form.questionImageEntries.map((entry, idx) => ({
+        id: `image${idx + 1}`,
+        url: entry.viewUrl,
+      })),
     [form.questionImageEntries]
   );
 
   const availableExplanationImages = useMemo(
-    () => form.explanationImageEntries.map((entry, idx) => ({ id: `image${idx + 1}`, url: entry.viewUrl })),
+    () =>
+      form.explanationImageEntries.map((entry, idx) => ({
+        id: `image${idx + 1}`,
+        url: entry.viewUrl,
+      })),
     [form.explanationImageEntries]
   );
 
@@ -35,7 +44,7 @@ export function QuestionContentEditor({ form }: QuestionContentEditorProps) {
     <div className="space-y-6">
       <DifficultySelector
         value={form.difficulty}
-        onChange={form.setDifficulty}
+        onChange={(v) => form.setDifficulty(v as DifficultyLevel)}
         disabled={disabled}
         required
       />
@@ -65,7 +74,12 @@ export function QuestionContentEditor({ form }: QuestionContentEditorProps) {
 
       <Separator />
 
-      <QuestionTypeSelector value={form.type} onChange={form.setType} disabled={disabled} />
+      <QuestionTypeSelector
+        value={form.type}
+        onChange={form.setType}
+        disabled={disabled}
+        required
+      />
 
       {form.type === 'MULTIPLE_CHOICE' ? (
         <AlternativesList
@@ -78,7 +92,10 @@ export function QuestionContentEditor({ form }: QuestionContentEditorProps) {
         />
       ) : (
         <div className="space-y-3">
-          <Label htmlFor="completion-answer">{t('questions.editor.correctAnswer')}<span className='text-destructive'>*</span></Label>
+          <Label htmlFor="completion-answer">
+            {t('questions.editor.correctAnswer')}
+            <span className="text-destructive">*</span>
+          </Label>
           <Input
             id="completion-answer"
             value={form.completionAnswer}
@@ -89,9 +106,7 @@ export function QuestionContentEditor({ form }: QuestionContentEditorProps) {
           {hasSpaces && (
             <p className="text-sm text-destructive">{t('questions.editor.noSpaces')}</p>
           )}
-          <p className="text-xs text-muted-foreground">
-            {t('questions.editor.noSpacesHint')}
-          </p>
+          <p className="text-xs text-muted-foreground">{t('questions.editor.noSpacesHint')}</p>
         </div>
       )}
 

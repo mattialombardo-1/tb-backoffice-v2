@@ -2,9 +2,8 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getRouteApi, useNavigate } from '@tanstack/react-router';
 import { toast } from 'sonner';
-import { CheckCircle, Loader2, Pencil, X } from 'lucide-react';
+import { CheckCircle, Loader2, Pencil, Plus, RotateCcw, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -21,12 +20,9 @@ import { useApiClient } from '@/lib/api/useApiClient';
 import { campaignsService } from '@/lib/services/campaignsService';
 import { questionsService } from '@/lib/services/questions';
 import type { DifficultyLevel, QuestionType } from '@/lib/types/questions';
-import { HierarchySelector } from './HierarchySelector';
-import { QuestionContentEditor } from './QuestionContentEditor';
-import { QuestionFormActions } from './QuestionFormActions';
+import { QuestionSetupAccordion } from './QuestionSetupAccordion';
 import { ReviewerAssignDialog } from './ReviewerAssignDialog';
 import { AutosaveIndicator } from './AutosaveIndicator';
-import { QuestionStudentPreview } from './QuestionStudentPreview';
 
 const routeApi = getRouteApi('/_authenticated/questions/create');
 
@@ -64,8 +60,17 @@ function parseDifficulty(raw: string | undefined): DifficultyLevel | undefined {
 }
 
 export function QuestionCreatePage() {
-  const { questionId: editId, slotId, campaignId, campaignName, subjectId, topicId, difficulty, questionType, revisorId, reviewMode } =
-    routeApi.useSearch();
+  const {
+    questionId: editId,
+    slotId,
+    campaignId,
+    campaignName,
+    subjectId,
+    topicId,
+    difficulty,
+    questionType,
+    reviewMode,
+  } = routeApi.useSearch();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const client = useApiClient();
@@ -75,22 +80,47 @@ export function QuestionCreatePage() {
   const initialDifficulty = parseDifficulty(difficulty);
   const initialType = parseQuestionType(questionType);
 
-  const hierarchy = useHierarchy(
-    subjectId
-      ? { subjectId, topicId: topicId ?? null }
-      : undefined
-  );
+  const hierarchy = useHierarchy(subjectId ? { subjectId, topicId: topicId ?? null } : undefined);
 
-  const form = useQuestionForm(
-    editId
-      ? editId
-      : { initialDifficulty, initialType }
-  );
+  const form = useQuestionForm(editId ? editId : { initialDifficulty, initialType });
   const { updateHierarchyRef } = form;
 
   const [reviewerDialogOpen, setReviewerDialogOpen] = useState(false);
   const [confirmLeaveOpen, setConfirmLeaveOpen] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
+
+  // Sollevati da QuestionSetupAccordion: servono qui per sapere se i campi
+  // obbligatori (Materia, Argomento, Tipo di domanda, Quantità, Revisore) sono
+  // compilati e quindi se la CTA "Crea Bozze" può essere cliccabile.
+  const [proposalType, setProposalType] = useState<QuestionType | ''>('');
+  const [proposalQuantity, setProposalQuantity] = useState('');
+  const [proposalReviewerId, setProposalReviewerId] = useState<string | null>(null);
+  const canGenerate =
+    hierarchy.isComplete &&
+    proposalType !== '' &&
+    proposalQuantity !== '' &&
+    Number(proposalQuantity) > 0 &&
+    proposalReviewerId !== null;
+
+  // Modale di riepilogo dopo "Crea Bozze" — vedi QuestionGenerationSummaryDialog.
+  const [summaryOpen, setSummaryOpen] = useState(false);
+  const handleExitSummary = () => {
+    setSummaryOpen(false);
+    navigate({ to: '/questions' });
+  };
+
+  // Cambiando questa key si rimonta QuestionSetupAccordion, azzerando tutto il suo
+  // stato interno (difficoltà, note, allegato, revisore, sezione aperta...) senza
+  // doverlo enumerare campo per campo qui. hierarchy e i tre campi sollevati restano
+  // fuori da quel remount, quindi vanno resettati esplicitamente.
+  const [resetKey, setResetKey] = useState(0);
+  const handleResetForm = () => {
+    hierarchy.setMateria(null);
+    setProposalType('');
+    setProposalQuantity('');
+    setProposalReviewerId(null);
+    setResetKey((k) => k + 1);
+  };
 
   useEffect(() => {
     updateHierarchyRef(hierarchy.selection);
@@ -109,27 +139,9 @@ export function QuestionCreatePage() {
     navigate({ to: '/questions' });
   };
 
-  const handleSaveDraft = async () => {
-    const savedId = await form.saveDraft(hierarchy.selection);
-    if (savedId) {
-      toast.success(t('questions.create.draftSaved'));
-    } else {
-      toast.error(t('questions.create.errorSave'));
-    }
-  };
-
-  const handleSubmit = () => {
-    if (Object.keys(form.validationErrors).length > 0) {
-      toast.error(t('questions.create.allFieldsRequired'));
-      return;
-    }
-    // In campaign mode the reviewer is pre-assigned on the slot — skip the picker
-    if (isCampaignMode && revisorId) {
-      handleConfirmSubmit(revisorId);
-      return;
-    }
-    setReviewerDialogOpen(true);
-  };
+  // handleSaveDraft/handleSubmit (vecchio form manuale) rimossi: legati a campi
+  // (questionText, alternatives...) che questa proposta non mostra più — vedi
+  // "Crea Bozze" in fondo alla pagina.
 
   const handleConfirmSubmit = async (reviewerId: string) => {
     try {
@@ -220,13 +232,32 @@ export function QuestionCreatePage() {
           >
             <X className="h-5 w-5" />
           </Button>
-          <div className="flex items-center gap-3">
-            <h1 className="text-xl font-semibold">
-              {reviewMode ? t('myReviews.reviewTitle') : isEditMode ? 'Modifica Domanda' : 'Crea Domanda'}
-            </h1>
-            {form.isReadOnly && !reviewMode && <Badge variant="secondary">{t('questions.readOnly')}</Badge>}
-            {reviewMode && form.isReadOnly && <Badge variant="secondary">{t('myReviews.readOnlyBadge')}</Badge>}
-            {reviewMode && !form.isReadOnly && <Badge variant="outline" className="border-amber-400 text-amber-600">{t('myReviews.editingBadge')}</Badge>}
+          <div>
+            <div className="flex items-center gap-3">
+              <h1 className="text-xl font-semibold">
+                {reviewMode
+                  ? t('myReviews.reviewTitle')
+                  : isEditMode
+                    ? 'Modifica Domanda'
+                    : 'Crea Domanda'}
+              </h1>
+              {form.isReadOnly && !reviewMode && (
+                <Badge variant="secondary">{t('questions.readOnly')}</Badge>
+              )}
+              {reviewMode && form.isReadOnly && (
+                <Badge variant="secondary">{t('myReviews.readOnlyBadge')}</Badge>
+              )}
+              {reviewMode && !form.isReadOnly && (
+                <Badge variant="outline" className="border-amber-400 text-amber-600">
+                  {t('myReviews.editingBadge')}
+                </Badge>
+              )}
+            </div>
+            {!reviewMode && !isEditMode && (
+              <p className="text-sm text-muted-foreground">
+                Indica i parametri e crea le bozze da revisionare.
+              </p>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -252,9 +283,11 @@ export function QuestionCreatePage() {
                   disabled={isApproving}
                   className="bg-emerald-600 hover:bg-emerald-700 text-white"
                 >
-                  {isApproving
-                    ? <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    : <CheckCircle className="h-4 w-4 mr-2" />}
+                  {isApproving ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                  )}
                   {t('myReviews.approve')}
                 </Button>
               </>
@@ -265,22 +298,18 @@ export function QuestionCreatePage() {
                 disabled={isApproving || Object.keys(form.validationErrors).length > 0}
                 className="bg-emerald-600 hover:bg-emerald-700 text-white"
               >
-                {isApproving
-                  ? <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  : <CheckCircle className="h-4 w-4 mr-2" />}
+                {isApproving ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                )}
                 {t('myReviews.saveAndApprove')}
               </Button>
             )
-          ) : (
-            <QuestionFormActions
-              onSaveDraft={handleSaveDraft}
-              onSubmit={handleSubmit}
-              isSaving={form.autosaveStatus === 'saving'}
-              isReadOnly={form.isReadOnly}
-              canSaveDraft={hierarchy.isComplete}
-              hasValidationErrors={Object.keys(form.validationErrors).length > 0}
-            />
-          )}
+          ) : // Proposta di design: niente CTA in alto a destra per "Crea Domanda" —
+          // "Crea Bozze" vive in fondo alla pagina, accanto ai parametri appena
+          // compilati.
+          null}
         </div>
       </div>
 
@@ -296,62 +325,39 @@ export function QuestionCreatePage() {
         </div>
       )}
 
-      {/* Two-column content area — single scroll, preview sticky */}
+      {/* Colonna unica: Classificazione, Composizione e Opzioni aggiuntive
+          (Note + Allegati) stanno tutte chiuse di default, quindi la CTA resta
+          a vista senza dover scorrere granché. */}
       <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto flex min-h-full max-w-7xl items-start">
+        <div className="mx-auto max-w-3xl space-y-8 px-10 py-8">
+          <QuestionSetupAccordion
+            key={resetKey}
+            hierarchy={hierarchy}
+            disabled={form.isReadOnly}
+            type={proposalType}
+            onTypeChange={setProposalType}
+            quantity={proposalQuantity}
+            onQuantityChange={setProposalQuantity}
+            reviewerId={proposalReviewerId}
+            onReviewerIdChange={setProposalReviewerId}
+            summaryOpen={summaryOpen}
+            onExitSummary={handleExitSummary}
+          />
 
-          {/* Left: form cards */}
-          <div className="flex-1 space-y-6 px-10 py-8">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Classificazione</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <HierarchySelector hierarchy={hierarchy} disabled={form.isReadOnly} />
-              </CardContent>
-            </Card>
-
-            {hierarchy.isComplete ? (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Contenuto</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <QuestionContentEditor form={form} />
-                </CardContent>
-              </Card>
-            ) : (
-              <Card>
-                <CardContent className="py-12 text-center text-muted-foreground">
-                  Seleziona brand, materia, argomento e sotto-argomento per abilitare il modulo di
-                  creazione.
-                </CardContent>
-              </Card>
-            )}
+          <div className="flex items-center justify-between gap-3">
+            <Button variant="ghost" onClick={handleResetForm} disabled={form.isReadOnly}>
+              <RotateCcw className="h-4 w-4" />
+              Resetta form
+            </Button>
+            <Button
+              size="lg"
+              disabled={form.isReadOnly || !canGenerate}
+              onClick={() => setSummaryOpen(true)}
+            >
+              <Plus className="h-4 w-4" />
+              Crea Bozze
+            </Button>
           </div>
-
-          {/* Right: sticky student preview at 35% */}
-          <div
-            className="sticky top-0 w-[35%] shrink-0 overflow-y-auto border-l"
-            style={{ maxHeight: 'calc(100dvh - 68px)' }}
-          >
-            <div className="space-y-4 p-6">
-              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                Anteprima studente
-              </p>
-              <QuestionStudentPreview
-                questionText={form.questionText}
-                type={form.type}
-                alternatives={form.alternatives}
-                alternativeStyle={form.alternativeStyle}
-                completionAnswer={form.completionAnswer}
-                questionImages={form.questionImageEntries.map((e) => e.viewUrl)}
-                explanationText={form.explanationText}
-                explanationImages={form.explanationImageEntries.map((e) => e.viewUrl)}
-              />
-            </div>
-          </div>
-
         </div>
       </div>
 

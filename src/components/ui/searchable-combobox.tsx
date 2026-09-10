@@ -15,6 +15,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 export interface ComboboxOption {
   value: string;
   label: string;
+  /** Shown in the list but not selectable — e.g. a coming-soon placeholder. */
+  disabled?: boolean;
 }
 
 interface SearchableComboboxProps {
@@ -26,6 +28,10 @@ interface SearchableComboboxProps {
   emptyMessage?: string;
   disabled?: boolean;
   className?: string;
+  /** Apribile anche da fuori (es. click su un tag di riepilogo) — non passarli per
+   *  lasciare il menu completamente non controllato, come prima. */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export function SearchableCombobox({
@@ -37,8 +43,15 @@ export function SearchableCombobox({
   emptyMessage = 'Nessun risultato.',
   disabled = false,
   className,
+  open: openProp,
+  onOpenChange,
 }: SearchableComboboxProps) {
-  const [open, setOpen] = useState(false);
+  const [openState, setOpenState] = useState(false);
+  const open = openProp ?? openState;
+  const setOpen = (next: boolean) => {
+    setOpenState(next);
+    onOpenChange?.(next);
+  };
 
   const selected = options.find((opt) => opt.value === value);
 
@@ -75,12 +88,16 @@ export function SearchableCombobox({
                 <CommandItem
                   key={opt.value}
                   value={opt.label}
+                  disabled={opt.disabled}
                   onSelect={() => {
+                    if (opt.disabled) return;
                     onChange(opt.value === value ? null : opt.value);
                     setOpen(false);
                   }}
                 >
-                  <Check className={cn('mr-2', value === opt.value ? 'opacity-100' : 'opacity-0')} />
+                  <Check
+                    className={cn('mr-2', value === opt.value ? 'opacity-100' : 'opacity-0')}
+                  />
                   {opt.label}
                 </CommandItem>
               ))}

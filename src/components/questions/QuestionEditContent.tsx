@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { CheckCircle, Loader2, Pencil, X } from 'lucide-react';
+import { CheckCircle, Loader2, Pencil, X, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +13,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { useHierarchy } from '@/lib/hooks/useHierarchy';
 import { useQuestionForm } from '@/lib/hooks/useQuestionForm';
@@ -24,6 +33,20 @@ import { QuestionFormActions } from './QuestionFormActions';
 import { ReviewerAssignDialog } from './ReviewerAssignDialog';
 import { AutosaveIndicator } from './AutosaveIndicator';
 import { QuestionStudentPreview } from './QuestionStudentPreview';
+
+// Proposta di design: motivi di rigetto — un dropdown fisso più "Altro" con testo libero,
+// così chi ha generato/scritto la domanda ha un feedback concreto su cosa correggere.
+const REJECT_REASONS = [
+  'Errore scientifico o risposta errata',
+  'Domanda ambigua o incompleta',
+  'Spiegazione insufficiente o incoerente',
+  'Duplicata o troppo simile a una domanda esistente',
+  'Fuori programma o classificata in modo errato',
+  'Altro',
+] as const;
+
+const REJECT_CUSTOM_REASON = 'Altro';
+const REJECT_CUSTOM_TEXT_MAX = 125;
 
 export interface QuestionEditContentProps {
   form: ReturnType<typeof useQuestionForm>;
@@ -75,6 +98,13 @@ export function QuestionEditContent({
   const [reviewerDialogOpen, setReviewerDialogOpen] = useState(false);
   const [confirmLeaveOpen, setConfirmLeaveOpen] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
+  const [isRejecting, setIsRejecting] = useState(false);
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
+  const [rejectCustomText, setRejectCustomText] = useState('');
+  const isCustomReason = rejectReason === REJECT_CUSTOM_REASON;
+  const canConfirmReject =
+    rejectReason !== '' && (!isCustomReason || rejectCustomText.trim().length > 0);
 
   const handleClose = () => {
     if (form.isDirty) {
@@ -128,6 +158,33 @@ export function QuestionEditContent({
     }
   };
 
+  const openRejectDialog = () => {
+    setRejectReason('');
+    setRejectCustomText('');
+    setRejectDialogOpen(true);
+  };
+
+  /** Rigetta: la domanda torna in bozza — esce dalla coda "da revisionare". Il motivo
+   *  scelto non ha ancora un campo dedicato sul backend reale (nessun endpoint di
+   *  feedback/commento sulle domande) — per ora resta solo nel log, non lo inventiamo
+   *  come campo salvato per davvero. */
+  const handleReject = async () => {
+    if (!form.questionId) return;
+    const reason = isCustomReason ? rejectCustomText.trim() : rejectReason;
+    setIsRejecting(true);
+    try {
+      await questionsService.reject(client, form.questionId);
+      console.info('[rigetta] motivo:', reason);
+      setRejectDialogOpen(false);
+      toast.success('Domanda rigettata.');
+      onSaved?.();
+      (onApproved ?? onClose)();
+    } catch {
+      toast.error(t('common.error'));
+      setIsRejecting(false);
+    }
+  };
+
   const handleSaveAndApprove = async () => {
     if (!form.questionId) return;
     setIsApproving(true);
@@ -173,9 +230,23 @@ export function QuestionEditContent({
                 <Pencil className="h-4 w-4 mr-2" />
                 Modifica
               </Button>
+              {isReviewMode && (
+                <Button
+                  variant="destructive"
+                  onClick={openRejectDialog}
+                  disabled={isApproving || isRejecting}
+                >
+                  {isRejecting ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <XCircle className="h-4 w-4 mr-2" />
+                  )}
+                  Rigetta
+                </Button>
+              )}
               <Button
                 onClick={handleApprove}
-                disabled={isApproving}
+                disabled={isApproving || isRejecting}
                 className="bg-emerald-600 hover:bg-emerald-700 text-white"
               >
                 {isApproving ? (
@@ -294,6 +365,76 @@ export function QuestionEditContent({
               }}
             >
               Esci senza salvare
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
+        <DialogContent showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle>Rigetta domanda</DialogTitle>
+            <DialogDescription>
+              Seleziona il motivo: la domanda uscirà dalla coda di revisione.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex flex-col gap-3">
+            <Label htmlFor="reject-reason">Motivazione</Label>
+            <Select value={rejectReason} onValueChange={setRejectReason}>
+              <SelectTrigger id="reject-reason">
+                <SelectValue placeholder="Seleziona un motivo" />
+              </SelectTrigger>
+              <SelectContent>
+                {REJECT_REASONS.map((reason) => (
+                  <SelectItem key={reason} value={reason}>
+                    {reason}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {isCustomReason && (
+              <div className="flex flex-col gap-1.5">
+                <Input
+                  value={rejectCustomText}
+                  onChange={(e) =>
+                    setRejectCustomText(e.target.value.slice(0, REJECT_CUSTOM_TEXT_MAX))
+                  }
+                  placeholder="Descrivi brevemente il motivo"
+                  maxLength={REJECT_CUSTOM_TEXT_MAX}
+                />
+                <p
+                  className={cn(
+                    'text-right text-xs text-muted-foreground',
+                    rejectCustomText.length >= REJECT_CUSTOM_TEXT_MAX && 'text-destructive'
+                  )}
+                >
+                  {rejectCustomText.length}/{REJECT_CUSTOM_TEXT_MAX}
+                </p>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setRejectDialogOpen(false)}
+              disabled={isRejecting}
+            >
+              Annulla
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleReject}
+              disabled={!canConfirmReject || isRejecting}
+            >
+              {isRejecting ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <XCircle className="h-4 w-4 mr-2" />
+              )}
+              Rigetta
             </Button>
           </DialogFooter>
         </DialogContent>
