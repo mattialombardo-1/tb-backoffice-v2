@@ -1,4 +1,4 @@
-/** Banca di domande finte usata dal flusso di generazione (QuestionGenerationSummaryDialog)
+/** Banca di domande finte usata dal flusso di generazione (QuestionGenerationStep)
  *  e dalla ricerca del passaggio "simulato" in QuestionsViewDialog — in un file a parte
  *  perché esporta solo dati/funzioni, non componenti (altrimenti react-refresh si lamenta:
  *  "Fast refresh only works when a file only exports components"). */
@@ -620,7 +620,7 @@ export function pickQuestionBank(argomentoName?: string): QuestionTemplate[] {
 
 /** Usata da QuestionsViewDialog per "Vedi il passaggio" su una domanda già persistita: il
  *  passaggio non viene mai salvato sul backend (vedi buildCreatePayload in
- *  QuestionGenerationSummaryDialog), ma le domande generate da quel flusso hanno testo
+ *  QuestionGenerationStep), ma le domande generate da quel flusso hanno testo
  *  identico a uno dei template qui sopra — cercandolo per testo si recupera lo stesso
  *  passaggio "simulato" con cui è stata generata, invece di inventarne uno nuovo. Nessun
  *  match per le domande del catalogo reale (mai passate da qui) o per quelle il cui testo è

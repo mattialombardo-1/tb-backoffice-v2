@@ -303,7 +303,7 @@ interface HierarchySelectorProps {
 /** Materia + Argomento + Sotto-argomento side by side — used by the edit screen. */
 export function HierarchySelector({ hierarchy, disabled = false }: HierarchySelectorProps) {
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+    <div className="grid grid-cols-3 gap-4">
       <MateriaField hierarchy={hierarchy} disabled={disabled} />
       <ArgomentoField hierarchy={hierarchy} disabled={disabled} />
       <SottoArgomentoField hierarchy={hierarchy} disabled={disabled} />

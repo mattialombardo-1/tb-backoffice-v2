@@ -25,6 +25,7 @@ import { QuestionsBulkToolbar } from './QuestionsBulkToolbar';
 import { QuestionsBulkDeleteDialog } from './QuestionsBulkDeleteDialog';
 import { QuestionsExportDialog } from './QuestionsExportDialog';
 import { QuestionsAddToCollectionDialog } from './QuestionsAddToCollectionDialog';
+import { AddQuestionDialog } from './AddQuestionDialog';
 import { parseIdsCsv, CsvMissingColumnError } from '@/lib/export/parseIdsCsv';
 
 const PER_PAGE = 20;
@@ -92,6 +93,7 @@ export function QuestionsListPage() {
   const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [showAddToCollectionDialog, setShowAddToCollectionDialog] = useState(false);
+  const [showAddQuestionDialog, setShowAddQuestionDialog] = useState(false);
 
   const updateFilters = (patch: Partial<FiltersType>) => {
     const next = { ...filters, ...patch };
@@ -308,8 +310,8 @@ export function QuestionsListPage() {
               </Button>
             )}
             {canCreate && (
-              <Button onClick={() => navigate({ to: '/questions/create' })}>
-                <Plus className="h-4 w-4 mr-2" />
+              <Button onClick={() => setShowAddQuestionDialog(true)}>
+                <Plus className="h-4 w-4" />
                 {t('questions.createBtn')}
               </Button>
             )}
@@ -384,6 +386,8 @@ export function QuestionsListPage() {
           questionIds={[...bulk.selectedIds]}
           onSuccess={bulk.clearSelection}
         />
+
+        <AddQuestionDialog open={showAddQuestionDialog} onOpenChange={setShowAddQuestionDialog} />
       </div>
     </div>
   );

@@ -13,6 +13,7 @@
     "confirm": "Confirm",
     "confirming": "Saving...",
     "retry": "Retry",
+    "refresh": "Refresh",
     "close": "Close",
     "error": "Error",
     "loading": "Loading...",
@@ -262,7 +263,11 @@
   "questions": {
     "title": "Questions",
     "subtitle": "Manage the question catalogue",
-    "createBtn": "Create question",
+    "createBtn": "Create Question",
+    "addDialog": {
+      "title": "Create Question",
+      "desc": "Choose the starting manual"
+    },
     "noResults": "No questions found",
     "noResultsFiltered": "No results for the selected filters",
     "resetFilters": "Reset filters",
@@ -302,6 +307,7 @@
     },
     "bulk": {
       "toggle": "Bulk select",
+      "cancelSelection": "Cancel selection",
       "todoBadge": "TODO backend",
       "selected_one": "{{count}} selected",
       "selected_other": "{{count}} selected",
@@ -476,7 +482,7 @@
       "draftSaved": "Draft saved",
       "errorSave": "Error while saving",
       "allFieldsRequired": "Complete all required fields before submitting",
-      "submitted": "Question submitted for review",
+      "submitted": "Question submitted to {{name}}",
       "errorSubmit": "Error while submitting",
       "error": "Error"
     },
@@ -1048,6 +1054,58 @@
     "campaignContext": "You are producing a question for a campaign. After submitting to the reviewer, the campaign slot will be updated automatically.",
     "errorTitle": "Loading error",
     "errorDesc": "Failed to load your assigned questions. Please try again."
+  },
+  "myReviews": {
+    "title": "Questions to review",
+    "subtitle": "Questions awaiting review assigned to you.",
+    "empty": "No questions to review",
+    "noResultsFiltered": "No results for the selected filters",
+    "review": "Review",
+    "reviewTitle": "Review Question",
+    "readOnlyBadge": "Read-only",
+    "editingBadge": "Editing",
+    "approve": "Approve",
+    "edit": "Edit",
+    "saveAndApprove": "Save and Approve",
+    "approved": "Question approved successfully",
+    "noText": "(empty text)",
+    "table": {
+      "text": "Question",
+      "materia": "Subject",
+      "argomento": "Topic",
+      "difficulty": "Difficulty",
+      "createdAt": "Created on"
+    },
+    "errorTitle": "Loading error",
+    "errorDesc": "Failed to load the questions to review. Please try again.",
+    "filters": {
+      "search": "Search by text or ID…",
+      "outcome": "Outcome"
+    },
+    "resetFilters": "Reset filters",
+    "bulk": {
+      "toggle": "Select questions",
+      "selectAll": "Select all ({{count}})",
+      "selectAllAction": "Select all questions",
+      "selectAction": "Select question {{index}}",
+      "selectBatchAction": "Select all questions in {{materia}} · {{argomento}}",
+      "rejectAction": "Reject",
+      "approveAction": "Approve",
+      "rejectDialogTitle": "Bulk reject",
+      "rejectDialogDesc": "Choose a reason: the selected questions will leave the review queue.",
+      "reasonLabel": "Reason",
+      "reasonPlaceholder": "Choose a reason",
+      "reasonCustomPlaceholder": "Briefly describe the reason",
+      "rejectConfirm": "Reject ({{count}})",
+      "approveSuccess_one": "{{count}} question approved",
+      "approveSuccess_other": "{{count}} questions approved",
+      "approveFailed": "{{count}} approvals failed",
+      "approveError": "Error during bulk approval",
+      "rejectSuccess_one": "{{count}} question rejected",
+      "rejectSuccess_other": "{{count}} questions rejected",
+      "rejectFailed": "{{count}} rejections failed",
+      "rejectError": "Error during bulk rejection"
+    }
   },
   "attributes": {
     "title": "Attributes",

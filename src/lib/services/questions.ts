@@ -393,24 +393,56 @@ export const questionsService = {
     await client.patch(`/questions/${questionId}/status`, { status: 'DRAFT' }, { signal });
   },
 
+  /** Approva in bulk (selezione multipla in "Domande da revisionare") — nessun endpoint
+   *  bulk dedicato: un giro di approve() per id, in parallelo, con esito aggregato così il
+   *  chiamante può mostrare un toast di successo/fallimento parziale e riprovare solo i
+   *  falliti (stesso principio di handleBulkDeleteConfirm in QuestionsListPage). */
+  async bulkApprove(
+    client: APIClient,
+    ids: string[]
+  ): Promise<{ approved: string[]; failed: string[] }> {
+    const results = await Promise.allSettled(ids.map((id) => questionsService.approve(client, id)));
+    const approved: string[] = [];
+    const failed: string[] = [];
+    results.forEach((r, i) => {
+      if (r.status === 'fulfilled') approved.push(ids[i]);
+      else failed.push(ids[i]);
+    });
+    return { approved, failed };
+  },
+
+  /** Rigetta in bulk — stesso principio di bulkApprove. Il motivo è condiviso per tutta la
+   *  selezione (un solo dialog, non uno a domanda — vedi MyReviewsBulkRejectDialog): come il
+   *  rigetto singolo, il backend non ha ancora un campo dedicato dove salvarlo, quindi per
+   *  ora resta solo in log — stesso commento onesto già in QuestionEditContent. */
+  async bulkReject(
+    client: APIClient,
+    ids: string[],
+    reason: string
+  ): Promise<{ rejected: string[]; failed: string[] }> {
+    const results = await Promise.allSettled(ids.map((id) => questionsService.reject(client, id)));
+    const rejected: string[] = [];
+    const failed: string[] = [];
+    results.forEach((r, i) => {
+      if (r.status === 'fulfilled') rejected.push(ids[i]);
+      else failed.push(ids[i]);
+    });
+    console.info('[rigetta bulk] motivo:', reason, 'domande:', rejected);
+    return { rejected, failed };
+  },
+
   /** Returns all questions assigned to the current user as reviewer with status TO_REVIEW. */
   async myReviews(client: APIClient, signal?: AbortSignal): Promise<QuestionListItem[]> {
-    const [raw, subjects] = await Promise.all([
-      client.get<BackendQuestion[]>('/questions/my-reviews', { signal }),
-      getSubjectsOnce(client),
-    ]);
-
-    return (Array.isArray(raw) ? raw : []).map((b) => {
-      const subjectDoc = subjects.find((s) => s._id === b.subjectId);
-      const topicDoc = subjectDoc?.topics?.find((t) => t._id === b.topicId);
-      const subtopicDoc = topicDoc?.subtopics?.find((st) => st._id === b.subtopicId);
-      return {
-        ...fromBackendQuestion(b),
-        materiaName: subjectDoc?.name ?? '',
-        argomentoName: topicDoc?.name ?? '',
-        sottoArgomentoName: subtopicDoc?.name ?? '',
-      };
-    });
+    const raw = await client.get<BackendQuestion[]>('/questions/my-reviews', { signal });
+    // fromBackendListItem, non una ri-derivazione via id contro il catalogo materie/argomenti
+    // (come faceva prima): quella ri-derivazione fallisce silenziosamente per le domande generate
+    // da QuestionSetupAccordion, il cui Argomento/Sotto-argomento sono "fixedOptions" — id fittizi
+    // (__fixed__...) che non combaciano con nessun topic reale, quindi argomentoName restava
+    // sempre vuoto in "Domande da revisionare" (mostrato con "—" da MyReviewsBatchGroup), pur
+    // avendo raggruppato correttamente il batch per materia (quella sì un id reale). Il nome
+    // dell'argomento è già risolto e salvato sulla domanda stessa (b.topic?.name) — usarlo da lì,
+    // come fa fromBackendListItem per il resto della lista Domande, invece di ricercarlo di nuovo.
+    return (Array.isArray(raw) ? raw : []).map(fromBackendListItem);
   },
 
   async list(

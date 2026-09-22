@@ -1,5 +1,5 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from '@tanstack/react-router';
 import { AlertCircle, ChevronRight, Loader2, Pencil, PlayCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +8,7 @@ import { DIFFICULTY_LABELS } from '@/lib/types/questions';
 import type { CampaignQuestionStatus, CampaignSlotWithContext } from '@/lib/types/campaigns';
 import { useMySlots } from '@/lib/hooks/useMySlots';
 import { cn } from '@/lib/utils';
+import { AddQuestionDialog } from '@/components/questions/AddQuestionDialog';
 
 const DIFFICULTY_FROM_NUM: Record<number, keyof typeof DIFFICULTY_LABELS> = {
   0: 'non_ancora_valutata',
@@ -45,25 +46,8 @@ function StatusBadge({ status }: { status: CampaignQuestionStatus }) {
   );
 }
 
-function SlotRow({ slot }: { slot: CampaignSlotWithContext }) {
+function SlotRow({ slot, onProduce }: { slot: CampaignSlotWithContext; onProduce: () => void }) {
   const { t } = useTranslation();
-  const navigate = useNavigate();
-
-  function handleProduce() {
-    navigate({
-      to: '/questions/create',
-      search: {
-        slotId: slot.id,
-        campaignId: slot.campaignId,
-        campaignName: slot.campaignName,
-        subjectId: slot.subjectId,
-        topicId: slot.topicId,
-        difficulty: slot.difficulty !== undefined ? String(slot.difficulty) : undefined,
-        questionType: slot.questionType ?? undefined,
-        revisorId: slot.revisorId || undefined,
-      },
-    });
-  }
 
   return (
     <div className="flex items-center gap-4 rounded-lg border bg-card px-4 py-3 transition-colors hover:bg-accent/30">
@@ -90,7 +74,7 @@ function SlotRow({ slot }: { slot: CampaignSlotWithContext }) {
       </div>
 
       {/* Produce button */}
-      <Button onClick={handleProduce} size="sm" className="shrink-0 gap-1.5">
+      <Button onClick={onProduce} size="sm" className="shrink-0 gap-1.5">
         <PlayCircle className="h-4 w-4" />
         {t('mySlots.produce')}
       </Button>
@@ -98,9 +82,27 @@ function SlotRow({ slot }: { slot: CampaignSlotWithContext }) {
   );
 }
 
+/** Stesso contesto campagna passato prima direttamente a /questions/create: ora va portato
+ *  dentro qualunque dei due percorsi scelga il revisore nel dialog — vedi AddQuestionDialog. */
+function toCampaignContext(slot: CampaignSlotWithContext) {
+  return {
+    slotId: slot.id,
+    campaignId: slot.campaignId,
+    campaignName: slot.campaignName,
+    subjectId: slot.subjectId,
+    topicId: slot.topicId,
+    difficulty: slot.difficulty !== undefined ? String(slot.difficulty) : undefined,
+    questionType: slot.questionType ?? undefined,
+    revisorId: slot.revisorId || undefined,
+  };
+}
+
 export function MySlotsPage() {
   const { t } = useTranslation();
   const { groups, total, isLoading, isError, refetch } = useMySlots();
+  // Un solo dialog per la pagina, non uno per riga — stesso pattern di RolesTable
+  // (RolesCapabilitiesDialog): lo slot "attivo" ne determina il contesto.
+  const [activeSlot, setActiveSlot] = useState<CampaignSlotWithContext | null>(null);
 
   if (isLoading) {
     return (
@@ -158,13 +160,19 @@ export function MySlotsPage() {
               </CardHeader>
               <CardContent className="space-y-2 pt-0">
                 {group.slots.map((slot) => (
-                  <SlotRow key={slot.id} slot={slot} />
+                  <SlotRow key={slot.id} slot={slot} onProduce={() => setActiveSlot(slot)} />
                 ))}
               </CardContent>
             </Card>
           ))}
         </div>
       )}
+
+      <AddQuestionDialog
+        open={!!activeSlot}
+        onOpenChange={(open) => !open && setActiveSlot(null)}
+        campaignContext={activeSlot ? toCampaignContext(activeSlot) : undefined}
+      />
     </div>
   );
 }

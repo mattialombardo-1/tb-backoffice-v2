@@ -123,14 +123,12 @@ export function PoolCreateSheet({ open, onOpenChange, onCreated }: PoolCreateShe
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-2xl flex flex-col p-0">
+      <SheetContent side="right" className="w-full max-w-2xl flex flex-col p-0">
         {step === 'form' ? (
           <>
             <SheetHeader className="border-b px-6 py-4 shrink-0">
               <SheetTitle>{t('pools.createSheet.title')}</SheetTitle>
-              <SheetDescription>
-                {t('pools.createSheet.desc')}
-              </SheetDescription>
+              <SheetDescription>{t('pools.createSheet.desc')}</SheetDescription>
             </SheetHeader>
 
             <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
@@ -169,9 +167,13 @@ export function PoolCreateSheet({ open, onOpenChange, onCreated }: PoolCreateShe
                   {t('pools.createSheet.brandLabel')} <span className="text-destructive">*</span>
                 </Label>
                 {brandsQuery.isLoading ? (
-                  <p className="text-sm text-muted-foreground">{t('pools.createSheet.brandLoading')}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {t('pools.createSheet.brandLoading')}
+                  </p>
                 ) : brands.length === 0 ? (
-                  <p className="text-sm text-muted-foreground italic">{t('pools.createSheet.brandEmpty')}</p>
+                  <p className="text-sm text-muted-foreground italic">
+                    {t('pools.createSheet.brandEmpty')}
+                  </p>
                 ) : (
                   <div className="space-y-2 rounded-md border px-3 py-2 max-h-40 overflow-y-auto">
                     {brands.map((b) => (
@@ -182,7 +184,10 @@ export function PoolCreateSheet({ open, onOpenChange, onCreated }: PoolCreateShe
                           onCheckedChange={() => toggleBrand(b._id)}
                           disabled={creating}
                         />
-                        <label htmlFor={`brand-${b._id}`} className="text-sm cursor-pointer select-none">
+                        <label
+                          htmlFor={`brand-${b._id}`}
+                          className="text-sm cursor-pointer select-none"
+                        >
                           {b.name}
                         </label>
                       </div>
@@ -205,7 +210,9 @@ export function PoolCreateSheet({ open, onOpenChange, onCreated }: PoolCreateShe
                         type="number"
                         step="0.01"
                         value={scores[key]}
-                        onChange={(e) => setScores((s) => ({ ...s, [key]: parseFloat(e.target.value) || 0 }))}
+                        onChange={(e) =>
+                          setScores((s) => ({ ...s, [key]: parseFloat(e.target.value) || 0 }))
+                        }
                         disabled={creating}
                         className="text-center"
                       />
@@ -230,9 +237,7 @@ export function PoolCreateSheet({ open, onOpenChange, onCreated }: PoolCreateShe
           <>
             <SheetHeader className="border-b px-6 py-4 shrink-0">
               <SheetTitle>{createdPool?.name}</SheetTitle>
-              <SheetDescription>
-                {t('pools.createSheet.createdHint')}
-              </SheetDescription>
+              <SheetDescription>{t('pools.createSheet.createdHint')}</SheetDescription>
             </SheetHeader>
 
             {createdPool && (

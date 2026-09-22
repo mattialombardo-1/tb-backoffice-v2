@@ -2,18 +2,21 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getRouteApi, useNavigate } from '@tanstack/react-router';
 import { toast } from 'sonner';
-import { CheckCircle, Loader2, Pencil, Plus, RotateCcw, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { BookOpen, CheckCircle, Loader2, Pencil, Plus, X } from 'lucide-react';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { useCapabilities } from '@/lib/auth';
 import { useHierarchy } from '@/lib/hooks/useHierarchy';
 import { useQuestionForm } from '@/lib/hooks/useQuestionForm';
 import { useApiClient } from '@/lib/api/useApiClient';
@@ -70,10 +73,13 @@ export function QuestionCreatePage() {
     difficulty,
     questionType,
     reviewMode,
+    manualeTitle,
   } = routeApi.useSearch();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const client = useApiClient();
+  const { me } = useCapabilities();
+  const meId = me?.user._id ?? null;
 
   const isEditMode = !!editId;
   const isCampaignMode = !!(slotId && campaignId);
@@ -91,7 +97,11 @@ export function QuestionCreatePage() {
 
   // Sollevati da QuestionSetupAccordion: servono qui per sapere se i campi
   // obbligatori (Materia, Argomento, Tipo di domanda, Quantità, Revisore) sono
-  // compilati e quindi se la CTA "Crea Bozze" può essere cliccabile.
+  // compilati e quindi se la CTA "Crea Domanda" può essere cliccabile. Partono
+  // vuoti: i valori più frequenti (Tipo, Quantità) e "Assegna a me" sono
+  // proposte di default, ma QuestionSetupAccordion li applica solo alla prima
+  // apertura della sezione che li contiene — non prima, non appena atterrati
+  // sul form (vedi lì).
   const [proposalType, setProposalType] = useState<QuestionType | ''>('');
   const [proposalQuantity, setProposalQuantity] = useState('');
   const [proposalReviewerId, setProposalReviewerId] = useState<string | null>(null);
@@ -102,32 +112,52 @@ export function QuestionCreatePage() {
     Number(proposalQuantity) > 0 &&
     proposalReviewerId !== null;
 
-  // Modale di riepilogo dopo "Crea Bozze" — vedi QuestionGenerationSummaryDialog.
+  // Secondo step dopo "Crea Domanda" (non un dialog) — vedi QuestionGenerationStep.
   const [summaryOpen, setSummaryOpen] = useState(false);
+  // Uscendo da lì: se il revisore assegnato è te stesso, ha senso atterrare direttamente
+  // sulla tua coda di revisione — è lì che andresti comunque subito dopo. Per chiunque
+  // altro, il comportamento resta quello di sempre (lista generale Domande).
   const handleExitSummary = () => {
     setSummaryOpen(false);
-    navigate({ to: '/questions' });
-  };
-
-  // Cambiando questa key si rimonta QuestionSetupAccordion, azzerando tutto il suo
-  // stato interno (difficoltà, note, allegato, revisore, sezione aperta...) senza
-  // doverlo enumerare campo per campo qui. hierarchy e i tre campi sollevati restano
-  // fuori da quel remount, quindi vanno resettati esplicitamente.
-  const [resetKey, setResetKey] = useState(0);
-  const handleResetForm = () => {
-    hierarchy.setMateria(null);
-    setProposalType('');
-    setProposalQuantity('');
-    setProposalReviewerId(null);
-    setResetKey((k) => k + 1);
+    navigate({
+      to: proposalReviewerId && proposalReviewerId === meId ? '/questions/to-review' : '/questions',
+    });
   };
 
   useEffect(() => {
     updateHierarchyRef(hierarchy.selection);
   }, [hierarchy.selection, updateHierarchyRef]);
 
+  // In modalità "Crea Domanda" i campi che contano (materia/argomento, tipo,
+  // quantità, revisore) non passano da useQuestionForm — sono sollevati da
+  // QuestionSetupAccordion — quindi form.isDirty da solo non li vede mai:
+  // uscire dopo averli compilati non mostrerebbe mai la conferma. In
+  // revisione/modifica invece i campi editati sono quelli reali di
+  // useQuestionForm, che resta l'unica fonte di verità lì.
+  const hasUnsavedCreationInput =
+    hierarchy.selection.subjectId != null ||
+    proposalType !== '' ||
+    proposalQuantity !== '' ||
+    proposalReviewerId !== null;
+  const isFormDirty =
+    !reviewMode && !isEditMode ? form.isDirty || hasUnsavedCreationInput : form.isDirty;
+
+  // Reload/chiusura scheda: qui non possiamo mostrare il nostro AlertDialog —
+  // il browser mostra il proprio dialog nativo (testo non personalizzabile,
+  // per policy anti-spam di tutti i browser moderni), attivato solo se
+  // l'evento viene "prevenuto" mentre il form è sporco.
+  useEffect(() => {
+    if (!isFormDirty) return;
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isFormDirty]);
+
   const handleClose = () => {
-    if (form.isDirty) {
+    if (isFormDirty) {
       setConfirmLeaveOpen(true);
     } else {
       navigate({ to: '/questions' });
@@ -141,12 +171,12 @@ export function QuestionCreatePage() {
 
   // handleSaveDraft/handleSubmit (vecchio form manuale) rimossi: legati a campi
   // (questionText, alternatives...) che questa proposta non mostra più — vedi
-  // "Crea Bozze" in fondo alla pagina.
+  // "Crea Domanda" in alto a destra.
 
-  const handleConfirmSubmit = async (reviewerId: string) => {
+  const handleConfirmSubmit = async (reviewerId: string, reviewerName: string) => {
     try {
       const savedQuestionId = await form.submitToReviewer(hierarchy.selection, reviewerId);
-      toast.success(t('questions.create.submitted'));
+      toast.success(t('questions.create.submitted', { name: reviewerName }));
 
       // If this question was created from a campaign slot, update the slot and navigate back
       if (isCampaignMode && savedQuestionId) {
@@ -255,7 +285,7 @@ export function QuestionCreatePage() {
             </div>
             {!reviewMode && !isEditMode && (
               <p className="text-sm text-muted-foreground">
-                Indica i parametri e crea le bozze da revisionare.
+                Indica i parametri e crea le domande da revisionare.
               </p>
             )}
           </div>
@@ -306,10 +336,7 @@ export function QuestionCreatePage() {
                 {t('myReviews.saveAndApprove')}
               </Button>
             )
-          ) : // Proposta di design: niente CTA in alto a destra per "Crea Domanda" —
-          // "Crea Bozze" vive in fondo alla pagina, accanto ai parametri appena
-          // compilati.
-          null}
+          ) : null}
         </div>
       </div>
 
@@ -325,39 +352,52 @@ export function QuestionCreatePage() {
         </div>
       )}
 
-      {/* Colonna unica: Classificazione, Composizione e Opzioni aggiuntive
-          (Note + Allegati) stanno tutte chiuse di default, quindi la CTA resta
-          a vista senza dover scorrere granché. */}
+      {/* Manuale scelto in AddQuestionDialog — solo informativo, in testa al contenuto: è
+          l'unica cosa che il sistema sa e l'utente no (se il manuale è "pronto" per la
+          generazione a batch), vale la pena renderla visibile qui. Grigio/muted, non amber
+          come il banner di campagna sopra: quello è un avviso operativo, questo è solo
+          contesto. Assente se si arriva qui senza passare da AddQuestionDialog (es. link
+          diretto) — niente banner vuoto. */}
+      {manualeTitle && (
+        <div className="flex shrink-0 items-center gap-2 border-b bg-muted/30 px-8 py-2 text-sm text-muted-foreground">
+          <BookOpen className="h-4 w-4 shrink-0" />
+          <span>
+            Manuale di riferimento:{' '}
+            <span className="font-medium text-foreground">{manualeTitle}</span>
+          </span>
+        </div>
+      )}
+
+      {/* Colonna unica: Classificazione (aperta di default), Composizione e
+          Gestisci revisione — la CTA finale vive qui in fondo, fuori
+          dall'accordion, al termine del flusso multistep. */}
       <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-3xl space-y-8 px-10 py-8">
+        <div className="mx-auto max-w-4xl px-10 py-8">
           <QuestionSetupAccordion
-            key={resetKey}
             hierarchy={hierarchy}
             disabled={form.isReadOnly}
             type={proposalType}
             onTypeChange={setProposalType}
-            quantity={proposalQuantity}
             onQuantityChange={setProposalQuantity}
             reviewerId={proposalReviewerId}
             onReviewerIdChange={setProposalReviewerId}
             summaryOpen={summaryOpen}
             onExitSummary={handleExitSummary}
+            manualeTitle={manualeTitle}
           />
 
-          <div className="flex items-center justify-between gap-3">
-            <Button variant="ghost" onClick={handleResetForm} disabled={form.isReadOnly}>
-              <RotateCcw className="h-4 w-4" />
-              Resetta form
-            </Button>
-            <Button
-              size="lg"
-              disabled={form.isReadOnly || !canGenerate}
-              onClick={() => setSummaryOpen(true)}
-            >
-              <Plus className="h-4 w-4" />
-              Crea Bozze
-            </Button>
-          </div>
+          {!reviewMode && (
+            <div className="flex justify-end pt-6">
+              <Button
+                size="lg"
+                disabled={form.isReadOnly || !canGenerate}
+                onClick={() => setSummaryOpen(true)}
+              >
+                <Plus className="h-4 w-4" />
+                Crea Domanda
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -367,24 +407,29 @@ export function QuestionCreatePage() {
         onConfirm={handleConfirmSubmit}
       />
 
-      <Dialog open={confirmLeaveOpen} onOpenChange={setConfirmLeaveOpen}>
-        <DialogContent showCloseButton={false}>
-          <DialogHeader>
-            <DialogTitle>Vuoi lasciare la pagina?</DialogTitle>
-            <DialogDescription>
-              Ci sono modifiche non salvate. Se esci ora, andranno perse.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setConfirmLeaveOpen(false)}>
-              Rimani
-            </Button>
-            <Button variant="destructive" onClick={handleConfirmLeave}>
-              Esci senza salvare
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* AlertDialog, non Dialog: è una decisione bloccante — non deve chiudersi
+          cliccando fuori o con Esc, solo scegliendo esplicitamente una delle
+          due azioni. Il click fuori è già bloccato di default da Radix per
+          AlertDialog; l'Esc lo blocchiamo esplicitamente qui. */}
+      <AlertDialog open={confirmLeaveOpen} onOpenChange={setConfirmLeaveOpen}>
+        <AlertDialogContent onEscapeKeyDown={(e) => e.preventDefault()}>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Hai fatto delle modifiche, vuoi scartarle e uscire?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Le modifiche non salvate andranno perse.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Continua a modificare</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmLeave}
+              className={buttonVariants({ variant: 'destructive' })}
+            >
+              Scarta ed esci
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

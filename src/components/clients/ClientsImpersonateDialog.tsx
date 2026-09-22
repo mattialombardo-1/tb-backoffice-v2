@@ -59,12 +59,16 @@ export function ClientsImpersonateDialog({ client, idToken, onClose }: Props) {
     }
   };
 
-  const clientLabel =
-    [client?.name, client?.surname].filter(Boolean).join(' ') || client?.email;
+  const clientLabel = [client?.name, client?.surname].filter(Boolean).join(' ') || client?.email;
 
   return (
-    <Dialog open={!!client} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent className="sm:max-w-md">
+    <Dialog
+      open={!!client}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
+      <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Seleziona brand per impersonificazione</DialogTitle>
         </DialogHeader>
@@ -98,10 +102,12 @@ export function ClientsImpersonateDialog({ client, idToken, onClose }: Props) {
                           : 'border-border hover:border-muted-foreground/40 hover:bg-muted/40'
                       )}
                     >
-                      <div className={cn(
-                        'flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 transition-colors',
-                        isSelected ? 'border-primary' : 'border-muted-foreground/40'
-                      )}>
+                      <div
+                        className={cn(
+                          'flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 transition-colors',
+                          isSelected ? 'border-primary' : 'border-muted-foreground/40'
+                        )}
+                      >
                         {isSelected && <div className="h-2 w-2 rounded-full bg-primary" />}
                       </div>
                       <div className="flex-1 min-w-0">

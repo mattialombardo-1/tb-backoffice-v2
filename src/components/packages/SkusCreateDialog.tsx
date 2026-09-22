@@ -57,7 +57,10 @@ export function SkusCreateDialog({ open, isLoading, onConfirm, onCancel }: SkusC
   };
 
   const handleOpenChange = (isOpen: boolean) => {
-    if (!isOpen) { reset(); onCancel(); }
+    if (!isOpen) {
+      reset();
+      onCancel();
+    }
   };
 
   const toggleBrand = (id: string) => {
@@ -87,7 +90,7 @@ export function SkusCreateDialog({ open, isLoading, onConfirm, onCancel }: SkusC
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-4xl">
+      <DialogContent className="max-w-4xl">
         <DialogHeader>
           <DialogTitle>{t('packages.createSkuDialog.title')}</DialogTitle>
         </DialogHeader>
@@ -124,9 +127,13 @@ export function SkusCreateDialog({ open, isLoading, onConfirm, onCancel }: SkusC
               {t('packages.createSkuDialog.brandLabel')} <span className="text-destructive">*</span>
             </Label>
             {brandsQuery.isLoading ? (
-              <p className="text-sm text-muted-foreground">{t('packages.createSkuDialog.brandLoading')}</p>
+              <p className="text-sm text-muted-foreground">
+                {t('packages.createSkuDialog.brandLoading')}
+              </p>
             ) : brands.length === 0 ? (
-              <p className="text-sm text-muted-foreground italic">{t('packages.createSkuDialog.brandEmpty')}</p>
+              <p className="text-sm text-muted-foreground italic">
+                {t('packages.createSkuDialog.brandEmpty')}
+              </p>
             ) : (
               <div className="space-y-2 rounded-md border px-3 py-2 max-h-40 overflow-y-auto">
                 {brands.map((b) => (
@@ -137,7 +144,10 @@ export function SkusCreateDialog({ open, isLoading, onConfirm, onCancel }: SkusC
                       onCheckedChange={() => toggleBrand(b._id)}
                       disabled={isLoading}
                     />
-                    <label htmlFor={`brand-${b._id}`} className="text-sm cursor-pointer select-none">
+                    <label
+                      htmlFor={`brand-${b._id}`}
+                      className="text-sm cursor-pointer select-none"
+                    >
                       {b.name}
                     </label>
                   </div>
@@ -147,9 +157,7 @@ export function SkusCreateDialog({ open, isLoading, onConfirm, onCancel }: SkusC
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="sku-url">
-              {t('packages.createSkuDialog.urlLabel')}
-            </Label>
+            <Label htmlFor="sku-url">{t('packages.createSkuDialog.urlLabel')}</Label>
             <Input
               id="sku-url"
               value={url}
@@ -164,13 +172,18 @@ export function SkusCreateDialog({ open, isLoading, onConfirm, onCancel }: SkusC
             <Button
               type="button"
               variant="outline"
-              onClick={() => { reset(); onCancel(); }}
+              onClick={() => {
+                reset();
+                onCancel();
+              }}
               disabled={isLoading}
             >
               {t('common.cancel')}
             </Button>
             <Button type="submit" disabled={isLoading || !canSubmit}>
-              {isLoading ? t('packages.createSkuDialog.creating') : t('packages.createSkuDialog.create')}
+              {isLoading
+                ? t('packages.createSkuDialog.creating')
+                : t('packages.createSkuDialog.create')}
             </Button>
           </DialogFooter>
         </form>

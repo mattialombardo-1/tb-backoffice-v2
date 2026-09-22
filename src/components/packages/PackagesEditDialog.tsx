@@ -161,7 +161,7 @@ export function PackagesEditDialog({
         if (!v) onCancel();
       }}
     >
-      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{t('packages.editPackageDialog.title')}</DialogTitle>
         </DialogHeader>

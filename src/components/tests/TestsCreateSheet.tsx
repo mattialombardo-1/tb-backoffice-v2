@@ -91,7 +91,10 @@ export function TestsCreateSheet({ open, onOpenChange, onSuccess }: TestsCreateS
   const argomenti = argomentiQuery.data ?? [];
 
   const sottoArgomentiQuery = useQuery({
-    queryKey: queryKeys.questions.sottoArgomenti(draft.subjectId || '__none__', draft.topicId || '__none__'),
+    queryKey: queryKeys.questions.sottoArgomenti(
+      draft.subjectId || '__none__',
+      draft.topicId || '__none__'
+    ),
     queryFn: ({ signal }) =>
       questionsService.getSottoArgomenti(client, draft.subjectId, draft.topicId, signal),
     enabled: open && !!draft.subjectId && !!draft.topicId,
@@ -124,12 +127,25 @@ export function TestsCreateSheet({ open, onOpenChange, onSuccess }: TestsCreateS
   // ── Syllabus draft helpers ────────────────────────────────────────────────
   const setDraftSubject = (id: string) => {
     const found = materie.find((m) => m.id === id);
-    setDraft({ subjectId: id, subjectName: found?.name ?? '', topicId: '', topicName: '', subtopicId: '', subtopicName: '' });
+    setDraft({
+      subjectId: id,
+      subjectName: found?.name ?? '',
+      topicId: '',
+      topicName: '',
+      subtopicId: '',
+      subtopicName: '',
+    });
   };
 
   const setDraftTopic = (id: string) => {
     const found = argomenti.find((a) => a.id === id);
-    setDraft((prev) => ({ ...prev, topicId: id, topicName: found?.name ?? '', subtopicId: '', subtopicName: '' }));
+    setDraft((prev) => ({
+      ...prev,
+      topicId: id,
+      topicName: found?.name ?? '',
+      subtopicId: '',
+      subtopicName: '',
+    }));
   };
 
   const setDraftSubtopic = (id: string) => {
@@ -167,10 +183,7 @@ export function TestsCreateSheet({ open, onOpenChange, onSuccess }: TestsCreateS
     !isNaN(Number(scores.wrong));
 
   const canSubmit =
-    !isSubmitting &&
-    name.trim().length > 0 &&
-    selectedBrandIds.length > 0 &&
-    scoresValid;
+    !isSubmitting && name.trim().length > 0 && selectedBrandIds.length > 0 && scoresValid;
 
   // ── Submit ────────────────────────────────────────────────────────────────
   const handleSubmit = async () => {
@@ -206,7 +219,7 @@ export function TestsCreateSheet({ open, onOpenChange, onSuccess }: TestsCreateS
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-2xl flex flex-col p-0">
+      <SheetContent side="right" className="w-full max-w-2xl flex flex-col p-0">
         <SheetHeader className="border-b px-6 py-4 shrink-0">
           <SheetTitle>Crea nuovo test</SheetTitle>
           <SheetDescription>
@@ -263,7 +276,10 @@ export function TestsCreateSheet({ open, onOpenChange, onSuccess }: TestsCreateS
                       onCheckedChange={() => toggleBrand(b._id)}
                       disabled={isSubmitting}
                     />
-                    <label htmlFor={`brand-${b._id}`} className="text-sm cursor-pointer select-none">
+                    <label
+                      htmlFor={`brand-${b._id}`}
+                      className="text-sm cursor-pointer select-none"
+                    >
                       {b.name}
                     </label>
                   </div>
@@ -321,9 +337,7 @@ export function TestsCreateSheet({ open, onOpenChange, onSuccess }: TestsCreateS
           {/* ── Syllabus ── */}
           <div className="space-y-3">
             <div>
-              <Label>
-                Syllabus
-              </Label>
+              <Label>Syllabus</Label>
             </div>
 
             {/* Entry list */}
@@ -368,7 +382,7 @@ export function TestsCreateSheet({ open, onOpenChange, onSuccess }: TestsCreateS
             {/* Add entry form */}
             <div className="rounded-md border p-3 space-y-3 bg-muted/30">
               <p className="text-xs font-medium text-muted-foreground">Aggiungi voce</p>
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+              <div className="grid grid-cols-3 gap-2">
                 {/* Materia */}
                 <div className="space-y-1">
                   <Label className="text-xs">Materia</Label>
@@ -396,7 +410,9 @@ export function TestsCreateSheet({ open, onOpenChange, onSuccess }: TestsCreateS
                       value={draft.topicId}
                       onValueChange={setDraftTopic}
                       options={argomenti.map((a) => ({ value: a.id, label: a.name }))}
-                      placeholder={draft.subjectId ? 'Seleziona argomento' : 'Prima seleziona materia'}
+                      placeholder={
+                        draft.subjectId ? 'Seleziona argomento' : 'Prima seleziona materia'
+                      }
                       searchPlaceholder="Cerca argomento…"
                       disabled={!draft.subjectId || isSubmitting}
                     />
@@ -417,8 +433,8 @@ export function TestsCreateSheet({ open, onOpenChange, onSuccess }: TestsCreateS
                         !draft.topicId
                           ? 'Prima seleziona argomento'
                           : sottoArgomenti.length === 0
-                          ? 'Nessuno disponibile'
-                          : 'Opzionale'
+                            ? 'Nessuno disponibile'
+                            : 'Opzionale'
                       }
                       searchPlaceholder="Cerca sotto-argomento…"
                       disabled={!draft.topicId || sottoArgomenti.length === 0 || isSubmitting}
@@ -446,7 +462,7 @@ export function TestsCreateSheet({ open, onOpenChange, onSuccess }: TestsCreateS
             Annulla
           </Button>
           <Button onClick={handleSubmit} disabled={!canSubmit}>
-            {isSubmitting ? <Loader className='animate-spin' /> : 'Crea test'}
+            {isSubmitting ? <Loader className="animate-spin" /> : 'Crea test'}
           </Button>
         </div>
       </SheetContent>

@@ -13,6 +13,7 @@
     "confirm": "Conferma",
     "confirming": "Salvataggio...",
     "retry": "Riprova",
+    "refresh": "Aggiorna",
     "close": "Chiudi",
     "error": "Errore",
     "loading": "Caricamento...",
@@ -263,7 +264,11 @@
   "questions": {
     "title": "Domande",
     "subtitle": "Gestisci le domande del catalogo",
-    "createBtn": "Crea domanda",
+    "createBtn": "Crea Domanda",
+    "addDialog": {
+      "title": "Crea Domanda",
+      "desc": "Scegli il manuale di partenza"
+    },
     "noResults": "Nessuna domanda presente",
     "noResultsFiltered": "Nessun risultato per i filtri selezionati",
     "resetFilters": "Reset filtri",
@@ -303,6 +308,7 @@
     },
     "bulk": {
       "toggle": "Selezione multipla",
+      "cancelSelection": "Annulla selezione",
       "todoBadge": "TODO backend",
       "selected_one": "{{count}} selezionata",
       "selected_other": "{{count}} selezionate",
@@ -478,7 +484,7 @@
       "draftSaved": "Bozza salvata",
       "errorSave": "Errore durante il salvataggio",
       "allFieldsRequired": "Completa tutti i campi obbligatori prima di inviare",
-      "submitted": "Domanda inviata al revisore",
+      "submitted": "Domanda inviata a {{name}}",
       "errorSubmit": "Errore durante l'invio",
       "error": "Errore"
     },
@@ -1055,6 +1061,7 @@
     "title": "Domande da revisionare",
     "subtitle": "Le domande in attesa di revisione assegnate a te.",
     "empty": "Nessuna domanda da revisionare",
+    "noResultsFiltered": "Nessun risultato per i filtri selezionati",
     "review": "Revisiona",
     "reviewTitle": "Revisiona Domanda",
     "readOnlyBadge": "Sola lettura",
@@ -1066,12 +1073,41 @@
     "noText": "(testo vuoto)",
     "table": {
       "text": "Domanda",
-      "subject": "Materia / Argomento",
+      "materia": "Materia",
+      "argomento": "Argomento",
       "difficulty": "Difficoltà",
       "createdAt": "Creata il"
     },
     "errorTitle": "Errore nel caricamento",
-    "errorDesc": "Non è stato possibile caricare le domande da revisionare. Riprova."
+    "errorDesc": "Non è stato possibile caricare le domande da revisionare. Riprova.",
+    "filters": {
+      "search": "Cerca per testo o ID…",
+      "outcome": "Esito"
+    },
+    "resetFilters": "Reset filtri",
+    "bulk": {
+      "toggle": "Seleziona domande",
+      "selectAll": "Seleziona tutto ({{count}})",
+      "selectAllAction": "Seleziona tutte le domande",
+      "selectAction": "Seleziona domanda {{index}}",
+      "selectBatchAction": "Seleziona tutte le domande di {{materia}} · {{argomento}}",
+      "rejectAction": "Rigetta",
+      "approveAction": "Approva",
+      "rejectDialogTitle": "Rigetta in blocco",
+      "rejectDialogDesc": "Seleziona il motivo: le domande selezionate usciranno dalla coda di revisione.",
+      "reasonLabel": "Motivazione",
+      "reasonPlaceholder": "Seleziona un motivo",
+      "reasonCustomPlaceholder": "Descrivi brevemente il motivo",
+      "rejectConfirm": "Rigetta ({{count}})",
+      "approveSuccess_one": "{{count}} domanda approvata",
+      "approveSuccess_other": "{{count}} domande approvate",
+      "approveFailed": "{{count}} approvazioni non riuscite",
+      "approveError": "Errore durante l'approvazione in blocco",
+      "rejectSuccess_one": "{{count}} domanda rigettata",
+      "rejectSuccess_other": "{{count}} domande rigettate",
+      "rejectFailed": "{{count}} rigetti non riusciti",
+      "rejectError": "Errore durante il rigetto in blocco"
+    }
   },
   "attributes": {
     "title": "Attributi",

@@ -198,10 +198,7 @@ export function TestsEditSheet({ test, onSuccess, onCancel }: TestsEditSheetProp
     !isNaN(Number(scores.wrong));
 
   const canSubmit =
-    !isSubmitting &&
-    name.trim().length > 0 &&
-    selectedBrandIds.length > 0 &&
-    scoresValid;
+    !isSubmitting && name.trim().length > 0 && selectedBrandIds.length > 0 && scoresValid;
 
   // ── Submit ────────────────────────────────────────────────────────────────
   const handleSubmit = async () => {
@@ -237,12 +234,10 @@ export function TestsEditSheet({ test, onSuccess, onCancel }: TestsEditSheetProp
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-2xl flex flex-col p-0">
+      <SheetContent side="right" className="w-full max-w-2xl flex flex-col p-0">
         <SheetHeader className="border-b px-6 py-4 shrink-0">
           <SheetTitle>Modifica test</SheetTitle>
-          <SheetDescription>
-            {test?.name ?? ''}
-          </SheetDescription>
+          <SheetDescription>{test?.name ?? ''}</SheetDescription>
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
@@ -361,9 +356,7 @@ export function TestsEditSheet({ test, onSuccess, onCancel }: TestsEditSheetProp
               {/* ── Syllabus ── */}
               <div className="space-y-3">
                 <div>
-                  <Label>
-                    Syllabus
-                  </Label>
+                  <Label>Syllabus</Label>
                 </div>
 
                 {/* Entry list */}
@@ -408,7 +401,7 @@ export function TestsEditSheet({ test, onSuccess, onCancel }: TestsEditSheetProp
                 {/* Add entry form */}
                 <div className="rounded-md border p-3 space-y-3 bg-muted/30">
                   <p className="text-xs font-medium text-muted-foreground">Aggiungi voce</p>
-                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                  <div className="grid grid-cols-3 gap-2">
                     {/* Materia */}
                     <div className="space-y-1">
                       <Label className="text-xs">Materia</Label>
@@ -459,8 +452,8 @@ export function TestsEditSheet({ test, onSuccess, onCancel }: TestsEditSheetProp
                             !draft.topicId
                               ? 'Prima seleziona argomento'
                               : sottoArgomenti.length === 0
-                              ? 'Nessuno disponibile'
-                              : 'Opzionale'
+                                ? 'Nessuno disponibile'
+                                : 'Opzionale'
                           }
                           searchPlaceholder="Cerca sotto-argomento…"
                           disabled={!draft.topicId || sottoArgomenti.length === 0 || isSubmitting}

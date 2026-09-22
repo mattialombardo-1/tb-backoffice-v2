@@ -37,8 +37,13 @@ export function SkusEditDialog({ sku, isLoading, onConfirm, onCancel }: SkusEdit
   };
 
   return (
-    <Dialog open={!!sku} onOpenChange={(open) => { if (!open) onCancel(); }}>
-      <DialogContent className="sm:max-w-4xl">
+    <Dialog
+      open={!!sku}
+      onOpenChange={(open) => {
+        if (!open) onCancel();
+      }}
+    >
+      <DialogContent className="max-w-4xl">
         <DialogHeader>
           <DialogTitle>{t('packages.editSkuDialog.title')}</DialogTitle>
         </DialogHeader>

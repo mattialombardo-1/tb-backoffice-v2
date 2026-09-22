@@ -24,16 +24,28 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { AddSlotSheet } from './AddSlotSheet';
-import { CampaignDetailFilters, applyFilters, EMPTY_CAMPAIGN_FILTERS } from './CampaignDetailFilters';
+import {
+  CampaignDetailFilters,
+  applyFilters,
+  EMPTY_CAMPAIGN_FILTERS,
+} from './CampaignDetailFilters';
 import type { CampaignDetailFiltersState } from './CampaignDetailFilters';
-import type { CampaignQuestionSlot, CampaignQuestionStatus, NewCampaignQuestionSlot } from '@/lib/types/campaigns';
+import type {
+  CampaignQuestionSlot,
+  CampaignQuestionStatus,
+  NewCampaignQuestionSlot,
+} from '@/lib/types/campaigns';
 import type { DifficultyLevel } from '@/lib/types/questions';
 
 const STATUS_CLASS: Record<CampaignQuestionStatus, string> = {
-  draft: 'border-zinc-400 bg-zinc-100 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400',
-  in_review: 'border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300',
-  approved: 'border-emerald-500 bg-emerald-100 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-300',
-  rejected: 'border-rose-500 bg-rose-100 text-rose-700 dark:border-rose-800 dark:bg-rose-950 dark:text-rose-300',
+  draft:
+    'border-zinc-400 bg-zinc-100 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400',
+  in_review:
+    'border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300',
+  approved:
+    'border-emerald-500 bg-emerald-100 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-300',
+  rejected:
+    'border-rose-500 bg-rose-100 text-rose-700 dark:border-rose-800 dark:bg-rose-950 dark:text-rose-300',
 };
 
 const DIFFICULTY_FROM_NUM: Record<number, DifficultyLevel> = {
@@ -71,9 +83,7 @@ function SlotRow({ slot, index, userEmailMap, onEdit, onDelete }: SlotRowProps) 
       </td>
       <td className="px-4 py-3 text-sm">{slot.subjectName}</td>
       <td className="px-4 py-3 text-sm">{slot.topicName}</td>
-      <td className="px-4 py-3 text-sm text-center">
-        {difficultyLabel(slot.difficulty)}
-      </td>
+      <td className="px-4 py-3 text-sm text-center">{difficultyLabel(slot.difficulty)}</td>
       <td className="px-4 py-3 text-sm">
         <span className="text-xs">{userEmailMap[slot.assigneeId] ?? slot.assigneeId}</span>
       </td>
@@ -134,10 +144,16 @@ export function CampaignDetailPage() {
 
   // Sheet state — null = closed, undefined slot = add mode, defined slot = edit mode
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [editTarget, setEditTarget] = useState<{ slot: CampaignQuestionSlot; index: number } | null>(null);
+  const [editTarget, setEditTarget] = useState<{
+    slot: CampaignQuestionSlot;
+    index: number;
+  } | null>(null);
 
   // Delete confirmation state
-  const [deleteTarget, setDeleteTarget] = useState<{ slot: CampaignQuestionSlot; index: number } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{
+    slot: CampaignQuestionSlot;
+    index: number;
+  } | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
@@ -242,8 +258,17 @@ export function CampaignDetailPage() {
         </div>
         {!isLoading && campaign && (
           <div className="text-right">
-            <div className="text-sm font-medium">{pct}% {t('campaigns.table.totalQuestions').toLowerCase()}</div>
-            <div className={cn('text-xs tabular-nums', isFull ? 'text-emerald-600 dark:text-emerald-400 font-medium' : 'text-muted-foreground')}>
+            <div className="text-sm font-medium">
+              {pct}% {t('campaigns.table.totalQuestions').toLowerCase()}
+            </div>
+            <div
+              className={cn(
+                'text-xs tabular-nums',
+                isFull
+                  ? 'text-emerald-600 dark:text-emerald-400 font-medium'
+                  : 'text-muted-foreground'
+              )}
+            >
               {doneCount} / {total}
             </div>
           </div>
@@ -253,7 +278,10 @@ export function CampaignDetailPage() {
       {!isLoading && campaign && (
         <div className="w-full h-2 rounded-full bg-muted overflow-hidden">
           <div
-            className={cn('h-full rounded-full transition-all', isFull ? 'bg-emerald-500' : 'bg-primary')}
+            className={cn(
+              'h-full rounded-full transition-all',
+              isFull ? 'bg-emerald-500' : 'bg-primary'
+            )}
             style={{ width: `${pct}%` }}
           />
         </div>
@@ -262,11 +290,7 @@ export function CampaignDetailPage() {
       <Card>
         <CardHeader className="pb-3 flex flex-row items-center justify-between">
           <CardTitle className="text-base">{t('campaigns.detail.slots')}</CardTitle>
-          <Button
-            size="sm"
-            onClick={openAdd}
-            disabled={isLoading || !!error}
-          >
+          <Button size="sm" onClick={openAdd} disabled={isLoading || !!error}>
             <Plus className="h-4 w-4 mr-1.5" />
             {t('campaigns.detail.addSlot')}
           </Button>
@@ -319,13 +343,19 @@ export function CampaignDetailPage() {
                   Array.from({ length: 6 }).map((_, i) => <SlotRowSkeleton key={i} />)
                 ) : allSlots.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="px-4 py-12 text-center text-sm text-muted-foreground">
+                    <td
+                      colSpan={9}
+                      className="px-4 py-12 text-center text-sm text-muted-foreground"
+                    >
                       {t('campaigns.detail.noSlots')}
                     </td>
                   </tr>
                 ) : filteredSlots.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="px-4 py-12 text-center text-sm text-muted-foreground">
+                    <td
+                      colSpan={9}
+                      className="px-4 py-12 text-center text-sm text-muted-foreground"
+                    >
                       Nessuno slot corrisponde ai filtri selezionati.
                     </td>
                   </tr>
@@ -361,9 +391,14 @@ export function CampaignDetailPage() {
       {/* Delete confirmation dialog */}
       <Dialog
         open={deleteTarget != null}
-        onOpenChange={(v) => { if (!v && !deleting) { setDeleteTarget(null); setDeleteError(null); } }}
+        onOpenChange={(v) => {
+          if (!v && !deleting) {
+            setDeleteTarget(null);
+            setDeleteError(null);
+          }
+        }}
       >
-        <DialogContent className="sm:max-w-sm">
+        <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>{t('campaigns.detail.deleteSlot.title')}</DialogTitle>
             <DialogDescription>
@@ -377,7 +412,10 @@ export function CampaignDetailPage() {
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => { setDeleteTarget(null); setDeleteError(null); }}
+              onClick={() => {
+                setDeleteTarget(null);
+                setDeleteError(null);
+              }}
               disabled={deleting}
             >
               {t('common.cancel')}

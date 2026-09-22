@@ -41,7 +41,7 @@ export function TestsGrid({ data, isLoading, error, onRetry, onEdit, onDelete }:
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-4 gap-4">
         {Array.from({ length: 8 }).map((_, i) => (
           <SkeletonCard key={i} />
         ))}
@@ -72,14 +72,14 @@ export function TestsGrid({ data, isLoading, error, onRetry, onEdit, onDelete }:
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+    <div className="grid grid-cols-4 gap-4">
       {data.map((test) => (
         <div
           key={test.id}
           className={cn(
             'group relative rounded-xl border bg-card p-5',
             'flex flex-col gap-2',
-            'transition-all duration-150',
+            'transition-all duration-150'
           )}
         >
           {/* Header */}

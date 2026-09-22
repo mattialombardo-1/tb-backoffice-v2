@@ -23,9 +23,12 @@ import type { Pool, PoolStatus } from '@/lib/types/pools';
 import { POOL_STATUS_LABELS } from '@/lib/types/pools';
 
 const STATUS_CONFIG: Record<PoolStatus, string> = {
-  ACTIVE: 'border-emerald-500 bg-emerald-100 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-300',
-  INACTIVE: 'border-zinc-400 bg-zinc-100 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400',
-  DRAFT: 'border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300',
+  ACTIVE:
+    'border-emerald-500 bg-emerald-100 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-300',
+  INACTIVE:
+    'border-zinc-400 bg-zinc-100 text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400',
+  DRAFT:
+    'border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300',
 };
 
 const COLUMNS = 5;
@@ -76,7 +79,7 @@ export function PoolsTable({
           <TableRow>
             {isBulkMode && <TableHead className="w-10" />}
             <TableHead>{t('pools.table.name')}</TableHead>
-            <TableHead className="hidden sm:table-cell">{t('pools.table.description')}</TableHead>
+            <TableHead>{t('pools.table.description')}</TableHead>
             <TableHead>{t('pools.table.status')}</TableHead>
             <TableHead className="text-right">{t('pools.table.totalQuestions')}</TableHead>
             <TableHead className="w-10" />
@@ -96,7 +99,10 @@ export function PoolsTable({
             </TableRow>
           ) : data.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={COLUMNS} className="h-24 text-center text-sm text-muted-foreground">
+              <TableCell
+                colSpan={COLUMNS}
+                className="h-24 text-center text-sm text-muted-foreground"
+              >
                 {t('pools.noResults')}
               </TableCell>
             </TableRow>
@@ -108,7 +114,7 @@ export function PoolsTable({
                 <TableRow
                   key={pool.id}
                   className="group cursor-pointer hover:bg-muted/50"
-                  onClick={() => isBulkMode ? onToggleItem(pool.id) : onRowClick(pool)}
+                  onClick={() => (isBulkMode ? onToggleItem(pool.id) : onRowClick(pool))}
                   data-selected={selected || undefined}
                 >
                   {isBulkMode && (
@@ -121,7 +127,7 @@ export function PoolsTable({
                     </TableCell>
                   )}
                   <TableCell className="font-medium py-4">{pool.name}</TableCell>
-                  <TableCell className="hidden sm:table-cell py-4 text-sm text-muted-foreground max-w-xs truncate">
+                  <TableCell className="py-4 text-sm text-muted-foreground max-w-xs truncate">
                     {pool.description ?? '—'}
                   </TableCell>
                   <TableCell className="py-4">
@@ -147,7 +153,9 @@ export function PoolsTable({
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => onStatusChange(pool, otherStatus)}>
-                            {t('pools.grid.setStatus', { status: POOL_STATUS_LABELS[otherStatus].toLowerCase() })}
+                            {t('pools.grid.setStatus', {
+                              status: POOL_STATUS_LABELS[otherStatus].toLowerCase(),
+                            })}
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem

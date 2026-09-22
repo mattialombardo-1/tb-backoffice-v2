@@ -16,7 +16,11 @@ import {
 import { Plus, Trash2 } from 'lucide-react';
 import { useApiClient } from '@/lib/api/useApiClient';
 import { communityRolesService } from '@/lib/services/communityRoles';
-import type { CommunityRole, CommunityRoleCapability, UpdateCommunityRolePayload } from '@/lib/types/communityRoles';
+import type {
+  CommunityRole,
+  CommunityRoleCapability,
+  UpdateCommunityRolePayload,
+} from '@/lib/types/communityRoles';
 
 const ACTIONS = ['CREATE', 'READ', 'UPDATE', 'DELETE'] as const;
 type ActionKey = (typeof ACTIONS)[number];
@@ -133,10 +137,7 @@ export function RolesEditDialog({ role, onSuccess, onCancel }: RolesEditDialogPr
 
   const rankNum = parseInt(rank, 10);
   const canSubmit =
-    !isSubmitting &&
-    displayName.trim().length > 0 &&
-    rank.trim().length > 0 &&
-    !isNaN(rankNum);
+    !isSubmitting && displayName.trim().length > 0 && rank.trim().length > 0 && !isNaN(rankNum);
 
   const handleSubmit = async () => {
     if (!role || !canSubmit) return;
@@ -161,7 +162,7 @@ export function RolesEditDialog({ role, onSuccess, onCancel }: RolesEditDialogPr
 
   return (
     <Sheet open={!!role} onOpenChange={handleOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-xl flex flex-col p-0">
+      <SheetContent side="right" className="w-full max-w-xl flex flex-col p-0">
         <SheetHeader className="border-b px-6 py-4 shrink-0">
           <SheetTitle>{t('roles.editDialog.title')}</SheetTitle>
           <SheetDescription>{role?.displayName ?? ''}</SheetDescription>

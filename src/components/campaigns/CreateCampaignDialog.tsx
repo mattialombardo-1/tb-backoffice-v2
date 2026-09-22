@@ -62,7 +62,7 @@ export function CreateCampaignDialog({ open, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>{t('campaigns.createDialog.title')}</DialogTitle>
         </DialogHeader>

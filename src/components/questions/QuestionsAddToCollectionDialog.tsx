@@ -157,7 +157,7 @@ export function QuestionsAddToCollectionDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FolderPlus className="h-5 w-5" />
@@ -360,13 +360,13 @@ export function QuestionsAddToCollectionDialog({
           )}
         </div>
 
-        <DialogFooter className="sm:justify-between">
+        <DialogFooter className="justify-between">
           <Button
             variant="ghost"
             onClick={() => setStep((s) => (s === 1 ? s : ((s - 1) as Step)))}
             disabled={step === 1 || submitting}
           >
-            <ArrowLeft className="mr-1.5 h-4 w-4" />
+            <ArrowLeft className="h-4 w-4" />
             {t('common.back')}
           </Button>
 
@@ -394,12 +394,12 @@ export function QuestionsAddToCollectionDialog({
               >
                 {submitting ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="h-4 w-4 animate-spin" />
                     {t('questions.addToCollection.adding')}
                   </>
                 ) : (
                   <>
-                    <Check className="mr-2 h-4 w-4" />
+                    <Check className="h-4 w-4" />
                     {t('questions.addToCollection.confirm', { count: plan?.toAdd.length ?? 0 })}
                   </>
                 )}

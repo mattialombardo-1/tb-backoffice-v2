@@ -29,6 +29,7 @@ import { Route as AuthenticatedCollectionsIndexRouteImport } from './routes/_aut
 import { Route as AuthenticatedCampaignsIndexRouteImport } from './routes/_authenticated/campaigns/index'
 import { Route as AuthenticatedQuestionsToReviewRouteImport } from './routes/_authenticated/questions/to-review'
 import { Route as AuthenticatedQuestionsImportRouteImport } from './routes/_authenticated/questions/import'
+import { Route as AuthenticatedQuestionsCreateManualRouteImport } from './routes/_authenticated/questions/create-manual'
 import { Route as AuthenticatedQuestionsCreateRouteImport } from './routes/_authenticated/questions/create'
 import { Route as AuthenticatedQuestionsQuestionIdRouteImport } from './routes/_authenticated/questions/$questionId'
 import { Route as AuthenticatedPoolsPoolIdRouteImport } from './routes/_authenticated/pools/$poolId'
@@ -140,6 +141,12 @@ const AuthenticatedQuestionsImportRoute =
     path: '/questions/import',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedQuestionsCreateManualRoute =
+  AuthenticatedQuestionsCreateManualRouteImport.update({
+    id: '/questions/create-manual',
+    path: '/questions/create-manual',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedQuestionsCreateRoute =
   AuthenticatedQuestionsCreateRouteImport.update({
     id: '/questions/create',
@@ -189,6 +196,7 @@ export interface FileRoutesByFullPath {
   '/pools/$poolId': typeof AuthenticatedPoolsPoolIdRoute
   '/questions/$questionId': typeof AuthenticatedQuestionsQuestionIdRoute
   '/questions/create': typeof AuthenticatedQuestionsCreateRoute
+  '/questions/create-manual': typeof AuthenticatedQuestionsCreateManualRoute
   '/questions/import': typeof AuthenticatedQuestionsImportRoute
   '/questions/to-review': typeof AuthenticatedQuestionsToReviewRoute
   '/campaigns/': typeof AuthenticatedCampaignsIndexRoute
@@ -215,6 +223,7 @@ export interface FileRoutesByTo {
   '/pools/$poolId': typeof AuthenticatedPoolsPoolIdRoute
   '/questions/$questionId': typeof AuthenticatedQuestionsQuestionIdRoute
   '/questions/create': typeof AuthenticatedQuestionsCreateRoute
+  '/questions/create-manual': typeof AuthenticatedQuestionsCreateManualRoute
   '/questions/import': typeof AuthenticatedQuestionsImportRoute
   '/questions/to-review': typeof AuthenticatedQuestionsToReviewRoute
   '/campaigns': typeof AuthenticatedCampaignsIndexRoute
@@ -243,6 +252,7 @@ export interface FileRoutesById {
   '/_authenticated/pools/$poolId': typeof AuthenticatedPoolsPoolIdRoute
   '/_authenticated/questions/$questionId': typeof AuthenticatedQuestionsQuestionIdRoute
   '/_authenticated/questions/create': typeof AuthenticatedQuestionsCreateRoute
+  '/_authenticated/questions/create-manual': typeof AuthenticatedQuestionsCreateManualRoute
   '/_authenticated/questions/import': typeof AuthenticatedQuestionsImportRoute
   '/_authenticated/questions/to-review': typeof AuthenticatedQuestionsToReviewRoute
   '/_authenticated/campaigns/': typeof AuthenticatedCampaignsIndexRoute
@@ -271,6 +281,7 @@ export interface FileRouteTypes {
     | '/pools/$poolId'
     | '/questions/$questionId'
     | '/questions/create'
+    | '/questions/create-manual'
     | '/questions/import'
     | '/questions/to-review'
     | '/campaigns/'
@@ -297,6 +308,7 @@ export interface FileRouteTypes {
     | '/pools/$poolId'
     | '/questions/$questionId'
     | '/questions/create'
+    | '/questions/create-manual'
     | '/questions/import'
     | '/questions/to-review'
     | '/campaigns'
@@ -324,6 +336,7 @@ export interface FileRouteTypes {
     | '/_authenticated/pools/$poolId'
     | '/_authenticated/questions/$questionId'
     | '/_authenticated/questions/create'
+    | '/_authenticated/questions/create-manual'
     | '/_authenticated/questions/import'
     | '/_authenticated/questions/to-review'
     | '/_authenticated/campaigns/'
@@ -482,6 +495,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedQuestionsImportRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/questions/create-manual': {
+      id: '/_authenticated/questions/create-manual'
+      path: '/questions/create-manual'
+      fullPath: '/questions/create-manual'
+      preLoaderRoute: typeof AuthenticatedQuestionsCreateManualRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/questions/create': {
       id: '/_authenticated/questions/create'
       path: '/questions/create'
@@ -535,6 +555,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedPoolsPoolIdRoute: typeof AuthenticatedPoolsPoolIdRoute
   AuthenticatedQuestionsQuestionIdRoute: typeof AuthenticatedQuestionsQuestionIdRoute
   AuthenticatedQuestionsCreateRoute: typeof AuthenticatedQuestionsCreateRoute
+  AuthenticatedQuestionsCreateManualRoute: typeof AuthenticatedQuestionsCreateManualRoute
   AuthenticatedQuestionsImportRoute: typeof AuthenticatedQuestionsImportRoute
   AuthenticatedQuestionsToReviewRoute: typeof AuthenticatedQuestionsToReviewRoute
   AuthenticatedCampaignsIndexRoute: typeof AuthenticatedCampaignsIndexRoute
@@ -559,6 +580,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedPoolsPoolIdRoute: AuthenticatedPoolsPoolIdRoute,
   AuthenticatedQuestionsQuestionIdRoute: AuthenticatedQuestionsQuestionIdRoute,
   AuthenticatedQuestionsCreateRoute: AuthenticatedQuestionsCreateRoute,
+  AuthenticatedQuestionsCreateManualRoute:
+    AuthenticatedQuestionsCreateManualRoute,
   AuthenticatedQuestionsImportRoute: AuthenticatedQuestionsImportRoute,
   AuthenticatedQuestionsToReviewRoute: AuthenticatedQuestionsToReviewRoute,
   AuthenticatedCampaignsIndexRoute: AuthenticatedCampaignsIndexRoute,

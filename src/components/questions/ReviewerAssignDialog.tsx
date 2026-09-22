@@ -18,7 +18,10 @@ import { useAuth } from '@/lib/auth';
 interface ReviewerAssignDialogProps {
   open: boolean;
   onClose: () => void;
-  onConfirm: (reviewerId: string) => Promise<void>;
+  /** reviewerName è "Nome Cognome" puro (non la label del combobox, che ha anche l'email
+   *  accodata) — pensato per essere inserito nel toast di conferma del chiamante, es.
+   *  "Domanda inviata a Chiara Vitale." */
+  onConfirm: (reviewerId: string, reviewerName: string) => Promise<void>;
 }
 
 export function ReviewerAssignDialog({ open, onClose, onConfirm }: ReviewerAssignDialogProps) {
@@ -32,9 +35,17 @@ export function ReviewerAssignDialog({ open, onClose, onConfirm }: ReviewerAssig
 
   const handleConfirm = async () => {
     if (!selectedId) return;
+    const selectedReviewer = reviewers.find((r) => r._id === selectedId);
+    // Fallback all'email: capita raramente (dato non ancora arricchito da Cognito), ma un
+    // toast con {{name}} vuoto ("Domanda inviata a .") sarebbe peggio di un'email al posto
+    // del nome.
+    const reviewerName =
+      [selectedReviewer?.name, selectedReviewer?.surname].filter(Boolean).join(' ') ||
+      selectedReviewer?.email ||
+      '';
     setIsSubmitting(true);
     try {
-      await onConfirm(selectedId);
+      await onConfirm(selectedId, reviewerName);
       onClose();
     } catch {
       // Error handled by parent

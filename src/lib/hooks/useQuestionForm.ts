@@ -47,6 +47,10 @@ interface UseQuestionFormReturn {
 
   // State
   isDirty: boolean;
+  /** Riporta isDirty a false senza salvare — per chi semina il form da uno stato esterno
+   *  già noto (es. QuestionDraftEditContent da una bozza locale) e non vuole che quella
+   *  semina iniziale, che passa dagli stessi setter dell'utente, risulti già "modificato". */
+  markClean: () => void;
   isReadOnly: boolean;
   setIsReadOnly: (value: boolean) => void;
   autosaveStatus: 'idle' | 'saving' | 'saved' | 'error';
@@ -362,6 +366,8 @@ export function useQuestionForm(
     setHierarchyState(h);
   }, []);
 
+  const markClean = useCallback(() => setIsDirty(false), []);
+
   return {
     questionId,
     type,
@@ -393,6 +399,7 @@ export function useQuestionForm(
     removeExplanationImage,
 
     isDirty,
+    markClean,
     isReadOnly,
     setIsReadOnly,
     autosaveStatus,

@@ -69,7 +69,7 @@ export function PoolsGrid({
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-4 gap-4">
         {Array.from({ length: 8 }).map((_, i) => (
           <SkeletonCard key={i} />
         ))}
@@ -100,7 +100,7 @@ export function PoolsGrid({
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+    <div className="grid grid-cols-4 gap-4">
       {data.map((pool) => {
         const selected = isSelected(pool.id);
         const otherStatus: PoolStatus = pool.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
@@ -111,7 +111,7 @@ export function PoolsGrid({
             role="button"
             tabIndex={0}
             aria-pressed={isBulkMode ? selected : undefined}
-            onClick={() => isBulkMode ? onToggleItem(pool.id) : onCardClick(pool)}
+            onClick={() => (isBulkMode ? onToggleItem(pool.id) : onCardClick(pool))}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
@@ -124,7 +124,7 @@ export function PoolsGrid({
               'transition-all duration-150 outline-none',
               'focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
               !isBulkMode && 'hover:shadow-md hover:border-foreground/20 hover:-translate-y-px',
-              isBulkMode && selected && 'ring-2 ring-primary border-primary',
+              isBulkMode && selected && 'ring-2 ring-primary border-primary'
             )}
           >
             {/* Header */}
@@ -145,7 +145,12 @@ export function PoolsGrid({
               )}
 
               <div className="flex items-center gap-1 shrink-0">
-                <span className={cn('flex items-center gap-1.5 text-xs font-medium', STATUS_TEXT[pool.status])}>
+                <span
+                  className={cn(
+                    'flex items-center gap-1.5 text-xs font-medium',
+                    STATUS_TEXT[pool.status]
+                  )}
+                >
                   <span className={cn('h-1.5 w-1.5 rounded-full', STATUS_DOT[pool.status])} />
                   {POOL_STATUS_LABELS[pool.status]}
                 </span>
@@ -165,7 +170,9 @@ export function PoolsGrid({
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => onStatusChange(pool, otherStatus)}>
-                          {t('pools.grid.setStatus', { status: POOL_STATUS_LABELS[otherStatus].toLowerCase() })}
+                          {t('pools.grid.setStatus', {
+                            status: POOL_STATUS_LABELS[otherStatus].toLowerCase(),
+                          })}
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem

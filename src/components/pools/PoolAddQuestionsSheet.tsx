@@ -25,16 +25,12 @@ export function PoolAddQuestionsSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-2xl flex flex-col p-0">
+      <SheetContent side="right" className="w-full max-w-2xl flex flex-col p-0">
         <SheetHeader className="border-b px-6 py-4 shrink-0">
           <SheetTitle>{t('pools.questions.addSheet.title')}</SheetTitle>
-          <SheetDescription>
-            {t('pools.questions.addSheet.desc')}
-          </SheetDescription>
+          <SheetDescription>{t('pools.questions.addSheet.desc')}</SheetDescription>
         </SheetHeader>
-        {open && (
-          <PoolQuestionsPickerContent poolId={poolId} onAdded={onAdded} />
-        )}
+        {open && <PoolQuestionsPickerContent poolId={poolId} onAdded={onAdded} />}
       </SheetContent>
     </Sheet>
   );

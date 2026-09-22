@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { ClipboardCheck, FileQuestion, Library, PenSquare, Plus, Target } from 'lucide-react';
@@ -11,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { AddQuestionDialog } from '@/components/questions/AddQuestionDialog';
 import {
   ChartContainer,
   ChartTooltip,
@@ -120,6 +122,7 @@ function DashboardComponent() {
   const client = useApiClient();
   const user = auth.user?.profile as Record<string, unknown> | undefined;
   const name = (user?.name as string)?.split(' ')[0] ?? 'ciao';
+  const [showAddQuestionDialog, setShowAddQuestionDialog] = useState(false);
 
   const activeQ = useQuery({
     queryKey: ['dashboard', 'questions', 'ACTIVE'],
@@ -176,7 +179,7 @@ function DashboardComponent() {
   ].filter((d) => d.value > 0);
 
   const statusChartConfig: ChartConfig = Object.fromEntries(
-    statusDonutData.map((d) => [d.name, { label: d.label, color: STATUS_COLORS[d.name] }]),
+    statusDonutData.map((d) => [d.name, { label: d.label, color: STATUS_COLORS[d.name] }])
   );
 
   const chartsLoading = chartDataQ.isLoading;
@@ -194,8 +197,12 @@ function DashboardComponent() {
       </div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <StatCard label="Domande attive" value={activeQ.data?.total} isLoading={activeQ.isLoading} />
+      <div className="grid grid-cols-4 gap-4">
+        <StatCard
+          label="Domande attive"
+          value={activeQ.data?.total}
+          isLoading={activeQ.isLoading}
+        />
         <StatCard label="In revisione" value={reviewQ.data?.total} isLoading={reviewQ.isLoading} />
         <StatCard
           label="Mie revisioni"
@@ -204,18 +211,16 @@ function DashboardComponent() {
         />
         <StatCard label="Bozze" value={draftQ.data?.total} isLoading={draftQ.isLoading} />
       </div>
-      
+
       {/* Quick actions */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Azioni rapide</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-3">
-          <Button asChild>
-            <Link to="/questions/create">
-              <Plus className="h-4 w-4" />
-              Crea domanda
-            </Link>
+          <Button onClick={() => setShowAddQuestionDialog(true)}>
+            <Plus className="h-4 w-4" />
+            Aggiungi domanda
           </Button>
           <Button variant="outline" asChild>
             <Link to="/questions/to-review">
@@ -242,9 +247,9 @@ function DashboardComponent() {
       </Card>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="grid grid-cols-3 gap-6">
         {/* Weekly creation bar chart */}
-        <Card className="lg:col-span-2">
+        <Card className="col-span-2">
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Domande create per settimana</CardTitle>
             <p className="text-xs text-muted-foreground">Ultime 8 settimane</p>
@@ -255,13 +260,13 @@ function DashboardComponent() {
             ) : (
               <ChartContainer config={weeklyChartConfig} className="h-48 w-full">
                 <BarChart data={weeklyData} margin={{ top: 4, right: 4, bottom: 4, left: -20 }}>
-                  <XAxis
-                    dataKey="week"
+                  <XAxis dataKey="week" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
+                  <YAxis
                     tickLine={false}
                     axisLine={false}
+                    allowDecimals={false}
                     tick={{ fontSize: 11 }}
                   />
-                  <YAxis tickLine={false} axisLine={false} allowDecimals={false} tick={{ fontSize: 11 }} />
                   <ChartTooltip content={<ChartTooltipContent hideLabel={false} />} />
                   <Bar dataKey="domande" fill="var(--color-domande)" radius={[3, 3, 0, 0]} />
                 </BarChart>
@@ -352,7 +357,13 @@ function DashboardComponent() {
                 layout="vertical"
                 margin={{ top: 4, right: 4, bottom: 4, left: 8 }}
               >
-                <XAxis type="number" tickLine={false} axisLine={false} allowDecimals={false} tick={{ fontSize: 11 }} />
+                <XAxis
+                  type="number"
+                  tickLine={false}
+                  axisLine={false}
+                  allowDecimals={false}
+                  tick={{ fontSize: 11 }}
+                />
                 <YAxis
                   type="category"
                   dataKey="name"
@@ -396,7 +407,8 @@ function DashboardComponent() {
             <ul className="divide-y">
               {campaignsQ.data?.campaigns.map((c) => {
                 const completed = c.totalQuestions - c.remainingQuestions;
-                const pct = c.totalQuestions > 0 ? Math.round((completed / c.totalQuestions) * 100) : 0;
+                const pct =
+                  c.totalQuestions > 0 ? Math.round((completed / c.totalQuestions) * 100) : 0;
                 return (
                   <li key={c.id}>
                     <Link
@@ -481,6 +493,8 @@ function DashboardComponent() {
           )}
         </CardContent>
       </Card>
+
+      <AddQuestionDialog open={showAddQuestionDialog} onOpenChange={setShowAddQuestionDialog} />
     </div>
   );
 }

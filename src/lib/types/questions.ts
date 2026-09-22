@@ -163,6 +163,45 @@ export interface QuestionsListFilters {
   search?: string;
 }
 
+// Stato del filtro "Stato" in "Domande da revisionare" — non un vero QuestionStatus di
+// backend: myReviews() restituisce solo domande TO_REVIEW, quindi non c'è mai un DRAFT/ACTIVE/
+// INACTIVE da filtrare qui. REVIEWED è uno stato derivato lato client (vedi
+// ReviewBatchQuestion.reviewedInSession in useReviewBatches): una domanda approvata o
+// rigettata in questa sessione, non più TO_REVIEW sul server ma ancora tenuta in vista.
+export type MyReviewStatus = 'TO_REVIEW' | 'REVIEWED';
+
+export const MY_REVIEW_STATUS_LABELS: Record<MyReviewStatus, string> = {
+  TO_REVIEW: 'Da revisionare',
+  REVIEWED: 'Già revisionate',
+};
+
+// Esito della generazione asincrona del batch (brief: "in corso con avanzamento, completata,
+// parziale o in errore"). Non esiste ancora un job di generazione da interrogare — né sul
+// backend né nel mock — quindi oggi è un campo mockato lato client (vedi
+// mockOutcomeForBatch in useReviewBatches), solo per popolare il filtro nella demo. Quando
+// il backend esporrà lo stato reale del job, questo mock va sostituito con quel dato.
+export type BatchOutcome = 'IN_PROGRESS' | 'COMPLETED' | 'PARTIAL' | 'ERROR';
+
+export const BATCH_OUTCOME_LABELS: Record<BatchOutcome, string> = {
+  IN_PROGRESS: 'In corso',
+  COMPLETED: 'Completata',
+  PARTIAL: 'Parziale',
+  ERROR: 'In errore',
+};
+
+// Sottoinsieme dei filtri di QuestionsListFilters usato in "Domande da revisionare" —
+// stessi campi/nomi per coerenza, ma applicati client-side (myReviews() non ha parametri di
+// filtro: vedi useReviewBatches) invece che come query al backend.
+export interface MyReviewsFilters {
+  materias: string[];
+  argomenti: string[];
+  statuses: MyReviewStatus[];
+  outcomes: BatchOutcome[];
+  dateFrom: string;
+  dateTo: string;
+  search: string;
+}
+
 export interface QuestionsSearchQuery {
   statuses?: QuestionStatus[];
   subjectIds?: string[];

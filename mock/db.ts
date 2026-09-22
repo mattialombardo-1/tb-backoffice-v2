@@ -579,6 +579,131 @@ export function buildDb(): Db {
     });
   }
 
+  // --- rompe i batch accidentali del seed casuale ---------------------------
+  // Con 200 domande casuali capita che 2+ finiscano sulla stessa materia +
+  // argomento + giorno restando entrambe TO_REVIEW: useReviewBatches le
+  // raggrupperebbe in un "batch" a tutti gli effetti (stesso MIN_BATCH_SIZE dei
+  // batch demo sopra), anche se non sono mai state generate insieme — un
+  // ulteriore "Parziale"/"Errore"/ecc. casuale in "Domande da revisionare",
+  // ridondante coi tre batch demo intenzionali sotto (che sono voluti apposta,
+  // uno per esito). Le separiamo spostando le domande in eccesso di qualche
+  // giorno indietro — solo createdAt/updatedAt, nessun'altra proprietà del seed
+  // cambia. Va fatto qui, prima del blocco demo sotto: quello aggiunge altre
+  // domande TO_REVIEW apposta raggruppate, che non devono essere toccate.
+  {
+    const toReviewGroups = new Map<string, DbQuestion[]>();
+    for (const q of questions) {
+      if (q.status !== 'TO_REVIEW') continue;
+      const day = new Date(q.createdAt).toLocaleDateString('it-IT');
+      const key = `${q.subjectId}::${q.topicId}::${day}`;
+      if (!toReviewGroups.has(key)) toReviewGroups.set(key, []);
+      toReviewGroups.get(key)!.push(q);
+    }
+    for (const group of toReviewGroups.values()) {
+      if (group.length < 2) continue;
+      // Il primo resta dov'è, gli altri si spostano indietro di 1+ giorno ciascuno —
+      // distanziati tra loro, non tutti sullo stesso nuovo giorno.
+      group.slice(1).forEach((q, i) => {
+        const shifted = new Date(
+          new Date(q.createdAt).getTime() - (i + 1) * 86_400_000
+        ).toISOString();
+        q.createdAt = shifted;
+        q.updatedAt = shifted;
+      });
+    }
+  }
+
+  // --- batch demo fissi per "Domande da revisionare" ------------------------
+  // Per la demo servono a menù, appena aperto il link, tre batch di generazione
+  // già pronti — uno per ciascun esito "bloccante/particolare" (Errore, In
+  // elaborazione, Parziale) — così compaiono subito senza dover generare nulla
+  // a mano. Materia/argomento/giorno sono fissi e letterali (non cercati via
+  // hash come in una versione precedente): useReviewBatches (src/, non importa
+  // da qui) riconosce questi tre batch per lo stesso identico terzetto
+  // materia+argomento+giorno — vedi DEMO_MATERIA/DEMO_ARGOMENTO/DEMO_OUTCOME_BY_DAY
+  // lì. Se uno dei tre valori cambia qui, va cambiato anche lì, altrimenti quel
+  // batch smette di essere riconosciuto come demo e torna "Elaborazione
+  // Completata" come tutti gli altri.
+  const DEMO_SUBJECT_NAME = 'Biologia';
+  const DEMO_TOPIC_NAME = 'La chimica dei viventi';
+  const demoSubject = subjects.find((s) => s.name === DEMO_SUBJECT_NAME)!;
+  const demoTopic = demoSubject.topics.find((t) => t.name === DEMO_TOPIC_NAME)!;
+
+  // Giorno fisso, senza il jitter orario di iso(): i 5 membri di un batch demo
+  // devono cadere tutti nello stesso giorno solare (dateKey in useReviewBatches
+  // confronta solo gg/mm/aaaa), il che col jitter di iso() (fino a ±20h) non è
+  // garantito vicino alla mezzanotte.
+  const fixedDayIso = (daysAgo: number) =>
+    new Date(Date.UTC(2026, 8, 2, 9, 0, 0) - daysAgo * 86_400_000).toISOString();
+
+  // Giorni recenti (ultima settimana) apposta: con l'ordinamento "più recente
+  // in alto" di useReviewBatches, i tre batch demo compaiono in cima alla
+  // lista invece di perdersi in mezzo ai 200 seed casuali.
+  const DEMO_BATCHES = [
+    { outcome: 'IN_PROGRESS', daysAgo: 1 },
+    { outcome: 'PARTIAL', daysAgo: 2 },
+    { outcome: 'ERROR', daysAgo: 3 },
+  ] as const;
+
+  for (const { daysAgo } of DEMO_BATCHES) {
+    const subject = demoSubject;
+    const topic = demoTopic;
+    const createdAt = fixedDayIso(daysAgo);
+
+    for (let n = 0; n < 5; n++) {
+      const idx = (perSubjectIndex[subject.name] = (perSubjectIndex[subject.name] ?? -1) + 1);
+      let body = pickQuestionBody(subject.name, idx, rng);
+      for (let attempt = 0; attempt < 12 && usedTexts.has(body.text); attempt++) {
+        body = pickQuestionBody(subject.name, idx, rng);
+      }
+      usedTexts.add(body.text);
+
+      const subtopic =
+        topic.subtopics.find((st) => st.name === body.subtopic) ?? rng.pick(topic.subtopics);
+
+      const convertToCompletion = body.completable === true && rng.chance(0.42);
+      const isCompletion = body.alternatives.length === 0 || convertToCompletion;
+      const completionAnswer = convertToCompletion
+        ? body.alternatives[0]
+        : (body.completionAnswer ?? '');
+      const alternatives: DbAlternative[] = isCompletion
+        ? []
+        : rng.shuffle(body.alternatives.map((text, j) => ({ text, correct: j === 0 })));
+
+      const author = rng.pick(authors);
+      const revisor = rng.pick(reviewers);
+
+      questions.push({
+        _id: objectId(rng),
+        subjectId: subject._id,
+        subject: { name: subject.name },
+        topicId: topic._id,
+        topic: { name: topic.name },
+        subtopicId: subtopic._id,
+        subtopic: { name: subtopic.name },
+        type: isCompletion ? 'COMPLETION' : 'MULTIPLE_CHOICE',
+        difficulty: rng.int(1, 4),
+        language: 'IT-it',
+        questionText: body.text,
+        alternatives,
+        completionAnswers: completionAnswer ? [completionAnswer] : [],
+        explanationText: body.explanation,
+        questionImages: [],
+        explanationImages: [],
+        status: 'TO_REVIEW',
+        versionCount: 1,
+        authorId: author._id,
+        author: { email: author.email },
+        revisorId: revisor._id,
+        revisor: { email: revisor.email },
+        archived: false,
+        tags: [],
+        createdAt,
+        updatedAt: createdAt,
+      });
+    }
+  }
+
   // --- pool ----------------------------------------------------------------
   const poolNames = [
     'Banca Biologia 2026',

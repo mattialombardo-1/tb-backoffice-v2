@@ -309,9 +309,11 @@ export function registerQuestionRoutes(router: Router): void {
   // "my-reviews" verrebbe catturato come un id.
   router.get('/questions/my-reviews', () => {
     const db = getDb();
-    return db.questions
-      .filter((q) => q.status === 'TO_REVIEW' && q.revisorId === db.currentUserId)
-      .sort(byUpdatedDesc);
+    // Prototipo: mostra tutto ciò che è TO_REVIEW a prescindere dal revisore assegnato,
+    // non solo quelle assegnate all'utente finto — per la demo serve vedere le domande
+    // generate a prescindere da chi le revisionerà davvero (vedi anche i tre batch demo
+    // fissi in mock/db.ts, pensati apposta per comparire qui appena aperto il link).
+    return db.questions.filter((q) => q.status === 'TO_REVIEW').sort(byUpdatedDesc);
   });
 
   router.get('/questions', ({ query }: Ctx) => {

@@ -147,7 +147,7 @@ export function QuestionsExportDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileDown className="h-5 w-5" />
@@ -311,12 +311,12 @@ export function QuestionsExportDialog({
           <Button onClick={handleExport} disabled={loading || count === 0}>
             {loading ? (
               <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
                 {t('questions.exportDialog.generating')}
               </>
             ) : (
               <>
-                <FileDown className="h-4 w-4 mr-2" />
+                <FileDown className="h-4 w-4" />
                 {t('questions.exportDialog.export')}
               </>
             )}

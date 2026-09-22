@@ -3,7 +3,16 @@ import { useNavigate } from '@tanstack/react-router';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
-import { Search, Plus, RefreshCw, ChevronLeft, ChevronRight, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import {
+  Search,
+  Plus,
+  RefreshCw,
+  ChevronLeft,
+  ChevronRight,
+  MoreHorizontal,
+  Pencil,
+  Trash2,
+} from 'lucide-react';
 import { useCampaignsList } from '@/lib/hooks/useCampaignsList';
 import { useApiClient } from '@/lib/api/useApiClient';
 import { campaignsService } from '@/lib/services/campaignsService';
@@ -41,11 +50,19 @@ function ProgressBar({ total, remaining }: { total: number; remaining: number })
     <div className="flex items-center gap-2">
       <div className="h-1.5 flex-1 rounded-full bg-muted overflow-hidden">
         <div
-          className={cn('h-full rounded-full transition-all', isFull ? 'bg-emerald-500' : 'bg-primary')}
+          className={cn(
+            'h-full rounded-full transition-all',
+            isFull ? 'bg-emerald-500' : 'bg-primary'
+          )}
           style={{ width: `${pct}%` }}
         />
       </div>
-      <span className={cn('text-xs tabular-nums', isFull ? 'text-emerald-600 dark:text-emerald-400 font-medium' : 'text-muted-foreground')}>
+      <span
+        className={cn(
+          'text-xs tabular-nums',
+          isFull ? 'text-emerald-600 dark:text-emerald-400 font-medium' : 'text-muted-foreground'
+        )}
+      >
         {done}/{total}
       </span>
     </div>
@@ -65,7 +82,9 @@ function CampaignRow({ campaign, onEdit, onDelete }: CampaignRowProps) {
   return (
     <tr
       className="border-b last:border-0 hover:bg-muted/50 cursor-pointer transition-colors group"
-      onClick={() => navigate({ to: '/campaigns/$campaignId', params: { campaignId: campaign.id } })}
+      onClick={() =>
+        navigate({ to: '/campaigns/$campaignId', params: { campaignId: campaign.id } })
+      }
     >
       <td className="px-4 py-3">
         <div className="font-medium text-sm">{campaign.name}</div>
@@ -77,10 +96,7 @@ function CampaignRow({ campaign, onEdit, onDelete }: CampaignRowProps) {
       <td className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">
         {new Date(campaign.createdAt).toLocaleDateString()}
       </td>
-      <td
-        className="px-4 py-3 w-12 text-right"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <td className="px-4 py-3 w-12 text-right" onClick={(e) => e.stopPropagation()}>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -226,24 +242,27 @@ export function CampaignsPage() {
                 </tr>
               </thead>
               <tbody>
-                {isLoading
-                  ? Array.from({ length: 8 }).map((_, i) => <CampaignRowSkeleton key={i} />)
-                  : data.length === 0
-                    ? (
-                      <tr>
-                        <td colSpan={4} className="px-4 py-12 text-center text-sm text-muted-foreground">
-                          {search ? t('campaigns.noResultsFiltered') : t('campaigns.noResults')}
-                        </td>
-                      </tr>
-                    )
-                    : data.map((c) => (
-                      <CampaignRow
-                        key={c.id}
-                        campaign={c}
-                        onEdit={setEditTarget}
-                        onDelete={setDeleteTarget}
-                      />
-                    ))}
+                {isLoading ? (
+                  Array.from({ length: 8 }).map((_, i) => <CampaignRowSkeleton key={i} />)
+                ) : data.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={4}
+                      className="px-4 py-12 text-center text-sm text-muted-foreground"
+                    >
+                      {search ? t('campaigns.noResultsFiltered') : t('campaigns.noResults')}
+                    </td>
+                  </tr>
+                ) : (
+                  data.map((c) => (
+                    <CampaignRow
+                      key={c.id}
+                      campaign={c}
+                      onEdit={setEditTarget}
+                      onDelete={setDeleteTarget}
+                    />
+                  ))
+                )}
               </tbody>
             </table>
           )}
@@ -252,9 +271,7 @@ export function CampaignsPage() {
 
       {totalPages > 1 && (
         <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>
-            {t('common.pagination', { page, totalPages, total })}
-          </span>
+          <span>{t('common.pagination', { page, totalPages, total })}</span>
           <div className="flex items-center gap-1">
             <Button
               variant="outline"
@@ -280,15 +297,22 @@ export function CampaignsPage() {
 
       <EditCampaignDialog
         campaign={editTarget}
-        onOpenChange={(v) => { if (!v) setEditTarget(null); }}
+        onOpenChange={(v) => {
+          if (!v) setEditTarget(null);
+        }}
       />
 
       {/* Delete confirmation */}
       <Dialog
         open={deleteTarget != null}
-        onOpenChange={(v) => { if (!v && !deleting) { setDeleteTarget(null); setDeleteError(null); } }}
+        onOpenChange={(v) => {
+          if (!v && !deleting) {
+            setDeleteTarget(null);
+            setDeleteError(null);
+          }
+        }}
       >
-        <DialogContent className="sm:max-w-sm">
+        <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>{t('campaigns.deleteDialog.title')}</DialogTitle>
             <DialogDescription>
@@ -299,7 +323,10 @@ export function CampaignsPage() {
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => { setDeleteTarget(null); setDeleteError(null); }}
+              onClick={() => {
+                setDeleteTarget(null);
+                setDeleteError(null);
+              }}
               disabled={deleting}
             >
               {t('common.cancel')}

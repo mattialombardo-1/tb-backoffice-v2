@@ -41,8 +41,8 @@ export function QuestionsBulkToolbar({
 
   if (!isBulkMode) {
     return (
-      <Button variant="outline" size="sm" onClick={onToggleBulkMode}>
-        <ListChecks className="h-4 w-4 mr-1.5" />
+      <Button variant="outline" onClick={onToggleBulkMode}>
+        <ListChecks className="h-4 w-4 mr-2" />
         {t('questions.bulk.toggle')}
       </Button>
     );
@@ -72,9 +72,9 @@ export function QuestionsBulkToolbar({
 
       <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="sm">
+          <Button variant="outline">
             {t('questions.bulk.actions')}
-            <ChevronDown className="h-4 w-4 ml-1.5" />
+            <ChevronDown className="h-4 w-4 ml-2" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
@@ -86,7 +86,7 @@ export function QuestionsBulkToolbar({
               setTimeout(() => fileInputRef.current?.click(), 0);
             }}
           >
-            <Upload />
+            <Upload className="h-4 w-4 mr-2" />
             {t('questions.bulk.importCsv')}
           </DropdownMenuItem>
 
@@ -100,7 +100,7 @@ export function QuestionsBulkToolbar({
                 onAddToCollection();
               }}
             >
-              <FolderPlus />
+              <FolderPlus className="h-4 w-4 mr-2" />
               {t('questions.bulk.addToCollection')}
             </DropdownMenuItem>
           )}
@@ -112,7 +112,7 @@ export function QuestionsBulkToolbar({
               onExport();
             }}
           >
-            <Download />
+            <Download className="h-4 w-4 mr-2" />
             {isExporting ? t('questions.bulk.exporting') : t('questions.bulk.export')}
           </DropdownMenuItem>
 
@@ -129,7 +129,7 @@ export function QuestionsBulkToolbar({
             }}
             className="text-destructive focus:text-destructive"
           >
-            <Trash2 />
+            <Trash2 className="h-4 w-4 mr-2" />
             {t('questions.bulk.remove')}
             <Badge
               variant="outline"

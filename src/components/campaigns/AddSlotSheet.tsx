@@ -7,13 +7,7 @@ import { useApiClient } from '@/lib/api/useApiClient';
 import { collectionsService } from '@/lib/services/collections';
 import { poolsService } from '@/lib/services/pools';
 import { queryKeys } from '@/lib/query';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetFooter,
-} from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -25,7 +19,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { SearchableSelect } from './SearchableSelect';
-import type { CampaignQuestionSlot, CampaignQuestionType, NewCampaignQuestionSlot } from '@/lib/types/campaigns';
+import type {
+  CampaignQuestionSlot,
+  CampaignQuestionType,
+  NewCampaignQuestionSlot,
+} from '@/lib/types/campaigns';
 
 const DIFFICULTY_OPTIONS = [
   { value: '0', labelKey: 'difficulties.non_ancora_valutata' },
@@ -47,7 +45,13 @@ interface Props {
   onEdit?: (slot: NewCampaignQuestionSlot, index: number) => Promise<void>;
 }
 
-function userLabel(u: { _id: string; name?: string; surname?: string; email?: string; cognitoId: string }): string {
+function userLabel(u: {
+  _id: string;
+  name?: string;
+  surname?: string;
+  email?: string;
+  cognitoId: string;
+}): string {
   if (u.name || u.surname) return `${u.name ?? ''} ${u.surname ?? ''}`.trim();
   if (u.email) return u.email;
   return u.cognitoId;
@@ -90,18 +94,14 @@ export function AddSlotSheet({ open, onOpenChange, onAdd, editSlot, editIndex, o
   const [revisorId, setRevisorId] = useState(editSlot?.revisorId ?? '');
   const [collectionId, setCollectionId] = useState(editSlot?.collection ?? '');
   const [poolId, setPoolId] = useState(editSlot?.pool ?? '');
-  const [dueDate, setDueDate] = useState(
-    editSlot?.dueDate ? editSlot.dueDate.slice(0, 10) : ''
-  );
+  const [dueDate, setDueDate] = useState(editSlot?.dueDate ? editSlot.dueDate.slice(0, 10) : '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const selectedSubject = hierarchy.materie.items.find(
     (m) => m.id === hierarchy.selection.subjectId
   );
-  const selectedTopic = hierarchy.argomenti.items.find(
-    (a) => a.id === hierarchy.selection.topicId
-  );
+  const selectedTopic = hierarchy.argomenti.items.find((a) => a.id === hierarchy.selection.topicId);
 
   const subjectOptions = hierarchy.materie.items.map((m) => ({ value: m.id, label: m.name }));
   const topicOptions = hierarchy.argomenti.items.map((a) => ({ value: a.id, label: a.name }));
@@ -184,7 +184,7 @@ export function AddSlotSheet({ open, onOpenChange, onAdd, editSlot, editIndex, o
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetContent className="w-full sm:max-w-lg overflow-y-auto p-3">
+      <SheetContent className="w-full max-w-lg overflow-y-auto p-3">
         <SheetHeader>
           <SheetTitle>
             {isEditMode ? t('campaigns.addSlotSheet.editTitle') : t('campaigns.addSlotSheet.title')}
@@ -248,7 +248,10 @@ export function AddSlotSheet({ open, onOpenChange, onAdd, editSlot, editIndex, o
           {/* Question type */}
           <div className="space-y-1.5">
             <Label>Tipologia domanda</Label>
-            <Select value={questionType} onValueChange={(v) => setQuestionType(v as CampaignQuestionType)}>
+            <Select
+              value={questionType}
+              onValueChange={(v) => setQuestionType(v as CampaignQuestionType)}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Qualsiasi tipologia" />
               </SelectTrigger>
@@ -337,7 +340,12 @@ export function AddSlotSheet({ open, onOpenChange, onAdd, editSlot, editIndex, o
           {error && <p className="text-sm text-destructive">{error}</p>}
 
           <SheetFooter className="pt-2">
-            <Button type="button" variant="outline" onClick={() => handleOpenChange(false)} disabled={saving}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => handleOpenChange(false)}
+              disabled={saving}
+            >
               {t('common.cancel')}
             </Button>
             <Button type="submit" disabled={!canSubmit}>

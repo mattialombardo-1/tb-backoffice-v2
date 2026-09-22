@@ -1,10 +1,10 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
-import { QuestionCreatePage } from '@/components/questions';
+import { QuestionCreateManualPage } from '@/components/questions/QuestionCreateManualPage';
 import { can } from '@/lib/auth';
 
-interface QuestionCreateSearch {
-  questionId?: string;
-  /** Campaign slot pre-fill params */
+interface QuestionCreateManualSearch {
+  /** Contesto campagna, quando si arriva da "Produci" su una slot — stessi campi di
+   *  /questions/create, portati qui identici quando si sceglie il percorso manuale. */
   slotId?: string;
   campaignId?: string;
   campaignName?: string;
@@ -12,18 +12,14 @@ interface QuestionCreateSearch {
   topicId?: string;
   difficulty?: string;
   questionType?: string;
-  /** Pre-assigned reviewer from campaign slot — skips the reviewer picker dialog */
   revisorId?: string;
-  /** Opens the question in review mode: read-only with Approve / Edit actions */
-  reviewMode?: boolean;
   /** Manuale scelto in AddQuestionDialog — solo per il banner informativo in testa al
    *  contenuto, nessuna logica dipende da questo valore qui. */
   manualeTitle?: string;
 }
 
-export const Route = createFileRoute('/_authenticated/questions/create')({
-  validateSearch: (raw: Record<string, unknown>): QuestionCreateSearch => ({
-    questionId: typeof raw.questionId === 'string' ? raw.questionId : undefined,
+export const Route = createFileRoute('/_authenticated/questions/create-manual')({
+  validateSearch: (raw: Record<string, unknown>): QuestionCreateManualSearch => ({
     slotId: typeof raw.slotId === 'string' ? raw.slotId : undefined,
     campaignId: typeof raw.campaignId === 'string' ? raw.campaignId : undefined,
     campaignName: typeof raw.campaignName === 'string' ? raw.campaignName : undefined,
@@ -32,19 +28,15 @@ export const Route = createFileRoute('/_authenticated/questions/create')({
     difficulty: typeof raw.difficulty === 'string' ? raw.difficulty : undefined,
     questionType: typeof raw.questionType === 'string' ? raw.questionType : undefined,
     revisorId: typeof raw.revisorId === 'string' ? raw.revisorId : undefined,
-    reviewMode: raw.reviewMode === true || raw.reviewMode === 'true',
     manualeTitle: typeof raw.manualeTitle === 'string' ? raw.manualeTitle : undefined,
   }),
   beforeLoad: ({ context }) => {
-    // Don't bounce the user while /community-profile is still in flight —
-    // they'd get kicked to /questions on every direct-load. Only redirect
-    // once we definitively know they lack the capability. The BE enforces
-    // the same check on the submit handler, so any visual leak between
-    // mount and the snapshot resolving is harmless.
+    // Stesso controllo di /questions/create — vedi il commento lì sul perché aspettare
+    // che le capabilities siano pronte prima di eventualmente reindirizzare.
     if (context.capabilities.state !== 'ready') return;
     if (!can(context.capabilities, 'questions', 'CREATE')) {
       throw redirect({ to: '/questions' });
     }
   },
-  component: QuestionCreatePage,
+  component: QuestionCreateManualPage,
 });

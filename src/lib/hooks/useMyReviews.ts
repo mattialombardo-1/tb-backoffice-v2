@@ -16,6 +16,9 @@ export function useMyReviews() {
     questions: query.data ?? [],
     total: query.data?.length ?? 0,
     isLoading: query.isLoading,
+    // isFetching copre anche il refetch manuale (isLoading resta false quando ci sono già
+    // dati in cache, quindi da solo non basta a far girare l'icona di ricarica).
+    isFetching: query.isFetching,
     isError: query.isError,
     error: query.error,
     refetch: query.refetch,
