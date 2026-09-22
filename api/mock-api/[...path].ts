@@ -1,0 +1,100 @@
+/**
+ * Funzione serverless Vercel — stesso mock server di `mock/`, servito qui
+ * invece che dal middleware del dev server Vite (`mock/index.ts`,
+ * `configureServer`), che esiste solo dentro `vite`/`npm run dev:mock` e non
+ * sopravvive a una build statica. Riusa router e handler pari pari: nessuna
+ * logica duplicata, solo un adattatore tra la richiesta Vercel e `Ctx`.
+ *
+ * Attiva solo per il deploy demo (`vite build --mode demo`, vedi
+ * package.json e .env.demo, che punta `VITE_API_BASE_URL` a `/api/mock-api`
+ * — relativo, risolto contro l'origine corrente da
+ * src/lib/api/client.ts): la build "vera" (`npm run build`) non usa questo
+ * path, quindi in produzione con backend reale questa funzione resta
+ * semplicemente inutilizzata.
+ *
+ * Limite noto: `getDb()` tiene lo stato in un modulo Node in memoria (vedi
+ * mock/db.ts) — su Vercel non c'è garanzia che richieste diverse finiscano
+ * sulla stessa istanza calda della funzione, quindi tra due click ravvicinati
+ * lo stato può risultare non condiviso (o azzerarsi del tutto a freddo). Va
+ * bene per una demo puntata da un link; non è pensato per un uso prolungato o
+ * per più persone che testano in contemporanea — per quello vedi le altre
+ * opzioni di deploy discusse con l'utente (hosting con processo persistente).
+ */
+import type { IncomingMessage, ServerResponse } from 'node:http';
+import { getDb } from '../../mock/db';
+import { registerCatalogRoutes } from '../../mock/handlers/catalog';
+import { registerPeopleRoutes } from '../../mock/handlers/people';
+import { registerQuestionRoutes } from '../../mock/handlers/questions';
+import { createRouter, HttpError, sendJson, type Ctx } from '../../mock/router';
+
+// Stesso identico ordine di registrazione di mock/index.ts — creato una sola
+// volta al caricamento del modulo, riusato tra invocazioni "calde" della
+// stessa istanza (vedi limite noto sopra).
+const router = createRouter();
+registerQuestionRoutes(router);
+registerCatalogRoutes(router);
+registerPeopleRoutes(router);
+
+// Scalda il seed al caricamento del modulo invece che alla prima richiesta —
+// così il log qui sotto finisce nei log di build/cold-start di Vercel, utile
+// per confermare che il deploy è partito con la generazione giusta.
+const db = getDb();
+console.info(
+  `[mock] API demo attiva — ${db.questions.length} domande, ${db.subjects.length} materie, ` +
+    `${db.collections.length} collection, ${db.pools.length} banche dati`
+);
+
+// Vercel arricchisce IncomingMessage con `query` (dai segmenti del catch-all
+// route `[...path]`) e, per Content-Type application/json come manda sempre
+// il client (vedi src/lib/api/client.ts), con `body` già parsato — niente
+// tipi `@vercel/node` per restare senza dipendenze aggiuntive, come il resto
+// di mock/ (vedi il commento in cima a mock/router.ts).
+interface VercelLikeRequest extends IncomingMessage {
+  query: Record<string, string | string[] | undefined>;
+  body?: unknown;
+}
+
+export default async function handler(req: VercelLikeRequest, res: ServerResponse): Promise<void> {
+  const method = (req.method ?? 'GET').toUpperCase();
+
+  if (method === 'OPTIONS') {
+    res.statusCode = 204;
+    res.end();
+    return;
+  }
+
+  // Segmenti dopo /api/mock-api/ — stesso path che il middleware del dev
+  // server ottiene togliendo API_PREFIX da req.url (vedi mock/index.ts).
+  const segments = req.query.path;
+  const path = '/' + (Array.isArray(segments) ? segments.join('/') : (segments ?? ''));
+
+  const url = new URL(req.url ?? '/', 'http://localhost');
+  const matched = router.match(method, path);
+
+  if (!matched) {
+    // Stesso trattamento del middleware: 200 vuoto invece di 404, il client
+    // ritenta tutto tranne 401/403 (src/lib/api/client.ts) — un endpoint
+    // dimenticato costerebbe 4 tentativi e ~6s prima di far fallire la
+    // schermata.
+    console.warn(`[mock] nessun handler per ${method} ${path} — risposta vuota`);
+    sendJson(res, 200, { data: [], total: 0, page: 1, limit: 20 });
+    return;
+  }
+
+  try {
+    const ctx: Ctx = {
+      method,
+      path,
+      params: matched.params,
+      query: url.searchParams,
+      body: req.body,
+    };
+    const result = await matched.handler(ctx);
+    sendJson(res, result === undefined ? 204 : 200, result);
+  } catch (err) {
+    const status = err instanceof HttpError ? err.status : 500;
+    const message = err instanceof Error ? err.message : 'Mock server error';
+    if (status >= 500) console.error(`[mock] ${method} ${path}: ${message}`);
+    sendJson(res, status, { error: message, message, statusCode: status });
+  }
+}

@@ -129,7 +129,13 @@ export class APIClient {
   private buildURL(endpoint: string, params?: Record<string, any>): string {
     // Concatenate explicitly: `new URL('/brands', 'https://host/prod')` would
     // strip `/prod` because absolute-path endpoints replace the base path.
-    const base = this.config.baseURL.replace(/\/+$/, '');
+    const rawBase = this.config.baseURL.replace(/\/+$/, '');
+    // VITE_API_BASE_URL è quasi sempre assoluto (staging, mock locale) — `new
+    // URL()` senza secondo argomento lo richiede. L'eccezione è il deploy demo
+    // su Vercel (vedi api/mock-api/), dove l'API vive sotto lo stesso dominio
+    // del sito e l'URL esatto non è noto in anticipo: lì VITE_API_BASE_URL è
+    // relativo ("/api/mock-api"), risolto qui contro l'origine corrente.
+    const base = rawBase.startsWith('/') ? window.location.origin + rawBase : rawBase;
     const path = endpoint.startsWith('/') ? endpoint : '/' + endpoint;
     const url = new URL(base + path);
 

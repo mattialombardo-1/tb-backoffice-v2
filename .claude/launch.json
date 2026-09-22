@@ -6,6 +6,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev:mock"],
       "port": 4300
+    },
+    {
+      "name": "tb-backoffice-preview-demo",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "preview", "--", "--mode", "demo", "--port", "4301"],
+      "port": 4301
     }
   ]
 }

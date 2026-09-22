@@ -13,6 +13,52 @@ Si apre direttamente sulla dashboard: niente login, nessuna chiamata verso
 
 ---
 
+## Condividere un link (deploy demo su Vercel)
+
+`npm run dev:mock` gira solo in locale. Per un link condivisibile con lo
+stakeholder, il prototipo si builda in modalità `demo` invece di `mock`:
+
+```bash
+npm run build:demo     # tsc -b && vite build --mode demo
+```
+
+Differenza rispetto a `dev:mock`: qui non c'è un dev server Node sempre acceso
+a fare da mock API. La build statica (`dist/`) viene servita da Vercel, e le
+chiamate a `/api/mock-api/*` sono gestite da una **funzione serverless**
+(`api/mock-api/[...path].ts`, alla radice del repo, fuori da `mock/` perché
+Vercel cerca le funzioni lì) che importa e riusa — senza duplicarla — la
+stessa `mock/router.ts` + `mock/handlers/*` + `mock/db.ts` di sopra. La
+sessione finta viene iniettata nell'HTML allo stesso modo (vedi
+"Com'è aggirata l'autenticazione" sotto), il plugin (`mock/index.ts`) si
+attiva anche per `--mode demo`, non solo `--mode mock`.
+
+Config di riferimento:
+- `.env.demo` — come `.env.mock`, ma `VITE_API_BASE_URL` è **relativo**
+  (`/api/mock-api`, non un URL assoluto con porta): il dominio del deploy non
+  è noto in anticipo, e viene risolto a runtime contro `window.location.origin`
+  da `src/lib/api/client.ts` (`buildURL`). È l'unica cosa che `src/` "sa" di
+  questo scenario — non è consapevolezza del mock, solo supporto a un
+  `VITE_API_BASE_URL` relativo, utile in generale.
+- `vercel.json` — `buildCommand: npm run build:demo`, e il rewrite SPA esclude
+  esplicitamente `/api/*` (altrimenti la chiamerebbe come route client-side
+  invece di lasciarla alla funzione).
+
+**Passi per pubblicare**: collega il repo GitHub a un progetto Vercel (dashboard
+o `vercel` CLI) — build command e output directory sono già in `vercel.json`,
+nessuna variabile d'ambiente da impostare a mano nel dashboard. Il deploy
+produce un URL tipo `https://<progetto>.vercel.app`, condivisibile subito.
+
+**Limite noto**: `getDb()` tiene lo stato in memoria del processo Node (vedi
+sotto). Sul dev server locale è un processo unico e persistente; su Vercel è
+una funzione serverless — nessuna garanzia che richieste diverse finiscano
+sulla stessa istanza "calda", quindi lo stato tra un'azione e l'altra può non
+essere condiviso (o azzerarsi a un'istanza fredda). Va bene per una demo
+puntata da un link e usata da una persona alla volta; per una sessione più
+lunga o più persone in contemporanea, riavviare il deploy (o ripubblicare)
+riporta al seed pulito, esattamente come riavviare `dev:mock` in locale.
+
+---
+
 ## Il principio: `src/` non sa che il mock esiste
 
 Non c'è nessun `if (mock)` nel codice applicativo. I service in
@@ -128,12 +174,17 @@ mock/
     questions.ts       16 rotte — filtri e paginazione veri
     catalog.ts         53 rotte — materie, pool, collection, test, SKU, tag
     people.ts          20 rotte — profilo, staff, ruoli, clienti, campagne
+
+api/mock-api/[...path].ts   funzione serverless Vercel — stesso router/handler
+                            di sopra, riusati per il deploy demo (vedi sopra)
 ```
 
 Le shape delle risposte ricalcano le interfacce `Backend*` già dichiarate dentro
 `src/lib/services/*`, non l'OpenAPI: `docs/openapi.json` è vecchio e sbagliato.
 Nessun file in `mock/` importa da `src/` — viene compilato nel bundle di
-`vite.config.ts`, dove l'alias `@/` non esiste.
+`vite.config.ts` (dove l'alias `@/` non esiste) o di `api/mock-api/[...path].ts`
+per il deploy Vercel. Il contrario non vale: `api/mock-api/[...path].ts`
+importa da `mock/` — è l'unico consumer esterno a questa cartella.
 
 ---
 

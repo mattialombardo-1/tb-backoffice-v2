@@ -19,6 +19,8 @@ React + TypeScript + Vite backoffice application with OIDC authentication.
 - `npm run dev` — punterebbe al backend vero (porta 3000, richiede `.env.local`).
   In questo repo non si usa: si rifiuta di partire e rimanda a `dev:mock`.
 - `npm run build` — typecheck + production build
+- `npm run build:demo` — build statica per il deploy demo su Vercel (mock via
+  funzioni serverless invece del dev server — vedi `mock/README.md`)
 - `npm run lint` — ESLint
 - `npm run format` / `npm run format:check` — Prettier
 

@@ -1,12 +1,22 @@
 /**
  * Plugin Vite che monta il mock server e inietta la sessione finta.
  *
- * Attivo solo con `--mode mock` (`npm run dev:mock`): in ogni altra modalità
- * non fa nulla e l'app parla con il backend vero configurato in `.env.local`.
+ * Attivo in due modalità, in ogni altra non fa nulla e l'app parla con il
+ * backend vero configurato in `.env.local`:
+ *  - `--mode mock` (`npm run dev:mock`): dev server locale, monta anche il
+ *    middleware `/mock-api` sotto — vedi `configureServer`.
+ *  - `--mode demo` (`vite build --mode demo`, vedi package.json): build
+ *    statica per il deploy Vercel — qui iniettiamo solo la sessione finta
+ *    nell'HTML; l'API in quel caso è servita da funzioni serverless separate
+ *    (`api/mock-api/[...path].ts`, che riusa lo stesso router/handler di
+ *    questa cartella) perché il middleware sotto vive solo dentro il dev
+ *    server e non esiste più una volta buildato.
  *
  * Il principio è che `src/` non sappia della sua esistenza: i service fanno
  * vere chiamate HTTP a `VITE_API_BASE_URL`, che in mock mode punta a
- * `http://localhost:3000/mock-api` e viene intercettato qui.
+ * `http://localhost:4300/mock-api` (intercettato qui) e in demo mode a
+ * `/api/mock-api` (relativo, risolto da src/lib/api/client.ts contro
+ * l'origine corrente — intercettato dalla funzione serverless).
  */
 import type { Plugin } from 'vite';
 import { buildAuthBootstrapScript } from './auth-bootstrap';
@@ -76,7 +86,10 @@ export function mockApiPlugin(): Plugin {
 
   return {
     name: 'testbusters:mock-api',
-    apply: 'serve',
+    // 'serve' per il dev server (qualunque modalità, così `npm run dev` senza
+    // .env.local può ancora far scattare assertRealBackendEnv sotto), più il
+    // caso build per il deploy demo — vedi il commento in cima al file.
+    apply: (_config, { command, mode }) => command === 'serve' || mode === 'demo',
 
     config(_config, { mode }) {
       if (mode !== 'mock') return;
@@ -84,27 +97,32 @@ export function mockApiPlugin(): Plugin {
     },
 
     configResolved(config) {
-      enabled = config.mode === 'mock';
+      enabled = config.mode === 'mock' || config.mode === 'demo';
 
       if (!enabled) {
         assertRealBackendEnv(config.env as Record<string, string>);
         return;
       }
 
-      // `config.env` contiene le VITE_* già caricate da .env.mock: la chiave di
-      // localStorage dipende da authority e client_id, quindi devono essere
-      // esattamente le stesse che finiscono in `src/lib/auth/config.ts`.
+      // `config.env` contiene le VITE_* già caricate da .env.mock/.env.demo: la
+      // chiave di localStorage dipende da authority e client_id, quindi devono
+      // essere esattamente le stesse che finiscono in `src/lib/auth/config.ts`.
       env = config.env as Record<string, string>;
 
       // Se .env.mock e il plugin puntano a porte diverse, l'app carica ma ogni
-      // chiamata va nel vuoto: meglio dirlo subito e a voce alta.
-      const base = env.VITE_API_BASE_URL ?? '';
-      const expected = `http://localhost:${MOCK_PORT}${API_PREFIX}`;
-      if (base !== expected) {
-        config.logger.warn(
-          `  \x1b[33m[mock]\x1b[0m VITE_API_BASE_URL è "${base}" ma il mock server ascolta su ` +
-            `"${expected}". Allinea .env.mock, altrimenti nessuna chiamata arriverà al mock.`
-        );
+      // chiamata va nel vuoto: meglio dirlo subito e a voce alta. Solo per
+      // mock mode: in demo mode VITE_API_BASE_URL è relativo ("/api/mock-api",
+      // vedi .env.demo) per costruzione, non ha senso confrontarlo con la
+      // porta del dev server locale.
+      if (config.mode === 'mock') {
+        const base = env.VITE_API_BASE_URL ?? '';
+        const expected = `http://localhost:${MOCK_PORT}${API_PREFIX}`;
+        if (base !== expected) {
+          config.logger.warn(
+            `  \x1b[33m[mock]\x1b[0m VITE_API_BASE_URL è "${base}" ma il mock server ascolta su ` +
+              `"${expected}". Allinea .env.mock, altrimenti nessuna chiamata arriverà al mock.`
+          );
+        }
       }
     },
 

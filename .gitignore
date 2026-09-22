@@ -15,6 +15,7 @@ coverage
 .env*
 !.env.example
 !.env.mock
+!.env.demo
 
 # Niente CI/CD su questo repo: è un prototipo di design, non un deploy.
 # Il workflow del cliente è recuperabile dal commit di baseline se serve:
