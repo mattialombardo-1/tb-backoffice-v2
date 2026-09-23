@@ -33,20 +33,29 @@ sessione finta viene iniettata nell'HTML allo stesso modo (vedi
 attiva anche per `--mode demo`, non solo `--mode mock`.
 
 Config di riferimento:
-- `.env.demo` — come `.env.mock`, ma `VITE_API_BASE_URL` è **relativo**
-  (`/api/mock-api`, non un URL assoluto con porta): il dominio del deploy non
-  è noto in anticipo, e viene risolto a runtime contro `window.location.origin`
-  da `src/lib/api/client.ts` (`buildURL`). È l'unica cosa che `src/` "sa" di
-  questo scenario — non è consapevolezza del mock, solo supporto a un
-  `VITE_API_BASE_URL` relativo, utile in generale.
+- `VITE_API_BASE_URL`/`VITE_SSO_AUTHORITY`/`VITE_COGNITO_CLIENT_ID` per demo
+  mode sono **forzati in `mock/index.ts`** (`DEMO_ENV`, via `define` in fase
+  di build), non letti da `.env.demo`/`config.env`: Vercel può popolare
+  Environment Variables del progetto con questi stessi nomi a stringa vuota
+  (es. campi proposti dall'import e mai compilati) — per Vite `process.env`
+  vince sempre sui file `.env*`, quindi una `VITE_API_BASE_URL=""` nel
+  dashboard silenzierebbe `.env.demo` senza errori: l'app caricherebbe,
+  sembrerebbe autenticata (la sessione finta si scrive comunque), ma ogni
+  chiamata fallirebbe con "Accesso non autorizzato" (`buildURL()` lancia
+  prima ancora di partire, `CapabilitiesProvider` lo legge come nessuna
+  capability). `define` bypassa `process.env` del tutto: zero variabili da
+  controllare o pulire nel dashboard Vercel, a prescindere da cosa c'è lì.
+  `.env.demo` resta solo per `vite preview --mode demo` in locale — se lo
+  cambi, aggiorna anche `DEMO_ENV` in `mock/index.ts`, altrimenti divergono.
 - `vercel.json` — `buildCommand: npm run build:demo`, e il rewrite SPA esclude
   esplicitamente `/api/*` (altrimenti la chiamerebbe come route client-side
   invece di lasciarla alla funzione).
 
 **Passi per pubblicare**: collega il repo GitHub a un progetto Vercel (dashboard
 o `vercel` CLI) — build command e output directory sono già in `vercel.json`,
-nessuna variabile d'ambiente da impostare a mano nel dashboard. Il deploy
-produce un URL tipo `https://<progetto>.vercel.app`, condivisibile subito.
+nessuna variabile d'ambiente da impostare a mano nel dashboard (e se ce ne
+sono già, vuote o no, non contano più — vedi sopra). Il deploy produce un URL
+tipo `https://<progetto>.vercel.app`, condivisibile subito.
 
 **Limite noto**: `getDb()` tiene lo stato in memoria del processo Node (vedi
 sotto). Sul dev server locale è un processo unico e persistente; su Vercel è

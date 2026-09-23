@@ -38,6 +38,31 @@ const API_PREFIX = '/mock-api';
  */
 const MOCK_PORT = 4300;
 
+/**
+ * Config demo mode — letterali, non lette da `.env.demo`/`config.env`.
+ *
+ * Bug scoperto in produzione: Vercel può popolare Environment Variables del
+ * progetto con questi stessi nomi a **stringa vuota** (non `undefined` — per
+ * esempio se in fase di import propone dei campi dedotti da `.env.example` e
+ * il form viene inviato senza compilarli). Per Vite le variabili in
+ * `process.env` vincono sempre sui file `.env*`, quindi una `VITE_API_BASE_URL=""`
+ * nel dashboard silenzia `.env.demo` senza errori — l'app carica, sembra
+ * autenticata (la sessione finta si scrive comunque), ma ogni chiamata API
+ * fallisce con un `TypeError` prima ancora di partire (`buildURL()`, vedi
+ * src/lib/api/client.ts) e la UI lo mostra come "Accesso non autorizzato"
+ * (CapabilitiesProvider interpreta l'errore come niente capability).
+ *
+ * Fix: per `--mode demo` questi tre valori sono forzati qui sotto via `define`
+ * (sostituzione statica in fase di build, vedi `config()`), che bypassa del
+ * tutto `process.env`/`.env.demo` — zero variabili da configurare a mano su
+ * Vercel, e nessuna sorpresa se il dashboard ne ha di vuote.
+ */
+const DEMO_ENV = {
+  VITE_API_BASE_URL: '/api/mock-api',
+  VITE_SSO_AUTHORITY: 'http://mock-sso.local',
+  VITE_COGNITO_CLIENT_ID: 'mock-client',
+};
+
 /** Ritardo artificiale: rende visibili skeleton e stati di caricamento. */
 const LATENCY_MS = 120;
 
@@ -92,8 +117,23 @@ export function mockApiPlugin(): Plugin {
     apply: (_config, { command, mode }) => command === 'serve' || mode === 'demo',
 
     config(_config, { mode }) {
-      if (mode !== 'mock') return;
-      return { server: { port: MOCK_PORT, strictPort: true } };
+      if (mode === 'mock') {
+        return { server: { port: MOCK_PORT, strictPort: true } };
+      }
+      if (mode === 'demo') {
+        // Sostituzione statica in fase di build — vedi DEMO_ENV sopra per il
+        // perché: bypassa process.env/.env.demo del tutto, immune a variabili
+        // d'ambiente vuote impostate (anche per sbaglio) nel dashboard Vercel.
+        return {
+          define: Object.fromEntries(
+            Object.entries(DEMO_ENV).map(([key, value]) => [
+              `import.meta.env.${key}`,
+              JSON.stringify(value),
+            ])
+          ),
+        };
+      }
+      return;
     },
 
     configResolved(config) {
@@ -104,32 +144,35 @@ export function mockApiPlugin(): Plugin {
         return;
       }
 
-      // `config.env` contiene le VITE_* già caricate da .env.mock/.env.demo: la
-      // chiave di localStorage dipende da authority e client_id, quindi devono
+      // In demo mode usiamo DEMO_ENV, non config.env — vedi il commento su
+      // DEMO_ENV sopra: è la stessa `define` che src/ vede per davvero,
+      // niente da leggere da .env.demo/process.env qui.
+      if (config.mode === 'demo') {
+        env = DEMO_ENV;
+        return;
+      }
+
+      // `config.env` contiene le VITE_* già caricate da .env.mock: la chiave
+      // di localStorage dipende da authority e client_id, quindi devono
       // essere esattamente le stesse che finiscono in `src/lib/auth/config.ts`.
       env = config.env as Record<string, string>;
 
       // Se .env.mock e il plugin puntano a porte diverse, l'app carica ma ogni
-      // chiamata va nel vuoto: meglio dirlo subito e a voce alta. Solo per
-      // mock mode: in demo mode VITE_API_BASE_URL è relativo ("/api/mock-api",
-      // vedi .env.demo) per costruzione, non ha senso confrontarlo con la
-      // porta del dev server locale.
-      if (config.mode === 'mock') {
-        const base = env.VITE_API_BASE_URL ?? '';
-        const expected = `http://localhost:${MOCK_PORT}${API_PREFIX}`;
-        if (base !== expected) {
-          config.logger.warn(
-            `  \x1b[33m[mock]\x1b[0m VITE_API_BASE_URL è "${base}" ma il mock server ascolta su ` +
-              `"${expected}". Allinea .env.mock, altrimenti nessuna chiamata arriverà al mock.`
-          );
-        }
+      // chiamata va nel vuoto: meglio dirlo subito e a voce alta.
+      const base = env.VITE_API_BASE_URL ?? '';
+      const expected = `http://localhost:${MOCK_PORT}${API_PREFIX}`;
+      if (base !== expected) {
+        config.logger.warn(
+          `  \x1b[33m[mock]\x1b[0m VITE_API_BASE_URL è "${base}" ma il mock server ascolta su ` +
+            `"${expected}". Allinea .env.mock, altrimenti nessuna chiamata arriverà al mock.`
+        );
       }
     },
 
     transformIndexHtml() {
       if (!enabled) return;
-      const authority = env.VITE_SSO_AUTHORITY ?? 'http://localhost:3000/mock-sso';
-      const clientId = env.VITE_COGNITO_CLIENT_ID ?? 'mock-client';
+      const authority = env.VITE_SSO_AUTHORITY || 'http://localhost:3000/mock-sso';
+      const clientId = env.VITE_COGNITO_CLIENT_ID || 'mock-client';
       return [
         {
           tag: 'script',
