@@ -96,20 +96,22 @@ export function QuestionCreatePage() {
   const [isApproving, setIsApproving] = useState(false);
 
   // Sollevati da QuestionSetupAccordion: servono qui per sapere se i campi
-  // obbligatori (Materia, Argomento, Tipo di domanda, Quantità, Revisore) sono
-  // compilati e quindi se la CTA "Crea Domanda" può essere cliccabile. Partono
-  // vuoti: i valori più frequenti (Tipo, Quantità) e "Assegna a me" sono
-  // proposte di default, ma QuestionSetupAccordion li applica solo alla prima
-  // apertura della sezione che li contiene — non prima, non appena atterrati
-  // sul form (vedi lì).
+  // obbligatori (Materia, Argomento, Tipo di domanda, Quantità, Numero di
+  // risposte se Risposta chiusa, Revisore) sono compilati e quindi se la CTA
+  // "Crea Domanda" può essere cliccabile. Partono vuoti: i valori più
+  // frequenti (Tipo, Quantità) e "Assegna a me" sono proposte di default, ma
+  // QuestionSetupAccordion li applica solo alla prima apertura della sezione
+  // che li contiene — non prima, non appena atterrati sul form (vedi lì).
   const [proposalType, setProposalType] = useState<QuestionType | ''>('');
   const [proposalQuantity, setProposalQuantity] = useState('');
+  const [proposalAnswerCount, setProposalAnswerCount] = useState('');
   const [proposalReviewerId, setProposalReviewerId] = useState<string | null>(null);
   const canGenerate =
     hierarchy.isComplete &&
     proposalType !== '' &&
     proposalQuantity !== '' &&
     Number(proposalQuantity) > 0 &&
+    (proposalType !== 'MULTIPLE_CHOICE' || proposalAnswerCount !== '') &&
     proposalReviewerId !== null;
 
   // Secondo step dopo "Crea Domanda" (non un dialog) — vedi QuestionGenerationStep.
@@ -138,6 +140,7 @@ export function QuestionCreatePage() {
     hierarchy.selection.subjectId != null ||
     proposalType !== '' ||
     proposalQuantity !== '' ||
+    proposalAnswerCount !== '' ||
     proposalReviewerId !== null;
   const isFormDirty =
     !reviewMode && !isEditMode ? form.isDirty || hasUnsavedCreationInput : form.isDirty;
@@ -379,6 +382,7 @@ export function QuestionCreatePage() {
             type={proposalType}
             onTypeChange={setProposalType}
             onQuantityChange={setProposalQuantity}
+            onAnswerCountChange={setProposalAnswerCount}
             reviewerId={proposalReviewerId}
             onReviewerIdChange={setProposalReviewerId}
             summaryOpen={summaryOpen}

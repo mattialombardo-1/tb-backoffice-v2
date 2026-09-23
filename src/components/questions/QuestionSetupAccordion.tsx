@@ -431,6 +431,11 @@ interface QuestionSetupAccordionProps {
    *  per "Crea Domanda" — non c'è un valore da ricevere indietro, la ripartizione non è
    *  ricostruibile da un totale singolo. */
   onQuantityChange: (value: string) => void;
+  /** Obbligatorio per procedere quando type === 'MULTIPLE_CHOICE' (per
+   *  'COMPLETION' il campo non esiste nemmeno, vedi sotto) — sola andata,
+   *  stesso motivo di onQuantityChange: QuestionCreatePage lo usa solo per
+   *  sapere se "Crea Domanda" può sbloccarsi. */
+  onAnswerCountChange: (value: string) => void;
   /** Obbligatorio per procedere — risolto qui (te stesso o un altro revisore scelto),
    *  ma controllato da QuestionCreatePage insieme agli altri campi che sbloccano "Crea Domanda". */
   reviewerId: string | null;
@@ -458,6 +463,7 @@ export function QuestionSetupAccordion({
   type,
   onTypeChange,
   onQuantityChange,
+  onAnswerCountChange,
   reviewerId,
   onReviewerIdChange,
   summaryOpen,
@@ -554,6 +560,10 @@ export function QuestionSetupAccordion({
   // Numero di risposte per "Risposta chiusa" — nessun default: parte senza nulla
   // selezionato, tocca sempre scegliere esplicitamente tra le opzioni abilitate.
   const [answerCount, setAnswerCount] = useState('');
+  const handleAnswerCountChange = (value: string) => {
+    setAnswerCount(value);
+    onAnswerCountChange(value);
+  };
 
   // Chi revisiona le domande generate — di default "Assegna a me" (siamo nella
   // casistica di creazione con AI, la scelta più frequente), con possibilità di
@@ -949,7 +959,7 @@ export function QuestionSetupAccordion({
                     <Label>Numero di risposte</Label>
                     <AnswerCountField
                       value={answerCount}
-                      onChange={setAnswerCount}
+                      onChange={handleAnswerCountChange}
                       disabled={disabled}
                     />
                   </div>
