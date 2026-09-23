@@ -27,22 +27,32 @@ import { registerPeopleRoutes } from '../../mock/handlers/people';
 import { registerQuestionRoutes } from '../../mock/handlers/questions';
 import { createRouter, HttpError, sendJson, type Ctx } from '../../mock/router';
 
-// Stesso identico ordine di registrazione di mock/index.ts — creato una sola
-// volta al caricamento del modulo, riusato tra invocazioni "calde" della
-// stessa istanza (vedi limite noto sopra).
-const router = createRouter();
-registerQuestionRoutes(router);
-registerCatalogRoutes(router);
-registerPeopleRoutes(router);
+// Stesso identico ordine di registrazione di mock/index.ts. Lazy (non al
+// caricamento del modulo): un errore qui dentro (es. nel seed di mock/db.ts)
+// a livello di modulo farebbe fallire l'intera funzione con un
+// FUNCTION_INVOCATION_FAILED opaco di Vercel, senza nessun dettaglio — vedi
+// initError sotto, che invece lo trasforma in una risposta JSON leggibile.
+let router: ReturnType<typeof createRouter> | null = null;
+let initError: Error | null = null;
 
-// Scalda il seed al caricamento del modulo invece che alla prima richiesta —
-// così il log qui sotto finisce nei log di build/cold-start di Vercel, utile
-// per confermare che il deploy è partito con la generazione giusta.
-const db = getDb();
-console.info(
-  `[mock] API demo attiva — ${db.questions.length} domande, ${db.subjects.length} materie, ` +
-    `${db.collections.length} collection, ${db.pools.length} banche dati`
-);
+function ensureInitialized(): void {
+  if (router || initError) return;
+  try {
+    router = createRouter();
+    registerQuestionRoutes(router);
+    registerCatalogRoutes(router);
+    registerPeopleRoutes(router);
+
+    const db = getDb();
+    console.info(
+      `[mock] API demo attiva — ${db.questions.length} domande, ${db.subjects.length} materie, ` +
+        `${db.collections.length} collection, ${db.pools.length} banche dati`
+    );
+  } catch (err) {
+    initError = err instanceof Error ? err : new Error(String(err));
+    console.error('[mock] errore di inizializzazione:', initError.stack ?? initError.message);
+  }
+}
 
 // Vercel arricchisce IncomingMessage con `query` (dai segmenti del catch-all
 // route `[...path]`) e, per Content-Type application/json come manda sempre
@@ -60,6 +70,16 @@ export default async function handler(req: VercelLikeRequest, res: ServerRespons
   if (method === 'OPTIONS') {
     res.statusCode = 204;
     res.end();
+    return;
+  }
+
+  ensureInitialized();
+  if (initError || !router) {
+    sendJson(res, 500, {
+      error: initError?.message ?? 'Mock server init failed',
+      stack: initError?.stack,
+      statusCode: 500,
+    });
     return;
   }
 
