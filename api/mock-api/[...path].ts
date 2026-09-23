@@ -54,15 +54,21 @@ function ensureInitialized(): void {
   }
 }
 
-// Vercel arricchisce IncomingMessage con `query` (dai segmenti del catch-all
-// route `[...path]`) e, per Content-Type application/json come manda sempre
-// il client (vedi src/lib/api/client.ts), con `body` già parsato — niente
-// tipi `@vercel/node` per restare senza dipendenze aggiuntive, come il resto
-// di mock/ (vedi il commento in cima a mock/router.ts).
+// Vercel arricchisce IncomingMessage con `body` già parsato per Content-Type
+// application/json come manda sempre il client (vedi src/lib/api/client.ts)
+// — niente tipi `@vercel/node` per restare senza dipendenze aggiuntive, come
+// il resto di mock/ (vedi il commento in cima a mock/router.ts). `req.query`
+// (i segmenti del catch-all `[...path]`) esiste ma si è rivelato inaffidabile
+// in produzione — usiamo solo `req.url`, sempre presente, sotto.
 interface VercelLikeRequest extends IncomingMessage {
-  query: Record<string, string | string[] | undefined>;
   body?: unknown;
 }
+
+/** Stesso prefisso che il middleware del dev server toglie da req.url (vedi
+ *  API_PREFIX in mock/index.ts) — qui la funzione vive sotto /api invece che
+ *  alla radice, quindi il prefisso da togliere è diverso ma il principio è
+ *  identico: /api/mock-api/questions/my-reviews → /questions/my-reviews. */
+const FUNCTION_PREFIX = '/api/mock-api';
 
 export default async function handler(req: VercelLikeRequest, res: ServerResponse): Promise<void> {
   const method = (req.method ?? 'GET').toUpperCase();
@@ -83,12 +89,10 @@ export default async function handler(req: VercelLikeRequest, res: ServerRespons
     return;
   }
 
-  // Segmenti dopo /api/mock-api/ — stesso path che il middleware del dev
-  // server ottiene togliendo API_PREFIX da req.url (vedi mock/index.ts).
-  const segments = req.query.path;
-  const path = '/' + (Array.isArray(segments) ? segments.join('/') : (segments ?? ''));
-
   const url = new URL(req.url ?? '/', 'http://localhost');
+  const path = url.pathname.startsWith(FUNCTION_PREFIX)
+    ? url.pathname.slice(FUNCTION_PREFIX.length) || '/'
+    : url.pathname;
   const matched = router.match(method, path);
 
   if (!matched) {
