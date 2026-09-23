@@ -5,6 +5,16 @@
  * sopravvive a una build statica. Riusa router e handler pari pari: nessuna
  * logica duplicata, solo un adattatore tra la richiesta Vercel e `Ctx`.
  *
+ * Nome file piatto (`mock-api.ts`), non `mock-api/[...path].ts`: il catch-all
+ * di Vercel su questo progetto si è rivelato non funzionare come catch-all —
+ * instradava correttamente un solo segmento dopo /api/mock-api/ (es.
+ * community-profile) ma rispondeva 404 a livello di routing (mai raggiungeva
+ * la funzione) per qualunque path con più segmenti (es.
+ * questions/my-reviews). Bypassato del tutto con un rewrite esplicito in
+ * vercel.json (`/api/mock-api/(.*) → /api/mock-api`): il rewrite non cambia
+ * `req.url` che la funzione vede, quindi il parsing del path sotto (da
+ * `req.url`, non da `req.query`) resta identico.
+ *
  * Attiva solo per il deploy demo (`vite build --mode demo`, vedi
  * package.json e .env.demo, che punta `VITE_API_BASE_URL` a `/api/mock-api`
  * — relativo, risolto contro l'origine corrente da
@@ -21,11 +31,11 @@
  * opzioni di deploy discusse con l'utente (hosting con processo persistente).
  */
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { getDb } from '../../mock/db.js';
-import { registerCatalogRoutes } from '../../mock/handlers/catalog.js';
-import { registerPeopleRoutes } from '../../mock/handlers/people.js';
-import { registerQuestionRoutes } from '../../mock/handlers/questions.js';
-import { createRouter, HttpError, sendJson, type Ctx } from '../../mock/router.js';
+import { getDb } from '../mock/db.js';
+import { registerCatalogRoutes } from '../mock/handlers/catalog.js';
+import { registerPeopleRoutes } from '../mock/handlers/people.js';
+import { registerQuestionRoutes } from '../mock/handlers/questions.js';
+import { createRouter, HttpError, sendJson, type Ctx } from '../mock/router.js';
 
 // Stesso identico ordine di registrazione di mock/index.ts. Lazy (non al
 // caricamento del modulo): un errore qui dentro (es. nel seed di mock/db.ts)
