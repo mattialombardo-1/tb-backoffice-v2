@@ -956,7 +956,10 @@ export function QuestionSetupAccordion({
                   // rifiuti di restringersi sotto il proprio contenuto quando lo spazio è
                   // poco, cosa che altrimenti lo spingerebbe fuori a capo prima del dovuto.
                   <div className="flex min-w-0 flex-1 flex-col gap-3">
-                    <Label>Numero di risposte</Label>
+                    <Label>
+                      Numero di risposte
+                      <span className="ml-0.5 text-destructive">*</span>
+                    </Label>
                     <AnswerCountField
                       value={answerCount}
                       onChange={handleAnswerCountChange}
