@@ -40,7 +40,7 @@ interface Manuale {
 }
 
 const MANUALE_TITLES = [
-  'Anestesia, Rianimazione e Terapia del Dolore',
+  'Chimica',
   'Chirurgia generale',
   'Dermatologia e Chirurgia plastica',
   'Ematologia',
