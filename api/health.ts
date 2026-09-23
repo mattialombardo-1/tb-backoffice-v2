@@ -23,6 +23,7 @@ export default function handler(_req: IncomingMessage, res: ServerResponse): voi
       ok: true,
       node: process.version,
       time: new Date().toISOString(),
+      commit: process.env.VERCEL_GIT_COMMIT_SHA ?? null,
       rngWorks: id.length === 24,
       dbInfo,
       dbError,

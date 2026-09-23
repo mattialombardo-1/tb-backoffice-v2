@@ -2,9 +2,8 @@
   "buildCommand": "npm run build:demo",
   "outputDirectory": "dist",
   "functions": {
-    "api/**/*.ts": {
-      "includeFiles": "mock/**"
-    }
+    "api/*.ts": { "includeFiles": "mock/**" },
+    "api/**/*.ts": { "includeFiles": "mock/**" }
   },
   "rewrites": [
     { "source": "/((?!api/).*)", "destination": "/index.html" }
