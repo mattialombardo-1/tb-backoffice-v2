@@ -47,9 +47,24 @@ Config di riferimento:
   controllare o pulire nel dashboard Vercel, a prescindere da cosa c'è lì.
   `.env.demo` resta solo per `vite preview --mode demo` in locale — se lo
   cambi, aggiorna anche `DEMO_ENV` in `mock/index.ts`, altrimenti divergono.
-- `vercel.json` — `buildCommand: npm run build:demo`, e il rewrite SPA esclude
+- `vercel.json` — `buildCommand: npm run build:demo`, il rewrite SPA esclude
   esplicitamente `/api/*` (altrimenti la chiamerebbe come route client-side
-  invece di lasciarla alla funzione).
+  invece di lasciarla alla funzione), e `functions.includeFiles` forza
+  `mock/**` nel bundle della funzione (difensivo — vedi sotto per il vero bug,
+  che `includeFiles` da solo non risolveva).
+- **Gli import relativi dentro `mock/` (e dentro `api/mock-api/[...path].ts`
+  verso `mock/`) hanno tutti l'estensione `.js` esplicita** (`from './db.js'`,
+  non `from './db'`), anche se i file sono `.ts`. Bug scoperto in produzione:
+  Vercel non impacchetta la funzione in un bundle unico come fa Vite — traspila
+  ogni file `.ts` in `.js` separato e li esegue con l'ESM nativo di Node, che
+  (a differenza della risoluzione "bundler" di TypeScript/Vite) **non prova
+  automaticamente le estensioni**: un `import { getDb } from '../db'` senza
+  estensione esplode a runtime con `ERR_MODULE_NOT_FOUND`, un
+  `FUNCTION_INVOCATION_FAILED` senza stack trace visibile se non vai a
+  cercarlo nei Runtime Logs del progetto (non nel dettaglio della singola
+  richiesta). Se aggiungi un nuovo file dentro `mock/` o un nuovo import verso
+  `mock/` da `api/`, ricordati l'estensione — altrimenti funziona in locale
+  (`dev:mock`, Vite bundla e non se ne accorge) e si rompe solo sul deploy.
 
 **Passi per pubblicare**: collega il repo GitHub a un progetto Vercel (dashboard
 o `vercel` CLI) — build command e output directory sono già in `vercel.json`,

@@ -5,7 +5,7 @@
  * popolino e i flussi non si rompano, non che ogni regola di business sia
  * replicata.
  */
-import { getDb, type Db, type DbCollection, type DbCollectionSection } from '../db';
+import { getDb, type Db, type DbCollection, type DbCollectionSection } from '../db.js';
 import {
   asRecord,
   asStringArray,
@@ -15,8 +15,8 @@ import {
   paginate,
   type Ctx,
   type Router,
-} from '../router';
-import { createRng, objectId } from '../rng';
+} from '../router.js';
+import { createRng, objectId } from '../rng.js';
 
 const idRng = createRng(4242);
 

@@ -11,9 +11,9 @@
  * i tipi di dominio del frontend. Questo file non importa nulla da `src/`:
  * viene compilato nel bundle di `vite.config.ts`, dove l'alias `@/` non esiste.
  */
-import { createRng, objectId, stratify, type Rng } from './rng';
-import { SUBJECT_SEED } from './seed/subjects';
-import { pickQuestionBody } from './seed/content';
+import { createRng, objectId, stratify, type Rng } from './rng.js';
+import { SUBJECT_SEED } from './seed/subjects.js';
+import { pickQuestionBody } from './seed/content.js';
 
 // ---------------------------------------------------------------------------
 // Shape

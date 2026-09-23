@@ -4,7 +4,7 @@
  * Filtri e paginazione sono implementati sul serio: se qui i filtri fossero
  * finti, il prototipo non direbbe nulla su come si cerca una domanda.
  */
-import { getDb, type Db, type DbQuestion, type DbQuestionStatus } from '../db';
+import { getDb, type Db, type DbQuestion, type DbQuestionStatus } from '../db.js';
 import {
   asRecord,
   asStringArray,
@@ -15,8 +15,8 @@ import {
   stripHtml,
   type Ctx,
   type Router,
-} from '../router';
-import { createRng, objectId } from '../rng';
+} from '../router.js';
+import { createRng, objectId } from '../rng.js';
 
 const idRng = createRng(999);
 

@@ -6,7 +6,7 @@
  * risponde con un MeResponse valido, `AuthenticatedLayout` resta bloccato su
  * spinner o sulla schermata "non autorizzato" e nessuna rotta è raggiungibile.
  */
-import { FULL_CAPABILITIES, getDb, type Db, type DbCampaignSlot } from '../db';
+import { FULL_CAPABILITIES, getDb, type Db, type DbCampaignSlot } from '../db.js';
 import {
   asRecord,
   asStringArray,
@@ -15,8 +15,8 @@ import {
   paginate,
   type Ctx,
   type Router,
-} from '../router';
-import { createRng, objectId } from '../rng';
+} from '../router.js';
+import { createRng, objectId } from '../rng.js';
 
 const idRng = createRng(7777);
 

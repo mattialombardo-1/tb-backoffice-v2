@@ -21,11 +21,11 @@
  * opzioni di deploy discusse con l'utente (hosting con processo persistente).
  */
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { getDb } from '../../mock/db';
-import { registerCatalogRoutes } from '../../mock/handlers/catalog';
-import { registerPeopleRoutes } from '../../mock/handlers/people';
-import { registerQuestionRoutes } from '../../mock/handlers/questions';
-import { createRouter, HttpError, sendJson, type Ctx } from '../../mock/router';
+import { getDb } from '../../mock/db.js';
+import { registerCatalogRoutes } from '../../mock/handlers/catalog.js';
+import { registerPeopleRoutes } from '../../mock/handlers/people.js';
+import { registerQuestionRoutes } from '../../mock/handlers/questions.js';
+import { createRouter, HttpError, sendJson, type Ctx } from '../../mock/router.js';
 
 // Stesso identico ordine di registrazione di mock/index.ts. Lazy (non al
 // caricamento del modulo): un errore qui dentro (es. nel seed di mock/db.ts)
