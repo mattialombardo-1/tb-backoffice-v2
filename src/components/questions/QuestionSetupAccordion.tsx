@@ -867,13 +867,17 @@ export function QuestionSetupAccordion({
                         e quante risposte hanno, non due colonne indipendenti come
                         "Completamento". */}
                     <div className="border-b bg-muted/40 py-2.5 pr-3 pl-6 text-center text-xs font-semibold text-foreground">
-                      Domande a risposta chiusa
+                      Domande a
+                      <br />
+                      risposta chiusa
                     </div>
                     <div className="border-r border-b bg-muted/40 py-2.5 pr-6 pl-3 text-center text-xs font-semibold text-foreground">
                       Numero di risposte
                     </div>
                     <div className="border-b bg-muted/40 px-6 py-2.5 text-center text-xs font-semibold text-foreground">
-                      Domande a completamento
+                      Domande a
+                      <br />
+                      completamento
                     </div>
                     {DIFFICULTY_BUCKETS.map(({ key, label }, rowIndex) => {
                       const isLastRow = rowIndex === DIFFICULTY_BUCKETS.length - 1;
