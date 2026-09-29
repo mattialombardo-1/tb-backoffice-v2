@@ -185,8 +185,11 @@ function NumberStepper({
   return (
     // Pillola arrotondata con sfondo (bg-muted) invece dei soli bottoni ghost affiancati —
     // reference fornita da Mattia: due cerchi pieni (variant="secondary" + rounded-full)
-    // per meno/più, il numero in mezzo senza sfondo proprio.
-    <div className="flex items-center gap-2 rounded-2xl bg-muted px-1.5 py-1.5">
+    // per meno/più, il numero in mezzo senza sfondo proprio. rounded-full (non rounded-2xl)
+    // + padding p-2 su tutti i lati (non solo px-1.5/py-1.5): nel reference la pillola ha
+    // parecchio respiro intorno ai cerchi, non li stringe — un rounded-2xl con poco padding
+    // finiva per sembrare un blocchetto stretto invece di una vera pillola.
+    <div className="flex items-center gap-2 rounded-full bg-muted p-2">
       <Button
         type="button"
         variant="secondary"
