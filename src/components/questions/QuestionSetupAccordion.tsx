@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Minus, Plus, type LucideIcon } from 'lucide-react';
 import {
   Accordion,
@@ -7,7 +7,6 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -149,14 +148,10 @@ function FieldTags({ items }: { items: FieldTagItem[] }) {
   );
 }
 
-// Stesso copy di TYPE_DESCRIPTIONS in QuestionTypeSelector.tsx — duplicato, non importato:
-// esportarlo da lì farebbe fallire il lint di react-refresh (un file di componente può
-// esportare solo componenti). Riga di aiuto sotto il toggle compatto di Tipo di domanda
-// qui sotto, stesso copy della card originale ma fuori dal bottone.
-const TYPE_DESCRIPTIONS: Record<QuestionType, string> = {
-  MULTIPLE_CHOICE: 'Lo studente sceglie tra più alternative',
-  COMPLETION: 'Lo studente scrive la risposta',
-};
+// Le due colonne della griglia difficoltà × tipo, sempre nello stesso ordine di
+// QUESTION_TYPE_LABELS — usato sia per la griglia che per i totali per tipo (vedi
+// typeTotal/typeBreakdownLabel più sotto).
+const QUESTION_TYPES = Object.keys(QUESTION_TYPE_LABELS) as QuestionType[];
 
 /** Un numero di risposte possibile; solo quelli `enabled` sono selezionabili. */
 interface AnswerCountOption {
@@ -400,16 +395,10 @@ const DIFFICULTY_BUCKETS: { key: DifficultyBucket; label: string }[] = [
   { key: 'difficile', label: 'Difficile' },
 ];
 
-// Tetto sul totale del batch (somma dei tre livelli), non più sulla singola
-// Quantità — stesso limite di prima, spalmato su tre input invece di uno.
+// Tetto sul totale del batch (somma di tutte le celle difficoltà × tipo), non più sulla
+// singola Quantità — stesso limite di prima, spalmato sulla griglia invece che su tre
+// input.
 const MAX_TOTAL_QUANTITY = 20;
-
-// Proposta di design: "Risposta chiusa" è il caso più frequente in produzione — parte
-// già selezionata invece di lasciare Tipo di domanda vuoto. Applicato solo alla prima
-// apertura di "Composizione", non prima (vedi openedRef più sotto). Le quantità per
-// livello invece partono sempre vuote: non c'è una ripartizione di default sensata da
-// proporre, tocca sempre scegliere esplicitamente quante per livello.
-const DEFAULT_TYPE: QuestionType = 'MULTIPLE_CHOICE';
 
 // "L'altra" sezione a cui passare quando quella aperta si chiude da sola a
 // tutti i campi compilati — non è un percorso bloccato (ogni sezione resta
@@ -423,18 +412,18 @@ const NEXT_SECTION: Record<string, string> = {
 interface QuestionSetupAccordionProps {
   hierarchy: HierarchyState;
   disabled?: boolean;
-  /** Obbligatorio per procedere — controllato da QuestionCreatePage insieme a Materia/Argomento. */
-  type: QuestionType | '';
-  onTypeChange: (value: QuestionType) => void;
-  /** Sola andata: QuestionSetupAccordion possiede le tre quantità per livello (vedi
+  /** Sola andata: QuestionSetupAccordion possiede la griglia difficoltà × tipo (vedi
    *  `quantities` più sotto) e riporta solo il totale a QuestionCreatePage, che lo usa
-   *  per "Crea Domanda" — non c'è un valore da ricevere indietro, la ripartizione non è
+   *  per "Crea Domanda" — non c'è un valore da ricevere indietro, la griglia non è
    *  ricostruibile da un totale singolo. */
   onQuantityChange: (value: string) => void;
-  /** Obbligatorio per procedere quando type === 'MULTIPLE_CHOICE' (per
-   *  'COMPLETION' il campo non esiste nemmeno, vedi sotto) — sola andata,
-   *  stesso motivo di onQuantityChange: QuestionCreatePage lo usa solo per
-   *  sapere se "Crea Domanda" può sbloccarsi. */
+  /** Se almeno una cella "Risposta chiusa" della griglia ha quantità > 0 — sola andata,
+   *  stesso motivo di onQuantityChange: QuestionCreatePage lo usa solo per sapere se
+   *  "Numero di risposte" è obbligatorio per sbloccare "Crea Domanda". */
+  onHasClosedTypeChange: (value: boolean) => void;
+  /** Obbligatorio per procedere quando onHasClosedTypeChange ha riportato true — sola
+   *  andata, stesso motivo di onQuantityChange: QuestionCreatePage lo usa solo per sapere
+   *  se "Crea Domanda" può sbloccarsi. */
   onAnswerCountChange: (value: string) => void;
   /** Obbligatorio per procedere — risolto qui (te stesso o un altro revisore scelto),
    *  ma controllato da QuestionCreatePage insieme agli altri campi che sbloccano "Crea Domanda". */
@@ -460,9 +449,8 @@ interface QuestionSetupAccordionProps {
 export function QuestionSetupAccordion({
   hierarchy,
   disabled = false,
-  type,
-  onTypeChange,
   onQuantityChange,
+  onHasClosedTypeChange,
   onAnswerCountChange,
   reviewerId,
   onReviewerIdChange,
@@ -514,47 +502,57 @@ export function QuestionSetupAccordion({
     setAutoOpenField(field);
   };
 
-  // Le tre quantità per livello sostituiscono il vecchio dropdown Difficoltà (valore
-  // unico per tutto il batch) + singola Quantità — partono da "0" (non più vuote):
-  // sono stepper, non campi di testo, quindi mostrano sempre un numero esplicito fin
-  // da subito, non c'è più uno stato "non ancora toccato" da distinguere da uno zero
-  // esplicito. Il totale (somma dei tre) risale a QuestionCreatePage tramite
-  // onQuantityChange, stesso canale di prima.
-  const [quantities, setQuantities] = useState<Record<DifficultyBucket, string>>({
-    facile: '0',
-    media: '0',
-    difficile: '0',
+  // Griglia difficoltà × tipo — sostituisce le tre quantità per livello (un solo tipo
+  // valido per l'intero batch): ora ogni cella (livello, tipo) ha la propria quantità,
+  // così una batteria può mischiare "3 chiuse + 2 aperte" nella stessa difficoltà. Ogni
+  // cella parte da "0" (non vuota): sono stepper, non campi di testo, quindi mostrano
+  // sempre un numero esplicito fin da subito. Il totale (somma di tutte le celle) risale
+  // a QuestionCreatePage tramite onQuantityChange, stesso canale di prima.
+  const [quantities, setQuantities] = useState<
+    Record<DifficultyBucket, Record<QuestionType, string>>
+  >({
+    facile: { MULTIPLE_CHOICE: '0', COMPLETION: '0' },
+    media: { MULTIPLE_CHOICE: '0', COMPLETION: '0' },
+    difficile: { MULTIPLE_CHOICE: '0', COMPLETION: '0' },
   });
-  const totalQuantity = DIFFICULTY_BUCKETS.reduce(
-    (sum, { key }) => sum + (Number(quantities[key]) || 0),
-    0
-  );
+  const bucketTotal = (bucket: DifficultyBucket) =>
+    QUESTION_TYPES.reduce((sum, t) => sum + (Number(quantities[bucket][t]) || 0), 0);
+  const typeTotal = (t: QuestionType) =>
+    DIFFICULTY_BUCKETS.reduce((sum, { key }) => sum + (Number(quantities[key][t]) || 0), 0);
+  const totalQuantity = DIFFICULTY_BUCKETS.reduce((sum, { key }) => sum + bucketTotal(key), 0);
+  // "Numero di risposte" è obbligatorio solo se almeno una cella "Risposta chiusa" della
+  // griglia è > 0 — non c'è più un tipo unico da controllare.
+  const hasClosedType = typeTotal('MULTIPLE_CHOICE') > 0;
 
-  /** Aggiorna la quantità di un livello — il totale complessivo resta sempre ≤
-   *  MAX_TOTAL_QUANTITY: il valore digitato viene tagliato se sforerebbe il tetto,
-   *  tenendo conto di quanto già impostato sugli altri due livelli. */
-  const handleQuantityChange = (bucket: DifficultyBucket, raw: string) => {
+  /** Aggiorna la quantità di una cella (livello, tipo) — il totale complessivo resta
+   *  sempre ≤ MAX_TOTAL_QUANTITY: il valore digitato viene tagliato se sforerebbe il
+   *  tetto, tenendo conto di quanto già impostato sulle altre celle. */
+  const handleQuantityChange = (bucket: DifficultyBucket, qType: QuestionType, raw: string) => {
     const digits = raw.replace(/\D/g, '').slice(0, 3);
-    const otherTotal = DIFFICULTY_BUCKETS.filter(({ key }) => key !== bucket).reduce(
-      (sum, { key }) => sum + (Number(quantities[key]) || 0),
-      0
-    );
+    const otherTotal = totalQuantity - (Number(quantities[bucket][qType]) || 0);
     const next =
       digits === '' ? '' : String(Math.min(Number(digits), MAX_TOTAL_QUANTITY - otherTotal));
-    const nextQuantities = { ...quantities, [bucket]: next };
+    const nextQuantities = {
+      ...quantities,
+      [bucket]: { ...quantities[bucket], [qType]: next },
+    };
     setQuantities(nextQuantities);
     const nextTotal = DIFFICULTY_BUCKETS.reduce(
-      (sum, { key }) => sum + (Number(nextQuantities[key]) || 0),
+      (sum, { key }) =>
+        sum + QUESTION_TYPES.reduce((s, t) => s + (Number(nextQuantities[key][t]) || 0), 0),
       0
     );
     onQuantityChange(nextTotal > 0 ? String(nextTotal) : '');
+    onHasClosedTypeChange(
+      DIFFICULTY_BUCKETS.some(({ key }) => (Number(nextQuantities[key].MULTIPLE_CHOICE) || 0) > 0)
+    );
   };
 
   /** Stepper +/- sopra handleQuantityChange: riusa lo stesso clamp (non si supera
    *  MAX_TOTAL_QUANTITY sul totale) e non si scende mai sotto 0. */
-  const stepQuantity = (bucket: DifficultyBucket, delta: 1 | -1) => {
-    const current = Number(quantities[bucket]) || 0;
-    handleQuantityChange(bucket, String(Math.max(0, current + delta)));
+  const stepQuantity = (bucket: DifficultyBucket, qType: QuestionType, delta: 1 | -1) => {
+    const current = Number(quantities[bucket][qType]) || 0;
+    handleQuantityChange(bucket, qType, String(Math.max(0, current + delta)));
   };
 
   // Numero di risposte per "Risposta chiusa" — nessun default: parte senza nulla
@@ -606,24 +604,23 @@ export function QuestionSetupAccordion({
     onReviewerIdChange(id);
   };
 
-  // Le proposte di default (Tipo/Quantità in Composizione, "Assegna a me" in
-  // Gestisci revisione) si applicano solo alla prima apertura della sezione che
-  // le contiene — mai prima, nemmeno se l'utente non la apre affatto: aprire il
-  // form non deve già dare per scelto qualcosa che non ha ancora visto. openedRef
-  // segna quali sezioni sono già state aperte almeno una volta, per applicare il
-  // default una sola volta e non sovrascrivere una scelta fatta nel frattempo.
+  // Le proposte di default ("Assegna a me" in Gestisci revisione) si applicano solo
+  // alla prima apertura della sezione che le contiene — mai prima, nemmeno se
+  // l'utente non la apre affatto: aprire il form non deve già dare per scelto
+  // qualcosa che non ha ancora visto. openedRef segna quali sezioni sono già state
+  // aperte almeno una volta, per applicare il default una sola volta e non
+  // sovrascrivere una scelta fatta nel frattempo. Composizione non ha più un
+  // default da applicare qui: con la griglia non c'è un "tipo" unico da
+  // preselezionare, solo celle che partono già da un numero esplicito (0).
   const openedRef = useRef<Set<string>>(new Set(['classificazione']));
   useEffect(() => {
     if (!openSection || openedRef.current.has(openSection)) return;
     openedRef.current.add(openSection);
 
-    if (openSection === 'composizione' && type === '') {
-      onTypeChange(DEFAULT_TYPE);
-    }
     if (openSection === 'gestisci-revisione' && reviewerChoice === '') {
       setReviewerChoice('me');
     }
-  }, [openSection, type, onTypeChange, reviewerChoice]);
+  }, [openSection, reviewerChoice]);
 
   const currentSubtopics = hierarchy.selection.topicName
     ? (SOTTOARGOMENTO_OPTIONS[hierarchy.selection.topicName] ?? [])
@@ -642,12 +639,12 @@ export function QuestionSetupAccordion({
     hierarchy.selection.subjectId != null &&
     hierarchy.selection.topicId != null &&
     (currentSubtopics.length === 0 || hierarchy.selection.sottoArgomentoId != null);
-  // Non serve più controllare che tutti e tre i livelli abbiano un valore "esplicito"
-  // (prima: quantities[key] !== '', per distinguere un campo mai toccato da uno zero
-  // voluto) — con gli stepper ogni livello è sempre un numero visibile fin dall'inizio
-  // (parte da "0", vedi sopra), quindi basta il totale positivo.
-  const composizioneAllFilled =
-    totalQuantity > 0 && type !== '' && (type !== 'MULTIPLE_CHOICE' || answerCount !== '');
+  // Non serve più controllare che ogni cella abbia un valore "esplicito" (prima:
+  // quantities[key] !== '', per distinguere un campo mai toccato da uno zero voluto) —
+  // con gli stepper ogni cella è sempre un numero visibile fin dall'inizio (parte da
+  // "0", vedi sopra), quindi basta il totale positivo. Niente più controllo su "type":
+  // con la griglia non c'è un tipo unico da scegliere, solo celle da valorizzare.
+  const composizioneAllFilled = totalQuantity > 0 && (!hasClosedType || answerCount !== '');
 
   // Chiude la sezione aperta e apre la prossima solo quando TUTTI i suoi campi sono
   // compilati (facoltativi compresi). autoAdvancedRef evita di richiuderla di nuovo
@@ -693,24 +690,25 @@ export function QuestionSetupAccordion({
       : null,
   ].filter((v): v is FieldTagItem => v !== null);
 
-  // Un solo tag "5 facili · 5 medie · 10 difficili" al posto dei due separati (Difficoltà
-  // + Quantità) che sostituisce: sono la stessa informazione, un batch ripartito per
-  // livello, non due scelte indipendenti. Solo i livelli valorizzati compaiono.
-  const quantityBreakdownLabel = DIFFICULTY_BUCKETS.filter(({ key }) => Number(quantities[key]) > 0)
-    .map(({ key, label }) => `${quantities[key]} ${label.toLowerCase()}`)
+  // Un tag "5 facili · 5 medie · 10 difficili" (totale per livello, a prescindere dal
+  // tipo) e uno "12 Risposta chiusa · 8 Completamento" (totale per tipo, a prescindere
+  // dal livello) — due riepiloghi della stessa griglia, non due scelte indipendenti.
+  // Solo i valori > 0 compaiono in ciascuno.
+  const quantityBreakdownLabel = DIFFICULTY_BUCKETS.filter(({ key }) => bucketTotal(key) > 0)
+    .map(({ key, label }) => `${bucketTotal(key)} ${label.toLowerCase()}`)
+    .join(' · ');
+  const typeBreakdownLabel = QUESTION_TYPES.filter((t) => typeTotal(t) > 0)
+    .map((t) => `${typeTotal(t)} ${QUESTION_TYPE_LABELS[t].toLowerCase()}`)
     .join(' · ');
 
   const composizioneTagItems: FieldTagItem[] = [
     quantityBreakdownLabel
       ? { label: quantityBreakdownLabel, onClick: () => openFieldDropdown('composizione', null) }
       : null,
-    type
-      ? {
-          label: QUESTION_TYPE_LABELS[type],
-          onClick: () => openFieldDropdown('composizione', null),
-        }
+    typeBreakdownLabel
+      ? { label: typeBreakdownLabel, onClick: () => openFieldDropdown('composizione', null) }
       : null,
-    type === 'MULTIPLE_CHOICE'
+    hasClosedType
       ? { label: `${answerCount} risposte`, onClick: () => openFieldDropdown('composizione', null) }
       : null,
   ].filter((v): v is FieldTagItem => v !== null);
@@ -812,12 +810,9 @@ export function QuestionSetupAccordion({
                 <GroupTrigger
                   title="Composizione"
                   stepNumber={2}
-                  // type/quantities partono vuoti e si valorizzano solo alla prima apertura
-                  // di questa sezione (vedi openedRef) — quindi non sono mai "già validi"
-                  // prima che l'utente l'abbia aperta almeno una volta.
-                  done={type !== '' && totalQuantity > 0}
+                  done={composizioneAllFilled}
                   badge={
-                    openSection === 'composizione' || (type !== '' && totalQuantity > 0)
+                    openSection === 'composizione' || composizioneAllFilled
                       ? undefined
                       : REQUIRED_BADGE
                   }
@@ -835,143 +830,120 @@ export function QuestionSetupAccordion({
               )}
             </div>
             <AccordionContent className="flex flex-col gap-5 px-6 pt-4 pb-5">
-              {/* Due colonne affiancate, ciascuna con esattamente 3 righe allineate:
-                  etichetta principale, poi UNA riga di controlli (non due: le etichette
-                  Facile/Media/Difficile stavano sopra gli stepper in una riga propria,
-                  che Tipo di domanda non aveva — i controlli veri partivano ad altezze
-                  diverse. Ora sono in linea, dentro la stessa riga del controllo), poi una
-                  riga di aiuto della stessa altezza (il totale a sinistra, il copy del
-                  tipo scelto a destra — lo stesso di QuestionTypeSelector, TYPE_DESCRIPTIONS,
-                  qui sotto invece che dentro la card). */}
-              {/* flex-wrap come rete di sicurezza: a 1440px reale le due colonne stanno
-                  comode affiancate, ma se la finestra è più stretta Tipo di domanda va a
-                  capo sotto Quantità invece di tagliarsi contro il bordo della card. */}
-              <div className="flex flex-wrap items-start gap-x-10 gap-y-5">
-                <div className="flex flex-col gap-3">
-                  <Label>
-                    Quantità e Difficoltà Domande
-                    <span className="ml-0.5 text-destructive">*</span>
-                  </Label>
-                  {/* Stepper, non più input di testo — sostituisce il vecchio dropdown
-                      Difficoltà (un valore unico per tutto il batch) + il singolo campo
-                      Quantità: ora è la somma dei tre a fare da quantità totale. */}
-                  <div className="flex gap-5">
-                    {DIFFICULTY_BUCKETS.map(({ key, label }) => (
-                      <div
-                        key={key}
-                        className="flex w-fit items-center gap-1.5 rounded-md border pl-2.5"
-                      >
-                        <span className="text-xs font-semibold text-muted-foreground">{label}</span>
-                        {/* Meno/numero/più più vicini tra loro (gap-0.5, non più lo
-                            stesso gap-1.5 dell'etichetta): sono un unico controllo, il
-                            numero digitabile — vedi Input sotto — è anche il bersaglio
-                            visivo dei due bottoni, non ha senso staccarlo quanto
-                            l'etichetta è staccata dal gruppo. */}
-                        <div className="flex items-center gap-0.5">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="h-9 w-9 shrink-0"
-                            disabled={disabled || Number(quantities[key]) <= 0}
-                            onClick={() => stepQuantity(key, -1)}
-                            aria-label={`Riduci quantità ${label.toLowerCase()}`}
-                          >
-                            <Minus className="h-3.5 w-3.5" />
-                          </Button>
-                          {/* Digitabile, non più un <span> di sola lettura — riusa
-                              handleQuantityChange (stesso clamp/parsing già validato per
-                              gli stepper) invece di un handler nuovo. */}
-                          <Input
-                            value={quantities[key]}
-                            onChange={(e) => handleQuantityChange(key, e.target.value)}
-                            inputMode="numeric"
-                            disabled={disabled}
-                            aria-label={`Quantità ${label.toLowerCase()}`}
-                            className="h-9 w-8 appearance-none border-none bg-transparent p-0 text-center text-sm tabular-nums shadow-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-0"
-                          />
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="h-9 w-9 shrink-0"
-                            disabled={disabled || totalQuantity >= MAX_TOTAL_QUANTITY}
-                            onClick={() => stepQuantity(key, 1)}
-                            aria-label={`Aumenta quantità ${label.toLowerCase()}`}
-                          >
-                            <Plus className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {totalQuantity} domande in totale · fino a {MAX_TOTAL_QUANTITY} per volta.
-                  </p>
-                </div>
-
-                {/* Toggle compatto al posto di QuestionTypeSelector (le due card con
-                    descrizione, usate invece nel resto dell'app — QuestionContentEditor,
-                    flusso manuale — che non tocco): qui deve stare accanto a Quantità su
-                    una riga sola, non sotto in un blocco alto. Stessi QUESTION_TYPE_LABELS
-                    e TYPE_DESCRIPTIONS di QuestionTypeSelector — il copy non è sparito,
-                    vive sotto come riga di aiuto invece che dentro ogni bottone. */}
-                <div className="flex flex-col gap-3">
-                  <Label>
-                    Tipo di domanda
-                    <span className="ml-0.5 text-destructive">*</span>
-                  </Label>
-                  <ToggleGroup
-                    type="single"
-                    variant="outline"
-                    value={type}
-                    onValueChange={(next) => next && onTypeChange(next as QuestionType)}
-                    disabled={disabled}
-                    className="justify-start gap-2"
+              <div className="flex flex-col gap-3">
+                <Label>
+                  Quantità per difficoltà e tipo
+                  <span className="ml-0.5 text-destructive">*</span>
+                </Label>
+                {/* Griglia difficoltà (righe) × tipo (colonne) — sostituisce i tre stepper
+                    per livello + il toggle Tipo di domanda unico per tutto il batch: ora
+                    ogni cella ha la propria quantità, una batteria può mischiare "3 chiuse
+                    + 2 aperte" nella stessa difficoltà. Un Fragment per riga (non un div):
+                    resta un unico CSS grid, non una tabella annidata — ogni cella è un
+                    figlio diretto del grid container, l'auto-flow riga per riga fa il
+                    resto. */}
+                <div className="overflow-hidden rounded-md border">
+                  <div
+                    className="grid"
+                    style={{ gridTemplateColumns: `auto repeat(${QUESTION_TYPES.length}, 1fr)` }}
                   >
-                    {(Object.keys(QUESTION_TYPE_LABELS) as QuestionType[]).map((t) => (
-                      <ToggleGroupItem
+                    <div className="border-r border-b bg-muted/40" />
+                    {QUESTION_TYPES.map((t, i) => (
+                      <div
                         key={t}
-                        value={t}
-                        className="h-9 shrink-0 px-3 text-sm font-normal whitespace-nowrap data-[state=on]:border-primary data-[state=on]:bg-accent data-[state=on]:font-medium"
+                        className={cn(
+                          'border-b bg-muted/40 px-3 py-2 text-center text-xs font-semibold text-muted-foreground',
+                          i < QUESTION_TYPES.length - 1 && 'border-r'
+                        )}
                       >
                         {QUESTION_TYPE_LABELS[t]}
-                      </ToggleGroupItem>
+                      </div>
                     ))}
-                  </ToggleGroup>
-                  <p className="text-xs text-muted-foreground">
-                    {type !== '' ? TYPE_DESCRIPTIONS[type] : ' '}
-                  </p>
-                </div>
-
-                {/* Terza colonna della stessa riga, non più sotto: compare solo per
-                    "Risposta chiusa" (type === MULTIPLE_CHOICE), quindi non c'è sempre —
-                    ma quando c'è sta sulla stessa linea orizzontale di Quantità e Tipo di
-                    domanda, non su una riga propria sotto. */}
-                {type === 'MULTIPLE_CHOICE' && (
-                  // flex-1 min-w-0: prende tutto lo spazio che resta sulla riga dopo
-                  // Quantità e Tipo di domanda (che restano a larghezza naturale, w-fit) —
-                  // i radio dentro si allargano di conseguenza (vedi AnswerCountField),
-                  // senza sforare i margini della card: min-w-0 evita che il flex item si
-                  // rifiuti di restringersi sotto il proprio contenuto quando lo spazio è
-                  // poco, cosa che altrimenti lo spingerebbe fuori a capo prima del dovuto.
-                  <div className="flex min-w-0 flex-1 flex-col gap-3">
-                    <Label>
-                      Numero di risposte
-                      <span className="ml-0.5 text-destructive">*</span>
-                    </Label>
-                    <AnswerCountField
-                      value={answerCount}
-                      onChange={handleAnswerCountChange}
-                      disabled={disabled}
-                    />
+                    {DIFFICULTY_BUCKETS.map(({ key, label }, rowIndex) => {
+                      const isLastRow = rowIndex === DIFFICULTY_BUCKETS.length - 1;
+                      return (
+                        <Fragment key={key}>
+                          <div
+                            className={cn(
+                              'flex items-center border-r px-3 py-2 text-xs font-semibold text-muted-foreground',
+                              !isLastRow && 'border-b'
+                            )}
+                          >
+                            {label}
+                          </div>
+                          {QUESTION_TYPES.map((t, colIndex) => (
+                            <div
+                              key={t}
+                              className={cn(
+                                'flex items-center justify-center px-2 py-1.5',
+                                !isLastRow && 'border-b',
+                                colIndex < QUESTION_TYPES.length - 1 && 'border-r'
+                              )}
+                            >
+                              <div className="flex items-center gap-0.5">
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 shrink-0"
+                                  disabled={disabled || Number(quantities[key][t]) <= 0}
+                                  onClick={() => stepQuantity(key, t, -1)}
+                                  aria-label={`Riduci ${QUESTION_TYPE_LABELS[t]} ${label}`}
+                                >
+                                  <Minus className="h-3.5 w-3.5" />
+                                </Button>
+                                <Input
+                                  value={quantities[key][t]}
+                                  onChange={(e) => handleQuantityChange(key, t, e.target.value)}
+                                  inputMode="numeric"
+                                  disabled={disabled}
+                                  aria-label={`${QUESTION_TYPE_LABELS[t]} ${label}`}
+                                  className="h-8 w-8 appearance-none border-none bg-transparent p-0 text-center text-sm tabular-nums shadow-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-0"
+                                />
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 shrink-0"
+                                  disabled={disabled || totalQuantity >= MAX_TOTAL_QUANTITY}
+                                  onClick={() => stepQuantity(key, t, 1)}
+                                  aria-label={`Aumenta ${QUESTION_TYPE_LABELS[t]} ${label}`}
+                                >
+                                  <Plus className="h-3.5 w-3.5" />
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </Fragment>
+                      );
+                    })}
                   </div>
-                )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {totalQuantity} domande in totale · fino a {MAX_TOTAL_QUANTITY} per volta.
+                </p>
               </div>
+
+              {/* Compare solo se almeno una cella "Risposta chiusa" della griglia è > 0 —
+                  un'unica scelta valida per tutte le domande a risposta chiusa del batch,
+                  a qualunque difficoltà appartengano (non configurabile per cella). */}
+              {hasClosedType && (
+                <div className="flex max-w-xs flex-col gap-3">
+                  <Label>
+                    Numero di risposte
+                    <span className="ml-0.5 text-destructive">*</span>
+                  </Label>
+                  <AnswerCountField
+                    value={answerCount}
+                    onChange={handleAnswerCountChange}
+                    disabled={disabled}
+                  />
+                </div>
+              )}
             </AccordionContent>
           </AccordionItem>
 
-          {/* Obbligatorio come Materia/Argomento/Tipo/Quantità, ma precompilato su
+          {/* Obbligatorio come Materia/Argomento/Composizione, ma precompilato su
               "Assegna a me" — "Crea Domanda" in fondo al form si abilita nello stesso
               momento in cui reviewerId è valorizzato, dato che dipende dallo stesso
               valore. */}
@@ -1095,12 +1067,19 @@ export function QuestionSetupAccordion({
           argomentoName={hierarchy.selection.topicName ?? undefined}
           sottoArgomentoId={hierarchy.selection.sottoArgomentoId ?? ''}
           sottoArgomentoName={sottoArgomentoLabel}
-          typeLabel={type ? QUESTION_TYPE_LABELS[type] : ''}
-          isMultipleChoice={type === 'MULTIPLE_CHOICE'}
-          quantityByDifficulty={{
-            facile: Number(quantities.facile) || 0,
-            media: Number(quantities.media) || 0,
-            difficile: Number(quantities.difficile) || 0,
+          quantityByDifficultyAndType={{
+            facile: {
+              MULTIPLE_CHOICE: Number(quantities.facile.MULTIPLE_CHOICE) || 0,
+              COMPLETION: Number(quantities.facile.COMPLETION) || 0,
+            },
+            media: {
+              MULTIPLE_CHOICE: Number(quantities.media.MULTIPLE_CHOICE) || 0,
+              COMPLETION: Number(quantities.media.COMPLETION) || 0,
+            },
+            difficile: {
+              MULTIPLE_CHOICE: Number(quantities.difficile.MULTIPLE_CHOICE) || 0,
+              COMPLETION: Number(quantities.difficile.COMPLETION) || 0,
+            },
           }}
           answerCount={Number(answerCount) || 5}
           reviewerId={reviewerId}

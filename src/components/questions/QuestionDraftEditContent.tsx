@@ -47,7 +47,6 @@ import { REVIEW_SUCCESS_TOAST_CLASSNAME, type DraftQuestion } from './QuestionGe
 
 interface QuestionDraftEditContentProps {
   draft: DraftQuestion;
-  isMultipleChoice: boolean;
   materiaName?: string;
   argomentoName?: string;
   sottoArgomentoName?: string;
@@ -80,7 +79,6 @@ interface QuestionDraftEditContentProps {
  */
 export function QuestionDraftEditContent({
   draft,
-  isMultipleChoice,
   materiaName,
   argomentoName,
   sottoArgomentoName,
@@ -90,8 +88,11 @@ export function QuestionDraftEditContent({
   onClose,
   onSave,
 }: QuestionDraftEditContentProps) {
+  // Il tipo non è più uniforme per tutto il batch (griglia difficoltà × tipo in
+  // QuestionSetupAccordion) — ogni bozza porta il proprio, vedi DraftQuestion.type.
+  const isMultipleChoice = draft.type === 'MULTIPLE_CHOICE';
   const form = useQuestionForm({
-    initialType: isMultipleChoice ? 'MULTIPLE_CHOICE' : 'COMPLETION',
+    initialType: draft.type,
     initialDifficulty: draft.difficulty,
   });
   const {

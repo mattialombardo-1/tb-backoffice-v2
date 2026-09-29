@@ -47,8 +47,10 @@ import { questionsService } from '@/lib/services/questions';
 import { useBulkSelection } from '@/lib/hooks/useBulkSelection';
 import {
   DIFFICULTY_LABELS,
+  QUESTION_TYPE_LABELS,
   type CreateQuestionPayload,
   type DifficultyLevel,
+  type QuestionType,
 } from '@/lib/types/questions';
 import { createGenerationId, recordGeneratedQuestion } from '@/lib/hooks/questionGenerationBatches';
 import { REJECT_CUSTOM_REASON, REJECT_CUSTOM_TEXT_MAX, REJECT_REASONS } from '@/lib/rejectReasons';
@@ -79,6 +81,10 @@ export interface DraftQuestion {
    *  da un unico parametro di batch: ogni domanda porta il livello del proprio "secchio"
    *  (facile/media/difficile), il batch può mischiarli nella stessa richiesta. */
   difficulty: DifficultyLevel;
+  /** Stessa idea di `difficulty` sopra, applicata al tipo: con la griglia difficoltà × tipo
+   *  di QuestionSetupAccordion il batch può mischiare "Risposta chiusa" e "Completamento"
+   *  nella stessa generazione, quindi ogni domanda porta anche il proprio tipo. */
+  type: QuestionType;
   text: string;
   alternatives: string[];
   correctIndex: number;
@@ -176,56 +182,64 @@ function generateDraftCode(length = 24): string {
   return code;
 }
 
-/** Quante domande generare per ciascuno dei tre livelli — sostituisce il vecchio parametro
- *  unico "count" + "difficoltà uniforme per tutto il batch": ogni livello ha il suo secchio,
- *  la richiesta può mischiarli (es. 5 facili, 5 medie, 10 difficili nella stessa generazione). */
-interface QuantityByDifficulty {
-  facile: number;
-  media: number;
-  difficile: number;
-}
+/** Quante domande generare per ciascuna cella difficoltà × tipo — sostituisce il vecchio
+ *  parametro unico "count" + "un solo tipo per tutto il batch": ogni cella ha il suo
+ *  secchio, la richiesta può mischiarli (es. 5 chiuse facili, 3 aperte medie, 10 chiuse
+ *  difficili nella stessa generazione). */
+type QuantityByDifficultyAndType = Record<
+  'facile' | 'media' | 'difficile',
+  Record<QuestionType, number>
+>;
 
 // Le tre etichette di QuestionSetupAccordion → scala reale delle domande (DifficultyLevel).
 // "Media" è l'unico nome che non coincide 1:1 con la scala reale (lì è "medio").
-const BUCKET_TO_REAL_DIFFICULTY: Record<keyof QuantityByDifficulty, DifficultyLevel> = {
+const BUCKET_TO_REAL_DIFFICULTY: Record<keyof QuantityByDifficultyAndType, DifficultyLevel> = {
   facile: 'facile',
   media: 'medio',
   difficile: 'difficile',
 };
 
+const QUESTION_TYPES = Object.keys(QUESTION_TYPE_LABELS) as QuestionType[];
+
 function buildDrafts(
-  quantityByDifficulty: QuantityByDifficulty,
+  quantityByDifficultyAndType: QuantityByDifficultyAndType,
   argomentoName: string | undefined,
   sottoArgomentoName: string | undefined,
-  isMultipleChoice: boolean,
   answerCount: number,
   manualeTitle: string | undefined
 ): DraftQuestion[] {
   const bank = pickQuestionBank(argomentoName);
-  // Un secchio per livello, nell'ordine facile → media → difficile: non mischiati a caso
-  // nella lista, così scorrendola si capisce a colpo d'occhio come si compone il batch.
+  // Un secchio per livello, nell'ordine facile → media → difficile, e dentro ogni livello
+  // un secchio per tipo — non mischiati a caso nella lista, così scorrendola si capisce a
+  // colpo d'occhio come si compone il batch.
   const drafts: DraftQuestion[] = [];
-  (Object.keys(BUCKET_TO_REAL_DIFFICULTY) as (keyof QuantityByDifficulty)[]).forEach((bucket) => {
-    for (let i = 0; i < quantityByDifficulty[bucket]; i++) {
-      const index = drafts.length;
-      const template = bank[index % bank.length];
-      drafts.push({
-        id: `draft-${index}`,
-        code: generateDraftCode(),
-        difficulty: BUCKET_TO_REAL_DIFFICULTY[bucket],
-        text: template.text,
-        alternatives: isMultipleChoice ? template.alternatives.slice(0, answerCount) : [],
-        correctIndex: 0,
-        completionAnswer: template.completionAnswer,
-        explanation: template.explanation,
-        passage: template.passage,
-        source: generateSource(argomentoName, sottoArgomentoName, manualeTitle),
-        status: 'pending',
-        persistedQuestionId: null,
-        isPersisting: false,
+  (Object.keys(BUCKET_TO_REAL_DIFFICULTY) as (keyof QuantityByDifficultyAndType)[]).forEach(
+    (bucket) => {
+      QUESTION_TYPES.forEach((type) => {
+        const isMultipleChoice = type === 'MULTIPLE_CHOICE';
+        for (let i = 0; i < quantityByDifficultyAndType[bucket][type]; i++) {
+          const index = drafts.length;
+          const template = bank[index % bank.length];
+          drafts.push({
+            id: `draft-${index}`,
+            code: generateDraftCode(),
+            difficulty: BUCKET_TO_REAL_DIFFICULTY[bucket],
+            type,
+            text: template.text,
+            alternatives: isMultipleChoice ? template.alternatives.slice(0, answerCount) : [],
+            correctIndex: 0,
+            completionAnswer: template.completionAnswer,
+            explanation: template.explanation,
+            passage: template.passage,
+            source: generateSource(argomentoName, sottoArgomentoName, manualeTitle),
+            status: 'pending',
+            persistedQuestionId: null,
+            isPersisting: false,
+          });
+        }
       });
     }
-  });
+  );
   return drafts;
 }
 
@@ -237,11 +251,10 @@ interface QuestionGenerationStepProps {
   argomentoName?: string;
   sottoArgomentoId: string;
   sottoArgomentoName?: string;
-  typeLabel: string;
-  isMultipleChoice: boolean;
-  /** Quante domande per livello — sostituisce quantity+difficultyLabel: non più un
-   *  totale con una difficoltà uniforme, un batch può mischiare i tre livelli. */
-  quantityByDifficulty: QuantityByDifficulty;
+  /** Quante domande per cella difficoltà × tipo — sostituisce quantity+difficultyLabel+
+   *  typeLabel: non più un totale con una difficoltà e un tipo uniformi, un batch può
+   *  mischiare i tre livelli e i due tipi. */
+  quantityByDifficultyAndType: QuantityByDifficultyAndType;
   answerCount: number;
   /** Chi riceve le domande quando vengono mandate in revisione — scelto in "Gestisci
    *  revisione" (QuestionSetupAccordion), obbligatorio: "Crea Domanda" resta disabilitato
@@ -284,9 +297,7 @@ export function QuestionGenerationStep({
   argomentoName,
   sottoArgomentoId,
   sottoArgomentoName,
-  typeLabel,
-  isMultipleChoice,
-  quantityByDifficulty,
+  quantityByDifficultyAndType,
   answerCount,
   reviewerId,
   notesLabel,
@@ -321,10 +332,9 @@ export function QuestionGenerationStep({
   // un montaggio nuovo — una nuova lista di bozze compresa.
   const [drafts, setDrafts] = useState<DraftQuestion[]>(() =>
     buildDrafts(
-      quantityByDifficulty,
+      quantityByDifficultyAndType,
       argomentoName,
       sottoArgomentoName,
-      isMultipleChoice,
       answerCount,
       manualeTitle
     )
@@ -464,22 +474,23 @@ export function QuestionGenerationStep({
     topicId,
     topicName: argomentoName ?? '',
     sottoArgomentoId,
-    type: isMultipleChoice ? 'MULTIPLE_CHOICE' : 'COMPLETION',
+    type: draft.type,
     difficulty: draft.difficulty,
     questionText: draft.text,
     // Il backend reale non ha un campo dedicato per la fonte della "Correzione
     // commentata" — la accodiamo al campo esplicativo esistente invece di inventare un
     // campo che il backend vero non saprebbe salvare (additionalProperties: false).
     explanationText: `${draft.explanation}\n\n${formatSource(draft.source)}`,
-    alternatives: isMultipleChoice
-      ? draft.alternatives.map((text, i) => ({
-          id: crypto.randomUUID(),
-          text,
-          isCorrect: i === draft.correctIndex,
-          order: i,
-        }))
-      : [],
-    completionAnswer: isMultipleChoice ? '' : draft.completionAnswer,
+    alternatives:
+      draft.type === 'MULTIPLE_CHOICE'
+        ? draft.alternatives.map((text, i) => ({
+            id: crypto.randomUUID(),
+            text,
+            isCorrect: i === draft.correctIndex,
+            order: i,
+          }))
+        : [],
+    completionAnswer: draft.type === 'MULTIPLE_CHOICE' ? '' : draft.completionAnswer,
     language: 'IT-it',
   });
 
@@ -771,19 +782,31 @@ export function QuestionGenerationStep({
   const classificationTags = [materiaName, argomentoName, sottoArgomentoName].filter(
     (v): v is string => !!v
   );
-  // Un solo tag "5 facili · 5 medie · 10 difficili" al posto del vecchio difficultyLabel
-  // singolo — solo i livelli con almeno una domanda compaiono.
+  // Due tag di riepilogo della griglia: uno per livello ("5 facili · 5 medie · 10
+  // difficili", a prescindere dal tipo) e uno per tipo ("12 Risposta chiusa · 8
+  // Completamento", a prescindere dal livello) — solo i valori > 0 compaiono in ciascuno.
+  const bucketTotal = (bucket: keyof QuantityByDifficultyAndType) =>
+    QUESTION_TYPES.reduce((sum, t) => sum + quantityByDifficultyAndType[bucket][t], 0);
+  const typeTotal = (t: QuestionType) =>
+    (Object.keys(quantityByDifficultyAndType) as (keyof QuantityByDifficultyAndType)[]).reduce(
+      (sum, bucket) => sum + quantityByDifficultyAndType[bucket][t],
+      0
+    );
+  const hasMultipleChoiceInBatch = typeTotal('MULTIPLE_CHOICE') > 0;
   const quantityBreakdownTag = [
-    quantityByDifficulty.facile ? `${quantityByDifficulty.facile} facili` : null,
-    quantityByDifficulty.media ? `${quantityByDifficulty.media} medie` : null,
-    quantityByDifficulty.difficile ? `${quantityByDifficulty.difficile} difficili` : null,
+    bucketTotal('facile') ? `${bucketTotal('facile')} facili` : null,
+    bucketTotal('media') ? `${bucketTotal('media')} medie` : null,
+    bucketTotal('difficile') ? `${bucketTotal('difficile')} difficili` : null,
   ]
     .filter((v): v is string => !!v)
     .join(' · ');
+  const typeBreakdownTag = QUESTION_TYPES.filter((t) => typeTotal(t) > 0)
+    .map((t) => `${typeTotal(t)} ${QUESTION_TYPE_LABELS[t]}`)
+    .join(' · ');
   const compositionOnlyTags = [
     quantityBreakdownTag || null,
-    typeLabel,
-    isMultipleChoice ? `${answerCount} risposte` : null,
+    typeBreakdownTag || null,
+    hasMultipleChoiceInBatch ? `${answerCount} risposte` : null,
   ].filter((v): v is string => !!v);
   const compositionTags = [...classificationTags, ...compositionOnlyTags];
 
@@ -1067,7 +1090,7 @@ export function QuestionGenerationStep({
                       già in testa alla riga, appena sopra — ripeterlo nel box grigio
                       era ridondante. Il box comincia già dalle risposte. */}
                   <div className="space-y-5 rounded-lg bg-muted/50 p-5">
-                    {isMultipleChoice ? (
+                    {draft.type === 'MULTIPLE_CHOICE' ? (
                       <div className="space-y-2.5">
                         <p className="text-xs text-muted-foreground">Risposte</p>
                         {draft.alternatives.map((alt, i) => {
@@ -1108,7 +1131,7 @@ export function QuestionGenerationStep({
                       <p className="text-xs text-muted-foreground">Correzione commentata</p>
                       <p className="text-sm font-semibold">
                         Risposta corretta:{' '}
-                        {isMultipleChoice
+                        {draft.type === 'MULTIPLE_CHOICE'
                           ? (ALT_LETTERS[draft.correctIndex] ?? '')
                           : draft.completionAnswer}
                       </p>
@@ -1390,7 +1413,6 @@ export function QuestionGenerationStep({
       {editingDraftId && (
         <QuestionDraftEditContent
           draft={drafts.find((d) => d.id === editingDraftId)!}
-          isMultipleChoice={isMultipleChoice}
           materiaName={materiaName}
           argomentoName={argomentoName}
           sottoArgomentoName={sottoArgomentoName}
