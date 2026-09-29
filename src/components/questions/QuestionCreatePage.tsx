@@ -370,9 +370,11 @@ export function QuestionCreatePage() {
           max-w fisso da reinseguire a mano ogni volta che il copy della griglia di
           Composizione cambiava larghezza (vedi il commento sulla Card in
           QuestionSetupAccordion) — l'intero blocco, bottone "Crea Domanda" compreso,
-          si adatta da solo alla larghezza del contenuto reale. */}
+          si adatta da solo alla larghezza del contenuto reale. mx-auto per centrarlo
+          nella pagina: senza un max-w non serviva a niente (il div riempiva già tutto
+          lo spazio disponibile), ma con w-fit torna a fare il suo lavoro. */}
       <div className="flex-1 overflow-y-auto">
-        <div className="w-fit px-10 py-8">
+        <div className="mx-auto w-fit px-10 py-8">
           <QuestionSetupAccordion
             hierarchy={hierarchy}
             disabled={form.isReadOnly}
