@@ -411,6 +411,14 @@ const NEXT_SECTION: Record<string, string> = {
   composizione: 'gestisci-revisione',
 };
 
+// Disattivato su richiesta di Mattia (29/09/2026): con la griglia di Composizione
+// bastava valorizzare anche una sola cella per soddisfare composizioneAllFilled,
+// chiudendo la sezione a metà interazione mentre si stava ancora confrontando quantità
+// su più righe. La navigazione tra sezioni va ripensata da capo — per ora ogni sezione
+// si apre/chiude solo a mano. Il resto della logica resta pronto (flag a true per
+// riattivarla), non rimosso.
+const AUTO_ADVANCE_ON_FILLED = false;
+
 interface QuestionSetupAccordionProps {
   hierarchy: HierarchyState;
   disabled?: boolean;
@@ -650,17 +658,12 @@ export function QuestionSetupAccordion({
   // non un campo che può restare "non ancora scelto".
   const composizioneAllFilled = totalQuantity > 0;
 
-  // Chiude la sezione aperta e apre la prossima solo quando TUTTI i suoi campi sono
-  // compilati (facoltativi compresi). autoAdvancedRef evita di richiuderla di nuovo
-  // se l'utente la riapre solo per rivederla, magari già completa.
-  // Solo classificazione e composizione, non gestisci-revisione: quella non ha un
-  // NEXT_SECTION (è l'ultima), e reviewerChoice si autocompila da solo appena si apre
-  // ("me", vedi l'effect sopra) — se contasse anche lei qui, la sezione risulterebbe
-  // "compilata" nello stesso istante in cui si apre, e questo effect la richiuderebbe
-  // subito (NEXT_SECTION[...] ?? '' = tutte le sezioni chiuse) prima ancora che
-  // l'utente veda "Assegna a me" già scelto per lui.
+  // Chiuderebbe la sezione aperta e aprirebbe la prossima quando TUTTI i suoi campi sono
+  // compilati (facoltativi compresi) — vedi AUTO_ADVANCE_ON_FILLED in cima al file per il
+  // perché è disattivato.
   const autoAdvancedRef = useRef<Set<string>>(new Set());
   useEffect(() => {
+    if (!AUTO_ADVANCE_ON_FILLED) return;
     if (!openSection || autoAdvancedRef.current.has(openSection)) return;
     const allFilled =
       openSection === 'classificazione'
