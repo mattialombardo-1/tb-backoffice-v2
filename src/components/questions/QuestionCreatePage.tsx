@@ -366,11 +366,12 @@ export function QuestionCreatePage() {
 
       {/* Colonna unica: Classificazione (aperta di default), Composizione e
           Gestisci revisione — la CTA finale vive qui in fondo, fuori
-          dall'accordion, al termine del flusso multistep. max-w-5xl, non più max-w-4xl:
-          la griglia di Composizione è più larga da quando la colonna "Risposta chiusa"
-          porta anche lo stepper del numero di risposte (vedi QuestionSetupAccordion). */}
+          dall'accordion, al termine del flusso multistep. max-w-6xl, non più max-w-4xl:
+          la griglia di Composizione è più larga da quando ha tre colonne esplicite
+          (Risposta Chiusa, Numero di risposte, Completamento) invece di due strette
+          (vedi QuestionSetupAccordion). */}
       <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-5xl px-10 py-8">
+        <div className="mx-auto max-w-6xl px-10 py-8">
           <QuestionSetupAccordion
             hierarchy={hierarchy}
             disabled={form.isReadOnly}

@@ -161,21 +161,25 @@ const ANSWER_COUNT_MIN = 2;
 const ANSWER_COUNT_MAX = 5;
 const ANSWER_COUNT_DEFAULT = '4';
 
-/** Stepper compatto +/- per il numero di risposte di una riga — stesso trattamento
- *  visivo dello stepper di quantità accanto a cui vive (vedi la griglia più sotto), ma
- *  con range fisso [ANSWER_COUNT_MIN, ANSWER_COUNT_MAX] invece che dipendente dal
- *  totale del batch. */
-function AnswerCountStepper({
+/** Stepper compatto +/- riusato sia per la quantità di domande sia per il numero di
+ *  risposte nella griglia di Composizione — min/maxDisabled arrivano già calcolati dal
+ *  chiamante (range diversi: la quantità dipende dal totale del batch, il numero di
+ *  risposte da ANSWER_COUNT_MIN/MAX fissi), lo stepper stesso non conosce il range. */
+function NumberStepper({
   value,
   onChange,
   onStep,
   disabled = false,
+  minDisabled,
+  maxDisabled,
   ariaLabel,
 }: {
   value: string;
   onChange: (value: string) => void;
   onStep: (delta: 1 | -1) => void;
   disabled?: boolean;
+  minDisabled: boolean;
+  maxDisabled: boolean;
   ariaLabel: string;
 }) {
   return (
@@ -185,7 +189,7 @@ function AnswerCountStepper({
         variant="ghost"
         size="icon"
         className="h-8 w-8 shrink-0"
-        disabled={disabled || Number(value) <= ANSWER_COUNT_MIN}
+        disabled={disabled || minDisabled}
         onClick={() => onStep(-1)}
         aria-label={`Riduci ${ariaLabel}`}
       >
@@ -204,7 +208,7 @@ function AnswerCountStepper({
         variant="ghost"
         size="icon"
         className="h-8 w-8 shrink-0"
-        disabled={disabled || Number(value) >= ANSWER_COUNT_MAX}
+        disabled={disabled || maxDisabled}
         onClick={() => onStep(1)}
         aria-label={`Aumenta ${ariaLabel}`}
       >
@@ -835,117 +839,102 @@ export function QuestionSetupAccordion({
                   Quantità per difficoltà e tipo
                   <span className="ml-0.5 text-destructive">*</span>
                 </Label>
-                {/* Griglia difficoltà (righe) × tipo (colonne) — sostituisce i tre stepper
-                    per livello + il toggle Tipo di domanda unico per tutto il batch: ora
-                    ogni cella ha la propria quantità, una batteria può mischiare "3 chiuse
-                    + 2 aperte" nella stessa difficoltà. Un Fragment per riga (non un div):
-                    resta un unico CSS grid, non una tabella annidata — ogni cella è un
-                    figlio diretto del grid container, l'auto-flow riga per riga fa il
-                    resto. */}
-                {/* w-fit, non più w-full: da quando la colonna "Risposta chiusa" porta anche
-                    lo stepper del numero di risposte, le due colonne di tipo non hanno più
-                    lo stesso contenuto — 1fr le avrebbe forzate alla stessa larghezza,
-                    sprecando spazio su "Completamento" o stringendo "Risposta chiusa".
-                    max-content lascia che ogni colonna prenda solo lo spazio che le serve. */}
+                {/* Griglia difficoltà (righe) × 3 colonne fisse: quantità "Risposta chiusa",
+                    numero di risposte, quantità "Completamento" — non più generata dal loop
+                    su QUESTION_TYPES (il numero di risposte non è un tipo di domanda, è un
+                    attributo solo di "Risposta chiusa"), colonne esplicite così ognuna ha
+                    la propria label leggibile invece di stare nascosta dentro un divider.
+                    Un Fragment per riga (non un div): resta un unico CSS grid, non una
+                    tabella annidata — ogni cella è un figlio diretto del grid container,
+                    l'auto-flow riga per riga fa il resto. */}
+                {/* w-fit, non più w-full: le tre colonne non hanno lo stesso contenuto (due
+                    steppers vs uno) — 1fr le forzerebbe alla stessa larghezza, sprecando
+                    spazio o stringendo la colonna più piena. max-content lascia che ognuna
+                    prenda solo lo spazio che le serve; px-6 (non più px-2/3) e gap-6 tra gli
+                    stepper danno il respiro che prima mancava. */}
                 <div className="w-fit overflow-hidden rounded-md border">
                   <div
                     className="grid"
-                    style={{
-                      gridTemplateColumns: `auto repeat(${QUESTION_TYPES.length}, max-content)`,
-                    }}
+                    style={{ gridTemplateColumns: 'auto repeat(3, max-content)' }}
                   >
                     <div className="border-r border-b bg-muted/40" />
-                    {QUESTION_TYPES.map((t, i) => (
-                      <div
-                        key={t}
-                        className={cn(
-                          'border-b bg-muted/40 px-3 py-2 text-center text-xs font-semibold text-muted-foreground',
-                          i < QUESTION_TYPES.length - 1 && 'border-r'
-                        )}
-                      >
-                        {QUESTION_TYPE_LABELS[t]}
-                      </div>
-                    ))}
+                    <div className="border-r border-b bg-muted/40 px-6 py-2.5 text-center text-xs font-semibold text-muted-foreground">
+                      Risposta Chiusa
+                    </div>
+                    <div className="border-r border-b bg-muted/40 px-6 py-2.5 text-center text-xs font-semibold text-muted-foreground">
+                      Numero di risposte
+                    </div>
+                    <div className="border-b bg-muted/40 px-6 py-2.5 text-center text-xs font-semibold text-muted-foreground">
+                      Completamento
+                    </div>
                     {DIFFICULTY_BUCKETS.map(({ key, label }, rowIndex) => {
                       const isLastRow = rowIndex === DIFFICULTY_BUCKETS.length - 1;
+                      const rowBorder = !isLastRow && 'border-b';
                       return (
                         <Fragment key={key}>
                           <div
                             className={cn(
-                              'flex items-center border-r px-3 py-2 text-xs font-semibold text-muted-foreground',
-                              !isLastRow && 'border-b'
+                              'flex items-center border-r px-6 py-2.5 text-xs font-semibold text-muted-foreground',
+                              rowBorder
                             )}
                           >
                             {label}
                           </div>
-                          {QUESTION_TYPES.map((t, colIndex) => (
-                            <div
-                              key={t}
-                              className={cn(
-                                'flex items-center justify-center gap-3 px-2 py-1.5',
-                                !isLastRow && 'border-b',
-                                colIndex < QUESTION_TYPES.length - 1 && 'border-r'
-                              )}
-                            >
-                              <div className="flex items-center gap-0.5">
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 shrink-0"
-                                  disabled={disabled || Number(quantities[key][t]) <= 0}
-                                  onClick={() => stepQuantity(key, t, -1)}
-                                  aria-label={`Riduci ${QUESTION_TYPE_LABELS[t]} ${label}`}
-                                >
-                                  <Minus className="h-3.5 w-3.5" />
-                                </Button>
-                                <Input
-                                  value={quantities[key][t]}
-                                  onChange={(e) => handleQuantityChange(key, t, e.target.value)}
-                                  inputMode="numeric"
-                                  disabled={disabled}
-                                  aria-label={`${QUESTION_TYPE_LABELS[t]} ${label}`}
-                                  className="h-8 w-8 appearance-none border-none bg-transparent p-0 text-center text-sm tabular-nums shadow-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-0"
-                                />
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 shrink-0"
-                                  disabled={disabled || totalQuantity >= MAX_TOTAL_QUANTITY}
-                                  onClick={() => stepQuantity(key, t, 1)}
-                                  aria-label={`Aumenta ${QUESTION_TYPE_LABELS[t]} ${label}`}
-                                >
-                                  <Plus className="h-3.5 w-3.5" />
-                                </Button>
-                              </div>
-                              {/* Solo la colonna "Risposta chiusa": numero di risposte per
-                                  questo livello di difficoltà, affiancato allo stepper di
-                                  quantità — non impilato, per restare sulla stessa riga della
-                                  griglia. Sempre visibile, non solo quando la quantità è > 0:
-                                  è comunque pronto per quando l'utente la alza. */}
-                              {t === 'MULTIPLE_CHOICE' && (
-                                <>
-                                  <div className="h-6 w-px shrink-0 bg-border" />
-                                  <AnswerCountStepper
-                                    value={answerCounts[key]}
-                                    onChange={(v) => handleAnswerCountChange(key, v)}
-                                    onStep={(delta) => stepAnswerCount(key, delta)}
-                                    disabled={disabled}
-                                    ariaLabel={`numero di risposte ${label}`}
-                                  />
-                                </>
-                              )}
-                            </div>
-                          ))}
+                          <div
+                            className={cn(
+                              'flex items-center justify-center border-r px-6 py-2.5',
+                              rowBorder
+                            )}
+                          >
+                            <NumberStepper
+                              value={quantities[key].MULTIPLE_CHOICE}
+                              onChange={(v) => handleQuantityChange(key, 'MULTIPLE_CHOICE', v)}
+                              onStep={(delta) => stepQuantity(key, 'MULTIPLE_CHOICE', delta)}
+                              disabled={disabled}
+                              minDisabled={Number(quantities[key].MULTIPLE_CHOICE) <= 0}
+                              maxDisabled={totalQuantity >= MAX_TOTAL_QUANTITY}
+                              ariaLabel={`Risposta chiusa ${label}`}
+                            />
+                          </div>
+                          <div
+                            className={cn(
+                              'flex items-center justify-center border-r px-6 py-2.5',
+                              rowBorder
+                            )}
+                          >
+                            <NumberStepper
+                              value={answerCounts[key]}
+                              onChange={(v) => handleAnswerCountChange(key, v)}
+                              onStep={(delta) => stepAnswerCount(key, delta)}
+                              disabled={disabled}
+                              minDisabled={Number(answerCounts[key]) <= ANSWER_COUNT_MIN}
+                              maxDisabled={Number(answerCounts[key]) >= ANSWER_COUNT_MAX}
+                              ariaLabel={`Numero di risposte ${label}`}
+                            />
+                          </div>
+                          <div
+                            className={cn(
+                              'flex items-center justify-center px-6 py-2.5',
+                              rowBorder
+                            )}
+                          >
+                            <NumberStepper
+                              value={quantities[key].COMPLETION}
+                              onChange={(v) => handleQuantityChange(key, 'COMPLETION', v)}
+                              onStep={(delta) => stepQuantity(key, 'COMPLETION', delta)}
+                              disabled={disabled}
+                              minDisabled={Number(quantities[key].COMPLETION) <= 0}
+                              maxDisabled={totalQuantity >= MAX_TOTAL_QUANTITY}
+                              ariaLabel={`Completamento ${label}`}
+                            />
+                          </div>
                         </Fragment>
                       );
                     })}
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {totalQuantity} domande in totale · fino a {MAX_TOTAL_QUANTITY} per volta · numero
-                  di risposte per livello nella colonna "Risposta chiusa".
+                  {totalQuantity} domande in totale · fino a {MAX_TOTAL_QUANTITY} per volta.
                 </p>
               </div>
             </AccordionContent>
