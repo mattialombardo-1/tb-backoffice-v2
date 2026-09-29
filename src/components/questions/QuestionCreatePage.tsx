@@ -96,21 +96,19 @@ export function QuestionCreatePage() {
   const [isApproving, setIsApproving] = useState(false);
 
   // Sollevati da QuestionSetupAccordion: servono qui per sapere se i campi
-  // obbligatori (Materia, Argomento, griglia Quantità, Numero di risposte se c'è
-  // almeno una cella "Risposta chiusa", Revisore) sono compilati e quindi se la
-  // CTA "Crea Domanda" può essere cliccabile. Partono vuoti: "Assegna a me" è
-  // l'unica proposta di default rimasta, ma QuestionSetupAccordion la applica
-  // solo alla prima apertura della sezione che la contiene — non prima, non
+  // obbligatori (Materia, Argomento, griglia Quantità, Revisore) sono compilati e
+  // quindi se la CTA "Crea Domanda" può essere cliccabile. Il numero di risposte non
+  // è più tra questi: è uno stepper per livello con un default sempre valido (4), non
+  // un campo che può restare "non ancora scelto" (vedi QuestionSetupAccordion). Partono
+  // vuoti: "Assegna a me" è l'unica proposta di default rimasta, ma QuestionSetupAccordion
+  // la applica solo alla prima apertura della sezione che la contiene — non prima, non
   // appena atterrati sul form (vedi lì).
   const [proposalQuantity, setProposalQuantity] = useState('');
-  const [proposalHasClosedType, setProposalHasClosedType] = useState(false);
-  const [proposalAnswerCount, setProposalAnswerCount] = useState('');
   const [proposalReviewerId, setProposalReviewerId] = useState<string | null>(null);
   const canGenerate =
     hierarchy.isComplete &&
     proposalQuantity !== '' &&
     Number(proposalQuantity) > 0 &&
-    (!proposalHasClosedType || proposalAnswerCount !== '') &&
     proposalReviewerId !== null;
 
   // Secondo step dopo "Crea Domanda" (non un dialog) — vedi QuestionGenerationStep.
@@ -136,10 +134,7 @@ export function QuestionCreatePage() {
   // revisione/modifica invece i campi editati sono quelli reali di
   // useQuestionForm, che resta l'unica fonte di verità lì.
   const hasUnsavedCreationInput =
-    hierarchy.selection.subjectId != null ||
-    proposalQuantity !== '' ||
-    proposalAnswerCount !== '' ||
-    proposalReviewerId !== null;
+    hierarchy.selection.subjectId != null || proposalQuantity !== '' || proposalReviewerId !== null;
   const isFormDirty =
     !reviewMode && !isEditMode ? form.isDirty || hasUnsavedCreationInput : form.isDirty;
 
@@ -371,15 +366,15 @@ export function QuestionCreatePage() {
 
       {/* Colonna unica: Classificazione (aperta di default), Composizione e
           Gestisci revisione — la CTA finale vive qui in fondo, fuori
-          dall'accordion, al termine del flusso multistep. */}
+          dall'accordion, al termine del flusso multistep. max-w-5xl, non più max-w-4xl:
+          la griglia di Composizione è più larga da quando la colonna "Risposta chiusa"
+          porta anche lo stepper del numero di risposte (vedi QuestionSetupAccordion). */}
       <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-4xl px-10 py-8">
+        <div className="mx-auto max-w-5xl px-10 py-8">
           <QuestionSetupAccordion
             hierarchy={hierarchy}
             disabled={form.isReadOnly}
             onQuantityChange={setProposalQuantity}
-            onHasClosedTypeChange={setProposalHasClosedType}
-            onAnswerCountChange={setProposalAnswerCount}
             reviewerId={proposalReviewerId}
             onReviewerIdChange={setProposalReviewerId}
             summaryOpen={summaryOpen}

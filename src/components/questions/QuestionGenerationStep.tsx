@@ -191,6 +191,10 @@ type QuantityByDifficultyAndType = Record<
   Record<QuestionType, number>
 >;
 
+/** Numero di risposte per "Risposta chiusa", uno per livello — non più un unico valore
+ *  per l'intero batch (vedi answerCounts in QuestionSetupAccordion). */
+type AnswerCountByDifficulty = Record<keyof QuantityByDifficultyAndType, number>;
+
 // Le tre etichette di QuestionSetupAccordion → scala reale delle domande (DifficultyLevel).
 // "Media" è l'unico nome che non coincide 1:1 con la scala reale (lì è "medio").
 const BUCKET_TO_REAL_DIFFICULTY: Record<keyof QuantityByDifficultyAndType, DifficultyLevel> = {
@@ -205,7 +209,7 @@ function buildDrafts(
   quantityByDifficultyAndType: QuantityByDifficultyAndType,
   argomentoName: string | undefined,
   sottoArgomentoName: string | undefined,
-  answerCount: number,
+  answerCountByDifficulty: AnswerCountByDifficulty,
   manualeTitle: string | undefined
 ): DraftQuestion[] {
   const bank = pickQuestionBank(argomentoName);
@@ -226,7 +230,9 @@ function buildDrafts(
             difficulty: BUCKET_TO_REAL_DIFFICULTY[bucket],
             type,
             text: template.text,
-            alternatives: isMultipleChoice ? template.alternatives.slice(0, answerCount) : [],
+            alternatives: isMultipleChoice
+              ? template.alternatives.slice(0, answerCountByDifficulty[bucket])
+              : [],
             correctIndex: 0,
             completionAnswer: template.completionAnswer,
             explanation: template.explanation,
@@ -255,7 +261,9 @@ interface QuestionGenerationStepProps {
    *  typeLabel: non più un totale con una difficoltà e un tipo uniformi, un batch può
    *  mischiare i tre livelli e i due tipi. */
   quantityByDifficultyAndType: QuantityByDifficultyAndType;
-  answerCount: number;
+  /** Numero di risposte per "Risposta chiusa", uno per livello — sostituisce il vecchio
+   *  answerCount unico per tutto il batch, coerente con quantityByDifficultyAndType sopra. */
+  answerCountByDifficulty: AnswerCountByDifficulty;
   /** Chi riceve le domande quando vengono mandate in revisione — scelto in "Gestisci
    *  revisione" (QuestionSetupAccordion), obbligatorio: "Crea Domanda" resta disabilitato
    *  finché non è valorizzato. */
@@ -298,7 +306,7 @@ export function QuestionGenerationStep({
   sottoArgomentoId,
   sottoArgomentoName,
   quantityByDifficultyAndType,
-  answerCount,
+  answerCountByDifficulty,
   reviewerId,
   notesLabel,
   attachmentLabel,
@@ -335,7 +343,7 @@ export function QuestionGenerationStep({
       quantityByDifficultyAndType,
       argomentoName,
       sottoArgomentoName,
-      answerCount,
+      answerCountByDifficulty,
       manualeTitle
     )
   );
@@ -792,7 +800,6 @@ export function QuestionGenerationStep({
       (sum, bucket) => sum + quantityByDifficultyAndType[bucket][t],
       0
     );
-  const hasMultipleChoiceInBatch = typeTotal('MULTIPLE_CHOICE') > 0;
   const quantityBreakdownTag = [
     bucketTotal('facile') ? `${bucketTotal('facile')} facili` : null,
     bucketTotal('media') ? `${bucketTotal('media')} medie` : null,
@@ -803,11 +810,12 @@ export function QuestionGenerationStep({
   const typeBreakdownTag = QUESTION_TYPES.filter((t) => typeTotal(t) > 0)
     .map((t) => `${typeTotal(t)} ${QUESTION_TYPE_LABELS[t]}`)
     .join(' · ');
-  const compositionOnlyTags = [
-    quantityBreakdownTag || null,
-    typeBreakdownTag || null,
-    hasMultipleChoiceInBatch ? `${answerCount} risposte` : null,
-  ].filter((v): v is string => !!v);
+  // Niente più un tag "X risposte": col numero di risposte per livello (non più un
+  // unico valore per tutto il batch) non c'è un numero solo da riassumere qui — resta
+  // visibile per riga, nella griglia di composizione.
+  const compositionOnlyTags = [quantityBreakdownTag || null, typeBreakdownTag || null].filter(
+    (v): v is string => !!v
+  );
   const compositionTags = [...classificationTags, ...compositionOnlyTags];
 
   const additionalOptionsTags: { label: string; icon: LucideIcon }[] = [

@@ -153,66 +153,64 @@ function FieldTags({ items }: { items: FieldTagItem[] }) {
 // typeTotal/typeBreakdownLabel più sotto).
 const QUESTION_TYPES = Object.keys(QUESTION_TYPE_LABELS) as QuestionType[];
 
-/** Un numero di risposte possibile; solo quelli `enabled` sono selezionabili. */
-interface AnswerCountOption {
-  count: string;
-  enabled?: boolean;
-}
+// Numero di risposte per le domande "Risposta chiusa" — non più un'unica scelta per
+// tutto il batch (le 4 pillole di prima), ma uno stepper per riga della griglia: ogni
+// livello di difficoltà ha il proprio numero di alternative. Range fisso, non legato a
+// MAX_TOTAL_QUANTITY (quello limita quante domande, questo quante risposte ciascuna).
+const ANSWER_COUNT_MIN = 2;
+const ANSWER_COUNT_MAX = 5;
+const ANSWER_COUNT_DEFAULT = '4';
 
-// Tutte e quattro selezionabili: i template in questionBanks.ts hanno già 5
-// alternative ciascuno (slice(0, answerCount) in QuestionGenerationStep), quindi
-// 3 e 4 funzionano esattamente come 2 e 5 — nessun contenuto mancante da coprire
-// prima. `enabled` resta nel tipo per un'eventuale futura variazione per materia.
-const ANSWER_COUNT_OPTIONS: AnswerCountOption[] = [
-  { count: '2', enabled: true },
-  { count: '3', enabled: true },
-  { count: '4', enabled: true },
-  { count: '5', enabled: true },
-];
-
-/**
- * Quante alternative deve avere la domanda — visibile solo per "Risposta
- * chiusa". Nessuna preselezione: "2" e "5" sono le due opzioni abilitate
- * per Chimica, entrambe da scegliere esplicitamente.
- */
-function AnswerCountField({
+/** Stepper compatto +/- per il numero di risposte di una riga — stesso trattamento
+ *  visivo dello stepper di quantità accanto a cui vive (vedi la griglia più sotto), ma
+ *  con range fisso [ANSWER_COUNT_MIN, ANSWER_COUNT_MAX] invece che dipendente dal
+ *  totale del batch. */
+function AnswerCountStepper({
   value,
   onChange,
+  onStep,
   disabled = false,
+  ariaLabel,
 }: {
   value: string;
   onChange: (value: string) => void;
+  onStep: (delta: 1 | -1) => void;
   disabled?: boolean;
+  ariaLabel: string;
 }) {
   return (
-    // flex-1 su ogni pillola, non più size-9 fisso: il gruppo riempie tutta la
-    // larghezza che il genitore gli lascia (vedi il flex-1 sul wrapper in
-    // QuestionSetupAccordion) invece di restare 4 quadretti piccoli ammassati a
-    // sinistra — i margini della card restano quelli che sono, cresce solo lo
-    // spazio già assegnato a questa colonna.
-    <RadioGroup value={value} onValueChange={onChange} disabled={disabled} className="flex gap-1.5">
-      {ANSWER_COUNT_OPTIONS.map(({ count, enabled }) => (
-        <label
-          key={count}
-          htmlFor={`answer-count-${count}`}
-          className={cn(
-            'flex h-9 flex-1 cursor-pointer items-center justify-center rounded-md border text-sm font-medium transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring has-[:focus-visible]:ring-offset-2',
-            value === count ? 'border-primary bg-primary/5' : 'border-border hover:bg-accent/50',
-            !enabled && 'cursor-not-allowed opacity-50 hover:bg-transparent'
-          )}
-        >
-          {/* Sui numeri il pallino è puro rumore — vedi QuestionTypeSelector
-              per lo stesso trattamento (sr-only, non hidden). */}
-          <RadioGroupItem
-            value={count}
-            id={`answer-count-${count}`}
-            disabled={!enabled}
-            className="sr-only"
-          />
-          {count}
-        </label>
-      ))}
-    </RadioGroup>
+    <div className="flex items-center gap-0.5">
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className="h-8 w-8 shrink-0"
+        disabled={disabled || Number(value) <= ANSWER_COUNT_MIN}
+        onClick={() => onStep(-1)}
+        aria-label={`Riduci ${ariaLabel}`}
+      >
+        <Minus className="h-3.5 w-3.5" />
+      </Button>
+      <Input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        inputMode="numeric"
+        disabled={disabled}
+        aria-label={ariaLabel}
+        className="h-8 w-8 appearance-none border-none bg-transparent p-0 text-center text-sm tabular-nums shadow-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-0"
+      />
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className="h-8 w-8 shrink-0"
+        disabled={disabled || Number(value) >= ANSWER_COUNT_MAX}
+        onClick={() => onStep(1)}
+        aria-label={`Aumenta ${ariaLabel}`}
+      >
+        <Plus className="h-3.5 w-3.5" />
+      </Button>
+    </div>
   );
 }
 
@@ -417,14 +415,6 @@ interface QuestionSetupAccordionProps {
    *  per "Crea Domanda" — non c'è un valore da ricevere indietro, la griglia non è
    *  ricostruibile da un totale singolo. */
   onQuantityChange: (value: string) => void;
-  /** Se almeno una cella "Risposta chiusa" della griglia ha quantità > 0 — sola andata,
-   *  stesso motivo di onQuantityChange: QuestionCreatePage lo usa solo per sapere se
-   *  "Numero di risposte" è obbligatorio per sbloccare "Crea Domanda". */
-  onHasClosedTypeChange: (value: boolean) => void;
-  /** Obbligatorio per procedere quando onHasClosedTypeChange ha riportato true — sola
-   *  andata, stesso motivo di onQuantityChange: QuestionCreatePage lo usa solo per sapere
-   *  se "Crea Domanda" può sbloccarsi. */
-  onAnswerCountChange: (value: string) => void;
   /** Obbligatorio per procedere — risolto qui (te stesso o un altro revisore scelto),
    *  ma controllato da QuestionCreatePage insieme agli altri campi che sbloccano "Crea Domanda". */
   reviewerId: string | null;
@@ -450,8 +440,6 @@ export function QuestionSetupAccordion({
   hierarchy,
   disabled = false,
   onQuantityChange,
-  onHasClosedTypeChange,
-  onAnswerCountChange,
   reviewerId,
   onReviewerIdChange,
   summaryOpen,
@@ -520,9 +508,6 @@ export function QuestionSetupAccordion({
   const typeTotal = (t: QuestionType) =>
     DIFFICULTY_BUCKETS.reduce((sum, { key }) => sum + (Number(quantities[key][t]) || 0), 0);
   const totalQuantity = DIFFICULTY_BUCKETS.reduce((sum, { key }) => sum + bucketTotal(key), 0);
-  // "Numero di risposte" è obbligatorio solo se almeno una cella "Risposta chiusa" della
-  // griglia è > 0 — non c'è più un tipo unico da controllare.
-  const hasClosedType = typeTotal('MULTIPLE_CHOICE') > 0;
 
   /** Aggiorna la quantità di una cella (livello, tipo) — il totale complessivo resta
    *  sempre ≤ MAX_TOTAL_QUANTITY: il valore digitato viene tagliato se sforerebbe il
@@ -543,9 +528,6 @@ export function QuestionSetupAccordion({
       0
     );
     onQuantityChange(nextTotal > 0 ? String(nextTotal) : '');
-    onHasClosedTypeChange(
-      DIFFICULTY_BUCKETS.some(({ key }) => (Number(nextQuantities[key].MULTIPLE_CHOICE) || 0) > 0)
-    );
   };
 
   /** Stepper +/- sopra handleQuantityChange: riusa lo stesso clamp (non si supera
@@ -555,12 +537,29 @@ export function QuestionSetupAccordion({
     handleQuantityChange(bucket, qType, String(Math.max(0, current + delta)));
   };
 
-  // Numero di risposte per "Risposta chiusa" — nessun default: parte senza nulla
-  // selezionato, tocca sempre scegliere esplicitamente tra le opzioni abilitate.
-  const [answerCount, setAnswerCount] = useState('');
-  const handleAnswerCountChange = (value: string) => {
-    setAnswerCount(value);
-    onAnswerCountChange(value);
+  // Numero di risposte per "Risposta chiusa", uno per livello di difficoltà (non più
+  // un'unica scelta per tutto il batch) — parte già da ANSWER_COUNT_DEFAULT ("4"), non
+  // vuoto: è uno stepper con range fisso [2, 5], non c'è un valore "non ancora scelto"
+  // da rappresentare, sempre un numero esplicito fin da subito (stesso trattamento
+  // degli stepper di quantità). Non risale a QuestionCreatePage: a differenza del vecchio
+  // campo unico, non blocca più "Crea Domanda" — un valore valido c'è sempre.
+  const [answerCounts, setAnswerCounts] = useState<Record<DifficultyBucket, string>>({
+    facile: ANSWER_COUNT_DEFAULT,
+    media: ANSWER_COUNT_DEFAULT,
+    difficile: ANSWER_COUNT_DEFAULT,
+  });
+  const handleAnswerCountChange = (bucket: DifficultyBucket, raw: string) => {
+    const digits = raw.replace(/\D/g, '').slice(0, 1);
+    const next =
+      digits === ''
+        ? ''
+        : String(Math.min(Math.max(Number(digits), ANSWER_COUNT_MIN), ANSWER_COUNT_MAX));
+    setAnswerCounts((prev) => ({ ...prev, [bucket]: next }));
+  };
+  const stepAnswerCount = (bucket: DifficultyBucket, delta: 1 | -1) => {
+    const current = Number(answerCounts[bucket]) || ANSWER_COUNT_MIN;
+    const next = Math.min(Math.max(current + delta, ANSWER_COUNT_MIN), ANSWER_COUNT_MAX);
+    setAnswerCounts((prev) => ({ ...prev, [bucket]: String(next) }));
   };
 
   // Chi revisiona le domande generate — di default "Assegna a me" (siamo nella
@@ -642,9 +641,10 @@ export function QuestionSetupAccordion({
   // Non serve più controllare che ogni cella abbia un valore "esplicito" (prima:
   // quantities[key] !== '', per distinguere un campo mai toccato da uno zero voluto) —
   // con gli stepper ogni cella è sempre un numero visibile fin dall'inizio (parte da
-  // "0", vedi sopra), quindi basta il totale positivo. Niente più controllo su "type":
-  // con la griglia non c'è un tipo unico da scegliere, solo celle da valorizzare.
-  const composizioneAllFilled = totalQuantity > 0 && (!hasClosedType || answerCount !== '');
+  // "0", vedi sopra), quindi basta il totale positivo. Niente più controllo sul numero
+  // di risposte: anche quello è ormai uno stepper con un default sempre valido (4),
+  // non un campo che può restare "non ancora scelto".
+  const composizioneAllFilled = totalQuantity > 0;
 
   // Chiude la sezione aperta e apre la prossima solo quando TUTTI i suoi campi sono
   // compilati (facoltativi compresi). autoAdvancedRef evita di richiuderla di nuovo
@@ -701,15 +701,15 @@ export function QuestionSetupAccordion({
     .map((t) => `${typeTotal(t)} ${QUESTION_TYPE_LABELS[t].toLowerCase()}`)
     .join(' · ');
 
+  // Niente più un terzo tag "X risposte": col numero di risposte ormai per livello
+  // (vedi answerCounts sopra) non c'è più un valore unico da riassumere in un tag solo
+  // — quelli restano visibili nella griglia stessa, a sezione aperta.
   const composizioneTagItems: FieldTagItem[] = [
     quantityBreakdownLabel
       ? { label: quantityBreakdownLabel, onClick: () => openFieldDropdown('composizione', null) }
       : null,
     typeBreakdownLabel
       ? { label: typeBreakdownLabel, onClick: () => openFieldDropdown('composizione', null) }
-      : null,
-    hasClosedType
-      ? { label: `${answerCount} risposte`, onClick: () => openFieldDropdown('composizione', null) }
       : null,
   ].filter((v): v is FieldTagItem => v !== null);
 
@@ -842,10 +842,17 @@ export function QuestionSetupAccordion({
                     resta un unico CSS grid, non una tabella annidata — ogni cella è un
                     figlio diretto del grid container, l'auto-flow riga per riga fa il
                     resto. */}
-                <div className="overflow-hidden rounded-md border">
+                {/* w-fit, non più w-full: da quando la colonna "Risposta chiusa" porta anche
+                    lo stepper del numero di risposte, le due colonne di tipo non hanno più
+                    lo stesso contenuto — 1fr le avrebbe forzate alla stessa larghezza,
+                    sprecando spazio su "Completamento" o stringendo "Risposta chiusa".
+                    max-content lascia che ogni colonna prenda solo lo spazio che le serve. */}
+                <div className="w-fit overflow-hidden rounded-md border">
                   <div
                     className="grid"
-                    style={{ gridTemplateColumns: `auto repeat(${QUESTION_TYPES.length}, 1fr)` }}
+                    style={{
+                      gridTemplateColumns: `auto repeat(${QUESTION_TYPES.length}, max-content)`,
+                    }}
                   >
                     <div className="border-r border-b bg-muted/40" />
                     {QUESTION_TYPES.map((t, i) => (
@@ -875,7 +882,7 @@ export function QuestionSetupAccordion({
                             <div
                               key={t}
                               className={cn(
-                                'flex items-center justify-center px-2 py-1.5',
+                                'flex items-center justify-center gap-3 px-2 py-1.5',
                                 !isLastRow && 'border-b',
                                 colIndex < QUESTION_TYPES.length - 1 && 'border-r'
                               )}
@@ -912,6 +919,23 @@ export function QuestionSetupAccordion({
                                   <Plus className="h-3.5 w-3.5" />
                                 </Button>
                               </div>
+                              {/* Solo la colonna "Risposta chiusa": numero di risposte per
+                                  questo livello di difficoltà, affiancato allo stepper di
+                                  quantità — non impilato, per restare sulla stessa riga della
+                                  griglia. Sempre visibile, non solo quando la quantità è > 0:
+                                  è comunque pronto per quando l'utente la alza. */}
+                              {t === 'MULTIPLE_CHOICE' && (
+                                <>
+                                  <div className="h-6 w-px shrink-0 bg-border" />
+                                  <AnswerCountStepper
+                                    value={answerCounts[key]}
+                                    onChange={(v) => handleAnswerCountChange(key, v)}
+                                    onStep={(delta) => stepAnswerCount(key, delta)}
+                                    disabled={disabled}
+                                    ariaLabel={`numero di risposte ${label}`}
+                                  />
+                                </>
+                              )}
                             </div>
                           ))}
                         </Fragment>
@@ -920,26 +944,10 @@ export function QuestionSetupAccordion({
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {totalQuantity} domande in totale · fino a {MAX_TOTAL_QUANTITY} per volta.
+                  {totalQuantity} domande in totale · fino a {MAX_TOTAL_QUANTITY} per volta · numero
+                  di risposte per livello nella colonna "Risposta chiusa".
                 </p>
               </div>
-
-              {/* Compare solo se almeno una cella "Risposta chiusa" della griglia è > 0 —
-                  un'unica scelta valida per tutte le domande a risposta chiusa del batch,
-                  a qualunque difficoltà appartengano (non configurabile per cella). */}
-              {hasClosedType && (
-                <div className="flex max-w-xs flex-col gap-3">
-                  <Label>
-                    Numero di risposte
-                    <span className="ml-0.5 text-destructive">*</span>
-                  </Label>
-                  <AnswerCountField
-                    value={answerCount}
-                    onChange={handleAnswerCountChange}
-                    disabled={disabled}
-                  />
-                </div>
-              )}
             </AccordionContent>
           </AccordionItem>
 
@@ -1081,7 +1089,11 @@ export function QuestionSetupAccordion({
               COMPLETION: Number(quantities.difficile.COMPLETION) || 0,
             },
           }}
-          answerCount={Number(answerCount) || 5}
+          answerCountByDifficulty={{
+            facile: Number(answerCounts.facile) || Number(ANSWER_COUNT_DEFAULT),
+            media: Number(answerCounts.media) || Number(ANSWER_COUNT_DEFAULT),
+            difficile: Number(answerCounts.difficile) || Number(ANSWER_COUNT_DEFAULT),
+          }}
           reviewerId={reviewerId}
           reviewerLabel={gestisciRevisioneLabel || undefined}
           manualeTitle={manualeTitle}
