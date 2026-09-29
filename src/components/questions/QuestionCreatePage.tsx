@@ -366,12 +366,13 @@ export function QuestionCreatePage() {
 
       {/* Colonna unica: Classificazione (aperta di default), Composizione e
           Gestisci revisione — la CTA finale vive qui in fondo, fuori
-          dall'accordion, al termine del flusso multistep. max-w-4xl: le etichette delle
-          colonne di Composizione sono più lunghe ("Domande a risposta chiusa", "Numero
-          di risposte", "Domande a completamento", non più le versioni brevi) — la
-          griglia (w-fit) è tornata a ~730px, max-w-2xl la avrebbe stretta. */}
+          dall'accordion, al termine del flusso multistep. w-fit, non più un
+          max-w fisso da reinseguire a mano ogni volta che il copy della griglia di
+          Composizione cambiava larghezza (vedi il commento sulla Card in
+          QuestionSetupAccordion) — l'intero blocco, bottone "Crea Domanda" compreso,
+          si adatta da solo alla larghezza del contenuto reale. */}
       <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-4xl px-10 py-8">
+        <div className="w-fit px-10 py-8">
           <QuestionSetupAccordion
             hierarchy={hierarchy}
             disabled={form.isReadOnly}

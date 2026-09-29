@@ -742,8 +742,17 @@ export function QuestionSetupAccordion({
           leggibile. Ogni header ha sfondo bg-muted/50 (si vede a colpo
           d'occhio dov'è il bottone, non solo sulla freccia — l'intero header
           è l'AccordionTrigger, senza wrapper a larghezza fissa), il contenuto
-          aperto sta sul background normale della card. */}
-      <Card className="overflow-hidden py-0 shadow-md">
+          aperto sta sul background normale della card.
+          w-fit, non più un blocco a larghezza piena: senza, la card segue sempre
+          la larghezza del contenitore (QuestionCreatePage) a prescindere da quanto
+          spazio serve davvero al contenuto — ogni volta che il copy della griglia
+          di Composizione cambiava lunghezza si doveva reinseguire un max-w a mano.
+          Con w-fit la card si adatta da sola al contenuto più largo tra le tre
+          sezioni: i campi con w-full dentro le altre due (Classificazione,
+          Gestisci revisione) si allargano di conseguenza nel passaggio di layout
+          vero e proprio, anche se contribuiscono poco alla larghezza intrinseca
+          calcolata in questo passaggio. */}
+      <Card className="w-fit overflow-hidden py-0 shadow-md">
         <Accordion
           type="single"
           collapsible
