@@ -183,17 +183,20 @@ function NumberStepper({
   ariaLabel: string;
 }) {
   return (
-    <div className="flex items-center gap-0.5">
+    // Pillola arrotondata con sfondo (bg-muted) invece dei soli bottoni ghost affiancati —
+    // reference fornita da Mattia: due cerchi pieni (variant="secondary" + rounded-full)
+    // per meno/più, il numero in mezzo senza sfondo proprio.
+    <div className="flex items-center gap-2 rounded-2xl bg-muted px-1.5 py-1.5">
       <Button
         type="button"
-        variant="ghost"
+        variant="secondary"
         size="icon"
-        className="h-8 w-8 shrink-0"
+        className="h-8 w-8 shrink-0 rounded-full"
         disabled={disabled || minDisabled}
         onClick={() => onStep(-1)}
         aria-label={`Riduci ${ariaLabel}`}
       >
-        <Minus className="h-3.5 w-3.5" />
+        <Minus className="h-4 w-4" />
       </Button>
       <Input
         value={value}
@@ -201,18 +204,18 @@ function NumberStepper({
         inputMode="numeric"
         disabled={disabled}
         aria-label={ariaLabel}
-        className="h-8 w-8 appearance-none border-none bg-transparent p-0 text-center text-sm text-foreground tabular-nums shadow-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-0"
+        className="h-8 w-6 appearance-none border-none bg-transparent p-0 text-center text-base font-semibold text-foreground tabular-nums shadow-none focus-visible:ring-0"
       />
       <Button
         type="button"
-        variant="ghost"
+        variant="secondary"
         size="icon"
-        className="h-8 w-8 shrink-0"
+        className="h-8 w-8 shrink-0 rounded-full"
         disabled={disabled || maxDisabled}
         onClick={() => onStep(1)}
         aria-label={`Aumenta ${ariaLabel}`}
       >
-        <Plus className="h-3.5 w-3.5" />
+        <Plus className="h-4 w-4" />
       </Button>
     </div>
   );
