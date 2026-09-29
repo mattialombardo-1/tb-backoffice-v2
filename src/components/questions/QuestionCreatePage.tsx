@@ -366,12 +366,13 @@ export function QuestionCreatePage() {
 
       {/* Colonna unica: Classificazione (aperta di default), Composizione e
           Gestisci revisione — la CTA finale vive qui in fondo, fuori
-          dall'accordion, al termine del flusso multistep. Di nuovo max-w-4xl: con
-          "Risposta Chiusa" e "Numero di risposte" raggruppate senza divider (vedi
-          QuestionSetupAccordion) la griglia è tornata compatta, max-w-6xl lasciava
-          solo spazio vuoto a destra della card. */}
+          dall'accordion, al termine del flusso multistep. max-w-2xl, non più max-w-4xl:
+          la Card è un blocco a larghezza piena, quindi segue sempre il contenitore anche
+          quando il contenuto (la griglia di Composizione, w-fit) è più stretto —
+          max-w-4xl lasciava uno spazio vuoto a destra della griglia. max-w-2xl combacia
+          con la larghezza naturale della griglia (~530px + padding). */}
       <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-4xl px-10 py-8">
+        <div className="mx-auto max-w-2xl px-10 py-8">
           <QuestionSetupAccordion
             hierarchy={hierarchy}
             disabled={form.isReadOnly}
