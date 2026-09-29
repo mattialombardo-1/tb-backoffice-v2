@@ -266,7 +266,20 @@
     "createBtn": "Create Question",
     "addDialog": {
       "title": "Create Question",
-      "desc": "Choose the starting manual"
+      "desc": "How do you want to proceed?",
+      "back": "Back",
+      "bulkOption": {
+        "title": "Generate in bulk",
+        "desc": "Create a batch of AI-generated questions, to review before publishing"
+      },
+      "manualOption": {
+        "title": "Create manually",
+        "desc": "Write one question at a time"
+      },
+      "manuale": {
+        "title": "Generate questions",
+        "desc": "Choose the starting manual"
+      }
     },
     "noResults": "No questions found",
     "noResultsFiltered": "No results for the selected filters",

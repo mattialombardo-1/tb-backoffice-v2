@@ -267,7 +267,20 @@
     "createBtn": "Crea Domanda",
     "addDialog": {
       "title": "Crea Domanda",
-      "desc": "Scegli il manuale di partenza"
+      "desc": "Come vuoi procedere?",
+      "back": "Indietro",
+      "bulkOption": {
+        "title": "Genera massivamente",
+        "desc": "Crea un batch di domande con l'AI, da revisionare prima di pubblicarle"
+      },
+      "manualOption": {
+        "title": "Crea manualmente",
+        "desc": "Scrivi una domanda alla volta"
+      },
+      "manuale": {
+        "title": "Genera domande",
+        "desc": "Scegli il manuale di partenza"
+      }
     },
     "noResults": "Nessuna domanda presente",
     "noResultsFiltered": "Nessun risultato per i filtri selezionati",
