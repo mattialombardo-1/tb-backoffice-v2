@@ -858,10 +858,15 @@ export function QuestionSetupAccordion({
                     style={{ gridTemplateColumns: 'auto repeat(3, max-content)' }}
                   >
                     <div className="border-r border-b bg-muted/40" />
-                    <div className="border-r border-b bg-muted/40 px-6 py-2.5 text-center text-xs font-semibold text-muted-foreground">
+                    {/* Niente border-r tra questa e "Numero di risposte", e padding interno
+                        ridotto (pr-3/pl-3 sul lato che si tocca, invece di px-6 su entrambi) —
+                        sono lo stesso raggruppamento: la quantità di domande "Risposta chiusa"
+                        e quante risposte hanno, non due colonne indipendenti come
+                        "Completamento". */}
+                    <div className="border-b bg-muted/40 py-2.5 pr-3 pl-6 text-center text-xs font-semibold text-muted-foreground">
                       Risposta Chiusa
                     </div>
-                    <div className="border-r border-b bg-muted/40 px-6 py-2.5 text-center text-xs font-semibold text-muted-foreground">
+                    <div className="border-r border-b bg-muted/40 py-2.5 pr-6 pl-3 text-center text-xs font-semibold text-muted-foreground">
                       Numero di risposte
                     </div>
                     <div className="border-b bg-muted/40 px-6 py-2.5 text-center text-xs font-semibold text-muted-foreground">
@@ -882,7 +887,7 @@ export function QuestionSetupAccordion({
                           </div>
                           <div
                             className={cn(
-                              'flex items-center justify-center border-r px-6 py-2.5',
+                              'flex items-center justify-center py-2.5 pr-3 pl-6',
                               rowBorder
                             )}
                           >
@@ -898,7 +903,7 @@ export function QuestionSetupAccordion({
                           </div>
                           <div
                             className={cn(
-                              'flex items-center justify-center border-r px-6 py-2.5',
+                              'flex items-center justify-center border-r py-2.5 pr-6 pl-3',
                               rowBorder
                             )}
                           >
