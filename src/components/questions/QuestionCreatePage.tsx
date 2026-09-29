@@ -368,8 +368,8 @@ export function QuestionCreatePage() {
           Gestisci revisione — la CTA finale vive qui in fondo, fuori
           dall'accordion, al termine del flusso multistep. max-w-4xl: le etichette delle
           colonne di Composizione sono più lunghe ("Domande a risposta chiusa", "Numero
-          di risposte per domanda", "Domande a completamento", non più le versioni
-          brevi) — la griglia (w-fit) è tornata a ~730px, max-w-2xl la avrebbe stretta. */}
+          di risposte", "Domande a completamento", non più le versioni brevi) — la
+          griglia (w-fit) è tornata a ~730px, max-w-2xl la avrebbe stretta. */}
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto max-w-4xl px-10 py-8">
           <QuestionSetupAccordion

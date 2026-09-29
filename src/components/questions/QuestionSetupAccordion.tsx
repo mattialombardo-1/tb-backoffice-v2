@@ -201,7 +201,7 @@ function NumberStepper({
         inputMode="numeric"
         disabled={disabled}
         aria-label={ariaLabel}
-        className="h-8 w-8 appearance-none border-none bg-transparent p-0 text-center text-sm tabular-nums shadow-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-0"
+        className="h-8 w-8 appearance-none border-none bg-transparent p-0 text-center text-sm text-foreground tabular-nums shadow-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-0"
       />
       <Button
         type="button"
@@ -866,13 +866,13 @@ export function QuestionSetupAccordion({
                         sono lo stesso raggruppamento: la quantità di domande "Risposta chiusa"
                         e quante risposte hanno, non due colonne indipendenti come
                         "Completamento". */}
-                    <div className="border-b bg-muted/40 py-2.5 pr-3 pl-6 text-center text-xs font-semibold text-muted-foreground">
+                    <div className="border-b bg-muted/40 py-2.5 pr-3 pl-6 text-center text-xs font-semibold text-foreground">
                       Domande a risposta chiusa
                     </div>
-                    <div className="border-r border-b bg-muted/40 py-2.5 pr-6 pl-3 text-center text-xs font-semibold text-muted-foreground">
-                      Numero di risposte per domanda
+                    <div className="border-r border-b bg-muted/40 py-2.5 pr-6 pl-3 text-center text-xs font-semibold text-foreground">
+                      Numero di risposte
                     </div>
-                    <div className="border-b bg-muted/40 px-6 py-2.5 text-center text-xs font-semibold text-muted-foreground">
+                    <div className="border-b bg-muted/40 px-6 py-2.5 text-center text-xs font-semibold text-foreground">
                       Domande a completamento
                     </div>
                     {DIFFICULTY_BUCKETS.map(({ key, label }, rowIndex) => {
@@ -882,7 +882,7 @@ export function QuestionSetupAccordion({
                         <Fragment key={key}>
                           <div
                             className={cn(
-                              'flex items-center border-r px-6 py-2.5 text-xs font-semibold text-muted-foreground',
+                              'flex items-center border-r px-6 py-2.5 text-xs font-semibold text-foreground',
                               rowBorder
                             )}
                           >
