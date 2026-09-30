@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getRouteApi, useNavigate } from '@tanstack/react-router';
 import { toast } from 'sonner';
-import { BookOpen, CheckCircle, Loader2, Pencil, Plus, X } from 'lucide-react';
+import { CheckCircle, Loader2, Pencil, Plus, X } from 'lucide-react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
@@ -345,22 +345,6 @@ export function QuestionCreatePage() {
             {' — '}
             La domanda verrà associata automaticamente allo slot quando inviata in revisione.
           </p>
-        </div>
-      )}
-
-      {/* Manuale scelto in AddQuestionDialog — solo informativo, in testa al contenuto: è
-          l'unica cosa che il sistema sa e l'utente no (se il manuale è "pronto" per la
-          generazione a batch), vale la pena renderla visibile qui. Grigio/muted, non amber
-          come il banner di campagna sopra: quello è un avviso operativo, questo è solo
-          contesto. Assente se si arriva qui senza passare da AddQuestionDialog (es. link
-          diretto) — niente banner vuoto. */}
-      {manualeTitle && (
-        <div className="flex shrink-0 items-center gap-2 border-b bg-muted/30 px-8 py-2 text-sm text-muted-foreground">
-          <BookOpen className="h-4 w-4 shrink-0" />
-          <span>
-            Manuale di riferimento:{' '}
-            <span className="font-medium text-foreground">{manualeTitle}</span>
-          </span>
         </div>
       )}
 
