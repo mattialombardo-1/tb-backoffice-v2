@@ -18,11 +18,13 @@ const PENDING_TAG_CLASSNAME =
 const REVIEWED_TAG_CLASSNAME =
   'border-emerald-500 bg-emerald-100 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-300';
 
-// Badge dell'Esito mock (vedi mockOutcomeForBatch in useReviewBatches). COMPLETED riusa lo
-// stesso emerald di REVIEWED_TAG_CLASSNAME sopra (= ACTIVE in QuestionsListTable): è lo
-// stesso verde "successo" di tutto il backoffice, non un colore a sé — l'etichetta
-// "Elaborazione Completata" (non solo "Completata", vedi sotto) è quella che distingue
-// l'asse Esito dallo Stato di revisione, non serve che lo faccia anche il colore.
+// Badge dell'Esito mock (vedi mockOutcomeForBatch in useReviewBatches) — renderizzato solo
+// per IN_PROGRESS e PARTIAL (vedi più sotto, header del batch). COMPLETED non ha più badge:
+// è lo stato di default, un segnale colorato lì è rumore su ogni batch andato bene invece che
+// sui pochi che meritano attenzione. ERROR nemmeno: la riga rossa "Creazione domande
+// interrotta" sotto il titolo dice già la stessa cosa, il badge sopra era ridondante. Le voci
+// COMPLETED/ERROR restano qui solo per completezza del tipo BatchOutcome — PARTIAL non è
+// stato ritoccato in questo giro, resta com'era.
 const OUTCOME_TAG_CLASSNAME: Record<BatchOutcome, string> = {
   COMPLETED: REVIEWED_TAG_CLASSNAME,
   // Neutro (nessun border/bg override — resta il grigio di default della variant "outline",
@@ -261,6 +263,10 @@ export function MyReviewsBatchGroup({
   // sottostante — la stessa incoerenza risolta per ERROR. Unica differenza: "N domande" NON
   // va azzerato, è la quantità target/richiesta, non un fallimento (vedi sotto).
   const isLocked = hasError || batch.outcome === 'IN_PROGRESS';
+  // Unico caso non toccato in questo giro (vedi i commenti su OUTCOME_TAG_CLASSNAME e più
+  // sotto): PARTIAL resta con lo stesso trattamento di prima, badge per badge — Esito e
+  // Stato ancora non riconciliati per quel caso, da riprendere a parte.
+  const isPartial = batch.outcome === 'PARTIAL';
 
   const header = (
     <div className="flex min-w-0 items-center gap-3">
@@ -272,41 +278,59 @@ export function MyReviewsBatchGroup({
           <p className="truncate text-sm font-semibold">
             {batch.materiaName} · {batch.argomentoName} · {batch.dateLabel}
           </p>
-          <Badge variant="outline" className="shrink-0 font-normal text-muted-foreground">
-            {hasError ? 0 : batch.pending.length + batch.reviewed.length} domande
-          </Badge>
-          {/* Esito (mock — vedi mockOutcomeForBatch) sta qui, non nella riga sotto con
-              Stato: sono due assi diversi (come è nato il batch vs quanto lavoro di
-              revisione resta) — tenerli separati evita che i colori competano nella
-              stessa riga, specie con COMPLETED che riusa l'emerald di "già revisionate". */}
-          <Badge
-            variant="outline"
-            className={cn('shrink-0 gap-1', OUTCOME_TAG_CLASSNAME[batch.outcome])}
-          >
-            {batch.outcome === 'IN_PROGRESS' && (
-              <Loader2 className="h-3 w-3 animate-spin [animation-duration:1.6s]" />
-            )}
-            {batch.outcome === 'PARTIAL' && <AlertTriangle className="h-3 w-3" />}
-            {batch.outcome === 'ERROR' && <XCircle className="h-3 w-3" />}
-            {OUTCOME_BADGE_LABEL[batch.outcome]}
-            {batch.outcome === 'IN_PROGRESS' &&
-              batch.outcomeProgress != null &&
-              ` · ${batch.outcomeProgress}%`}
-          </Badge>
+          {/* Fatto, non stato: un conteggio non è una decisione da prendere, quindi è testo
+              semplice invece di un badge — il colore resta riservato a "da revisionare" più
+              sotto, l'unico segnale davvero actionable di questa card. */}
+          {isPartial ? (
+            <Badge variant="outline" className="shrink-0 font-normal text-muted-foreground">
+              {batch.pending.length + batch.reviewed.length} domande
+            </Badge>
+          ) : (
+            <span className="shrink-0 text-xs text-muted-foreground">
+              {hasError ? 0 : batch.pending.length + batch.reviewed.length} domande
+            </span>
+          )}
+          {/* Esito (mock — vedi mockOutcomeForBatch): solo IN_PROGRESS e PARTIAL lo mostrano
+              ancora come badge qui — COMPLETED (successo, stato di default) ed ERROR
+              (ridondante con la riga rossa sotto) non hanno più un badge Esito, vedi il
+              commento su OUTCOME_TAG_CLASSNAME. */}
+          {(batch.outcome === 'IN_PROGRESS' || isPartial) && (
+            <Badge
+              variant="outline"
+              className={cn('shrink-0 gap-1', OUTCOME_TAG_CLASSNAME[batch.outcome])}
+            >
+              {batch.outcome === 'IN_PROGRESS' && (
+                <Loader2 className="h-3 w-3 animate-spin [animation-duration:1.6s]" />
+              )}
+              {isPartial && <AlertTriangle className="h-3 w-3" />}
+              {OUTCOME_BADGE_LABEL[batch.outcome]}
+              {batch.outcome === 'IN_PROGRESS' &&
+                batch.outcomeProgress != null &&
+                ` · ${batch.outcomeProgress}%`}
+            </Badge>
+          )}
         </div>
         {/* Niente chip Stato per ERROR/IN_PROGRESS: per ERROR è coerente con "0 domande" sopra
             (mostrare "10 da revisionare" contraddirebbe sia il conteggio azzerato sia il box
             d'errore sotto); per IN_PROGRESS, anche se "N domande" resta il target, nessuna di
             quelle domande esiste ancora davvero — non c'è nulla da segnare come "da
-            revisionare" finché la generazione non è completa. */}
+            revisionare" finché la generazione non è completa. "Già revisionate" è badge solo
+            per PARTIAL (non toccato); altrove è testo semplice, stesso ragionamento del
+            conteggio "N domande" sopra — "da revisionare" resta l'unico badge colorato. */}
         {!isLocked && (
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
             <Badge variant="outline" className={PENDING_TAG_CLASSNAME}>
               {batch.pending.length} da revisionare
             </Badge>
-            <Badge variant="outline" className={REVIEWED_TAG_CLASSNAME}>
-              {batch.reviewed.length} già revisionate
-            </Badge>
+            {isPartial ? (
+              <Badge variant="outline" className={REVIEWED_TAG_CLASSNAME}>
+                {batch.reviewed.length} già revisionate
+              </Badge>
+            ) : (
+              <span className="text-xs text-muted-foreground">
+                {batch.reviewed.length} già revisionate
+              </span>
+            )}
           </div>
         )}
         {/* Motivo mock dell'errore — solo per ERROR, sempre visibile qui: quei batch non sono
