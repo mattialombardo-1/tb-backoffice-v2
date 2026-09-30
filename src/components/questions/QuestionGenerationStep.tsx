@@ -708,19 +708,6 @@ export function QuestionGenerationStep({
     return failures;
   };
 
-  // "Manda tutte e esci" nella conferma di uscita: invia il rimanente e esce solo se
-  // è andato tutto a buon fine — altrimenti resta sul riepilogo, che nel frattempo
-  // mostra già lo stato aggiornato riga per riga. Solo Caso B: il Caso A esce con
-  // "Elimina le rimanenti", non con un invio.
-  const handleSendAllAndExit = async () => {
-    const failures = await sendAllToReview();
-    if (failures === 0) {
-      onExit();
-    } else {
-      setConfirmExitOpen(false);
-    }
-  };
-
   /** "Manda in revisione" della toolbar di selezione — stessa dinamica del singolo Manda in
    *  revisione per riga: solo lo scope cambia, dalla singola riga alla selezione corrente. */
   const handleBulkSendToReview = async () => {
@@ -744,9 +731,7 @@ export function QuestionGenerationStep({
   /** I tre entry point che mandano in revisione (riga, tutte, selezione) — solo Caso B,
    *  chiamati dal JSX solo quando !isReviewerSelf (vedi i bottoni più sotto): aprono sempre
    *  la modale di conferma, mai un invio diretto — mandare a qualcun altro merita sempre una
-   *  conferma esplicita, a differenza di Approva (Caso A), che non la merita mai (vedi sopra).
-   *  "Manda tutte e esci" nel dialog di uscita fa eccezione: quel dialog è già di per sé una
-   *  conferma, vedi il commento lì. */
+   *  conferma esplicita, a differenza di Approva (Caso A), che non la merita mai (vedi sopra). */
   const requestSendToReview = (id: string) => setPendingSend({ kind: 'single', id });
   const requestSendAllToReview = () => setPendingSend({ kind: 'all' });
   const requestBulkSendToReview = () => setPendingSend({ kind: 'selection' });
@@ -1424,62 +1409,33 @@ export function QuestionGenerationStep({
 
       {/* Si apre solo se restano domande "da decidere" — se sono già tutte decise (approvate/
           inviate o scartate), non c'è niente da perdere e "Esci" esce direttamente.
-          Due varianti distinte, non una sola con copy condizionale sui bottoni:
-          - Caso A: "Rimani" / "Elimina le rimanenti" — niente terzo bottone "approva ed
-            esci", non richiesto dal brief (Step 4: "compare un avviso con l'azione 'Elimina
-            le rimanenti'"). Nulla è mai stato persistito finché non approvato, quindi
-            "eliminare" è solo chiudere: stessa azione tecnica di onExit, copy che riflette
-            la conseguenza reale.
-          - Caso B: invariato — "Rimani" / "Esci comunque" / "Manda tutte e esci", nessuna
-            modale di conferma separata su quest'ultimo (è già di per sé una conferma). */}
+          Un solo dialog per entrambi i casi, non due varianti: in nessuno dei due le domande
+          "da decidere" sono mai state persistite (Caso A passa da create+approve solo
+          all'Approva, Caso B da create+submit solo al Manda in revisione), quindi "uscire
+          perde tutto il non deciso" è vero in entrambi allo stesso modo — cambiano solo le
+          parole per la parte già risolta (approvate vs in revisione). Niente più scorciatoia
+          "manda tutte e esci" per il Caso B: un'uscita è un'uscita, non un invio di massa
+          travestito da conferma — chi vuole mandarle tutte lo fa dalla toolbar, poi esce. */}
       <Dialog open={confirmExitOpen} onOpenChange={setConfirmExitOpen}>
         <DialogContent showCloseButton={false}>
           <DialogHeader>
             <DialogTitle>Uscire dal riepilogo domande?</DialogTitle>
-            {isReviewerSelf ? (
-              <DialogDescription>
-                {approvate} approvate · {scartate} scartate · {daDecidere} ancora da decidere. Se
-                esci ora, le {daDecidere} domande non ancora approvate né scartate verranno
-                eliminate: non sono mai state salvate.
-              </DialogDescription>
-            ) : (
-              <DialogDescription>
-                {inRevisione} in revisione · {scartate} scartate · {daDecidere} ancora da mandare in
-                revisione. Se esci ora, quelle non ancora inviate né scartate andranno perse.
-                {daDecidere > 0 && (
-                  <>
-                    {' '}
-                    Se scegli "Manda tutte e esci", le {daDecidere} rimanenti verranno mandate in
-                    revisione a {reviewerDisplayName}.
-                  </>
-                )}
-              </DialogDescription>
-            )}
+            <DialogDescription>
+              {isReviewerSelf ? approvate : inRevisione}{' '}
+              {isReviewerSelf ? 'approvate' : 'in revisione'} · {scartate} scartate · {daDecidere}{' '}
+              ancora da decidere. Se esci ora, le {daDecidere} domande non ancora{' '}
+              {isReviewerSelf ? 'approvate' : 'mandate in revisione'} né scartate verranno
+              eliminate: non sono mai state salvate.
+            </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setConfirmExitOpen(false)}>
               Rimani
             </Button>
-            {isReviewerSelf ? (
-              <Button variant="destructive" onClick={onExit}>
-                <Trash2 className="mr-1.5 h-4 w-4" />
-                Elimina le rimanenti
-              </Button>
-            ) : (
-              <>
-                <Button variant="outline" onClick={onExit}>
-                  Esci comunque
-                </Button>
-                <Button onClick={handleSendAllAndExit} disabled={isSendingAll}>
-                  {isSendingAll ? (
-                    <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                  ) : (
-                    <Send className="mr-1.5 h-4 w-4" />
-                  )}
-                  Manda tutte e esci
-                </Button>
-              </>
-            )}
+            <Button variant="destructive" onClick={onExit}>
+              <Trash2 className="mr-1.5 h-4 w-4" />
+              Elimina le rimanenti
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
