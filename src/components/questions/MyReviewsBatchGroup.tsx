@@ -354,8 +354,7 @@ export function MyReviewsBatchGroup({
           <div className="mt-2 flex max-w-prose items-start gap-1.5">
             <XCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-red-600 dark:text-red-400" />
             <p className="text-xs leading-relaxed text-red-700 dark:text-red-300">
-              <span className="font-semibold">Creazione domande interrotta</span>{' '}
-              {batch.outcomeReason}
+              Creazione domande interrotta {batch.outcomeReason}
             </p>
           </div>
         )}
