@@ -18,13 +18,15 @@ const PENDING_TAG_CLASSNAME =
 const REVIEWED_TAG_CLASSNAME =
   'border-emerald-500 bg-emerald-100 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-300';
 
-// Badge dell'Esito mock (vedi mockOutcomeForBatch in useReviewBatches) — renderizzato solo
-// per IN_PROGRESS e PARTIAL (vedi più sotto, header del batch). COMPLETED non ha più badge:
-// è lo stato di default, un segnale colorato lì è rumore su ogni batch andato bene invece che
-// sui pochi che meritano attenzione. ERROR nemmeno: la riga rossa "Creazione domande
-// interrotta" sotto il titolo dice già la stessa cosa, il badge sopra era ridondante. Le voci
-// COMPLETED/ERROR restano qui solo per completezza del tipo BatchOutcome — PARTIAL non è
-// stato ritoccato in questo giro, resta com'era.
+// Badge dell'Esito mock (vedi mockOutcomeForBatch in useReviewBatches) — ormai renderizzato
+// come pillola colorata solo per IN_PROGRESS (vedi più sotto, header del batch). COMPLETED
+// non ha più badge: è lo stato di default, un segnale colorato lì è rumore su ogni batch
+// andato bene invece che sui pochi che meritano attenzione. ERROR nemmeno: la riga rossa
+// "Creazione domande interrotta" sotto il titolo dice già la stessa cosa, il badge sopra era
+// ridondante. PARTIAL è passato da badge a icona + testo senza pillola (il giallo qui sotto
+// era troppo vicino all'amber di "da revisionare", vedi PENDING_TAG_CLASSNAME) — non legge
+// più questa mappa. Le voci COMPLETED/PARTIAL/ERROR restano solo per completezza del tipo
+// BatchOutcome.
 const OUTCOME_TAG_CLASSNAME: Record<BatchOutcome, string> = {
   COMPLETED: REVIEWED_TAG_CLASSNAME,
   // Neutro (nessun border/bg override — resta il grigio di default della variant "outline",
@@ -33,21 +35,18 @@ const OUTCOME_TAG_CLASSNAME: Record<BatchOutcome, string> = {
   // segnale — solo un'altra tinta nella lista. font-semibold (la Badge base è già font-medium)
   // per ridare un po' di peso al testo, visto che ha perso il colore.
   IN_PROGRESS: 'text-muted-foreground font-semibold',
-  // Yellow, non amber come PENDING_TAG_CLASSNAME ("da revisionare") sopra — due gialli
-  // diversi ma vicini, non lo stesso: PARTIAL è asse Esito, "da revisionare" è asse Stato,
-  // un colore identico tra i due riproporrebbe la stessa ambiguità che la separazione
-  // Esito/Stato voleva evitare. L'icona AlertTriangle, condivisa col boxettino "Generate N/M
-  // domande" sotto (quello resta amber), è il collegamento visivo tra badge e box.
   PARTIAL:
     'border-yellow-500 bg-yellow-100 text-yellow-700 dark:border-yellow-800 dark:bg-yellow-950 dark:text-yellow-300',
   ERROR:
     'border-red-500 bg-red-100 text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300',
 };
 
-// Copy del badge sul batch, più descrittivo di BATCH_OUTCOME_LABELS (quello resta per le
-// opzioni nel filtro, dove il contesto "Esito" è già dato dal nome del campo): "Completata"
-// o "In corso" da sole, lette accanto a "N da revisionare", suonano come se si riferissero
-// alla revisione invece che alla generazione.
+// Copy dell'Esito nell'header del batch (badge per IN_PROGRESS, icona+testo per PARTIAL —
+// vedi sopra), più descrittivo di BATCH_OUTCOME_LABELS (quello resta per le opzioni nel
+// filtro, dove il contesto "Esito" è già dato dal nome del campo): "Completata" o "In corso"
+// da sole, lette accanto a "N da revisionare", suonano come se si riferissero alla revisione
+// invece che alla generazione. COMPLETED/ERROR non sono più letti (vedi sopra), restano solo
+// per completezza del tipo.
 const OUTCOME_BADGE_LABEL: Record<BatchOutcome, string> = {
   ...BATCH_OUTCOME_LABELS,
   IN_PROGRESS: 'Elaborazione in corso',
@@ -299,24 +298,30 @@ export function MyReviewsBatchGroup({
               {hasError ? 0 : batch.pending.length + batch.reviewed.length} domande
             </span>
           )}
-          {/* Esito (mock — vedi mockOutcomeForBatch): solo IN_PROGRESS e PARTIAL lo mostrano
-              ancora come badge qui — COMPLETED (successo, stato di default) ed ERROR
-              (ridondante con la riga rossa sotto) non hanno più un badge Esito, vedi il
-              commento su OUTCOME_TAG_CLASSNAME. */}
-          {(batch.outcome === 'IN_PROGRESS' || isPartial) && (
+          {/* Esito (mock — vedi mockOutcomeForBatch): IN_PROGRESS resta badge pieno — non c'è
+              nessun altro colore in questa card con cui possa competere (isLocked nasconde la
+              riga Stato). COMPLETED (successo, stato di default) ed ERROR (ridondante con la
+              riga rossa sotto) non hanno più un badge Esito, vedi il commento su
+              OUTCOME_TAG_CLASSNAME. */}
+          {batch.outcome === 'IN_PROGRESS' && (
             <Badge
               variant="outline"
               className={cn('shrink-0 gap-1', OUTCOME_TAG_CLASSNAME[batch.outcome])}
             >
-              {batch.outcome === 'IN_PROGRESS' && (
-                <Loader2 className="h-3 w-3 animate-spin [animation-duration:1.6s]" />
-              )}
-              {isPartial && <AlertTriangle className="h-3 w-3" />}
-              {OUTCOME_BADGE_LABEL[batch.outcome]}
-              {batch.outcome === 'IN_PROGRESS' &&
-                batch.outcomeProgress != null &&
-                ` · ${batch.outcomeProgress}%`}
+              <Loader2 className="h-3 w-3 animate-spin [animation-duration:1.6s]" />
+              {OUTCOME_BADGE_LABEL.IN_PROGRESS}
+              {batch.outcomeProgress != null && ` · ${batch.outcomeProgress}%`}
             </Badge>
+          )}
+          {/* PARTIAL: non più badge pieno (era giallo, troppo vicino all'amber di "da
+              revisionare" nella riga sotto — due segnali diversi che sembravano lo stesso
+              colore per errore). Icona + testo, senza pillola: il segnale "attenzione" resta
+              leggibile, ma il colore in questa card lo porta solo l'amber di Stato sotto. */}
+          {isPartial && (
+            <span className="flex shrink-0 items-center gap-1 text-xs font-semibold text-muted-foreground">
+              <AlertTriangle className="h-3 w-3" />
+              {OUTCOME_BADGE_LABEL.PARTIAL}
+            </span>
           )}
         </div>
         {/* Niente chip Stato per ERROR/IN_PROGRESS: per ERROR è coerente con "0 domande" sopra
