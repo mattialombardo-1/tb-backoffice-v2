@@ -435,6 +435,11 @@ export function QuestionGenerationStep({
   // bottoni come "Manda tutte in revisione"). Esclude anche i click dentro un Dialog
   // annidato (conferma di uscita, "Vedi il passaggio") E sul suo overlay — cliccare fuori
   // da quelle modali deve solo chiuderle, senza toccare le righe aperte sotto né lo scroll.
+  // Esclude anche i popper Radix (es. il <Select> "Motivazione" nel dialog di Scarta): il
+  // suo elenco opzioni è portato fuori dal DOM del dialog, in un wrapper a sé con
+  // data-radix-popper-content-wrapper — senza l'esclusione, scegliere un motivo veniva
+  // letto come "click fuori" e richiudeva la riga aperta sotto, senza nessun ancoraggio
+  // dello scroll (a differenza della richiusura automatica dopo Approva/Scarta).
   const rowsListRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (openRowIds.length === 0) return;
@@ -444,7 +449,9 @@ export function QuestionGenerationStep({
       if (rowsListRef.current?.contains(target)) return;
       if (
         target instanceof Element &&
-        target.closest('[data-slot="dialog-content"], [data-slot="dialog-overlay"]')
+        target.closest(
+          '[data-slot="dialog-content"], [data-slot="dialog-overlay"], [data-radix-popper-content-wrapper]'
+        )
       ) {
         return;
       }
