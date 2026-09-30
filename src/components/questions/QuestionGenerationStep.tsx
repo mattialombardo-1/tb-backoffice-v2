@@ -1156,8 +1156,18 @@ export function QuestionGenerationStep({
                   aperta — che la spinge via naturalmente, essendo più giù nel flusso.
                   A riga chiusa niente sticky: non ha contenuto sotto da scorrere. */}
               <div
+                role="button"
+                tabIndex={0}
+                aria-expanded={isOpen}
+                onClick={() => toggleRow(draft.id)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    toggleRow(draft.id);
+                  }
+                }}
                 className={cn(
-                  'flex w-full items-center justify-between gap-4 px-8 py-5 transition-colors',
+                  'flex w-full cursor-pointer items-center justify-between gap-4 px-8 py-5 transition-colors',
                   !isOpen && 'hover:bg-accent/50',
                   isOpen && 'sticky top-0 z-10 bg-background'
                 )}
@@ -1177,11 +1187,7 @@ export function QuestionGenerationStep({
                     )}
                   </div>
                 )}
-                <button
-                  type="button"
-                  onClick={() => toggleRow(draft.id)}
-                  className="min-w-0 flex-1 text-left"
-                >
+                <div className="min-w-0 flex-1 text-left">
                   <p
                     className={cn(
                       'truncate text-sm font-medium',
@@ -1194,7 +1200,7 @@ export function QuestionGenerationStep({
                   <p className="mt-1 truncate font-mono text-xs text-muted-foreground">
                     {draft.code}
                   </p>
-                </button>
+                </div>
                 <div className="flex shrink-0 items-center gap-3">
                   {/* Prova visibile del mix di difficoltà nel batch (es. facili e difficili
                       nella stessa generazione) — grigio neutro, non uno stato come quello
