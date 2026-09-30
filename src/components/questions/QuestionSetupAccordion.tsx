@@ -186,20 +186,21 @@ function NumberStepper({
     // Pillola arrotondata con sfondo (bg-muted) invece dei soli bottoni ghost affiancati —
     // reference fornita da Mattia: due cerchi pieni (variant="secondary" + rounded-full)
     // per meno/più, il numero in mezzo senza sfondo proprio. rounded-full (non rounded-2xl)
-    // + padding p-2 su tutti i lati (non solo px-1.5/py-1.5): nel reference la pillola ha
-    // parecchio respiro intorno ai cerchi, non li stringe — un rounded-2xl con poco padding
-    // finiva per sembrare un blocchetto stretto invece di una vera pillola.
-    <div className="flex items-center gap-2 rounded-full bg-muted p-2">
+    // per angoli sempre pieni indipendentemente dall'altezza. Scala ridotta (h-6, p-1,
+    // gap-1) rispetto al primo tentativo (h-8, p-2, gap-2): quella misura restava fedele
+    // al reference isolato, ma dentro la griglia — tre per riga, tre righe — risultava
+    // sproporzionata rispetto al resto della card.
+    <div className="flex items-center gap-1 rounded-full bg-muted p-1">
       <Button
         type="button"
         variant="secondary"
         size="icon"
-        className="h-8 w-8 shrink-0 rounded-full"
+        className="h-6 w-6 shrink-0 rounded-full"
         disabled={disabled || minDisabled}
         onClick={() => onStep(-1)}
         aria-label={`Riduci ${ariaLabel}`}
       >
-        <Minus className="h-4 w-4" />
+        <Minus className="h-3 w-3" />
       </Button>
       <Input
         value={value}
@@ -207,18 +208,18 @@ function NumberStepper({
         inputMode="numeric"
         disabled={disabled}
         aria-label={ariaLabel}
-        className="h-8 w-6 appearance-none border-none bg-transparent p-0 text-center text-base font-semibold text-foreground tabular-nums shadow-none focus-visible:ring-0"
+        className="h-6 w-5 appearance-none border-none bg-transparent p-0 text-center text-sm font-semibold text-foreground tabular-nums shadow-none focus-visible:ring-0"
       />
       <Button
         type="button"
         variant="secondary"
         size="icon"
-        className="h-8 w-8 shrink-0 rounded-full"
+        className="h-6 w-6 shrink-0 rounded-full"
         disabled={disabled || maxDisabled}
         onClick={() => onStep(1)}
         aria-label={`Aumenta ${ariaLabel}`}
       >
-        <Plus className="h-4 w-4" />
+        <Plus className="h-3 w-3" />
       </Button>
     </div>
   );
