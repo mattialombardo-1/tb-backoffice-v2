@@ -937,15 +937,16 @@ export function QuestionGenerationStep({
             {/* "Create" da solo suona concluso — il cliente lo leggeva come "fatto" quando in
                 realtà è a metà flusso: le domande esistono ma non sono ancora salvate.
                 Titolo e sottotitolo nominano il passo che manca, non solo la CTA a destra.
-                Caso A (isReviewerSelf): il passo che manca è decidere, non "mandare" a
-                qualcuno — non esiste un revisore esterno che "non le vede ancora". */}
+                Caso A (isReviewerSelf): copy fornita dal brief corretto — il passo che
+                manca è decidere, non "mandare" a qualcuno (non esiste un revisore esterno
+                che "non le vede ancora"). Caso B: invariato. */}
             <h1 className="text-xl font-semibold">
               {drafts.length}{' '}
-              {isReviewerSelf ? 'Domande generate' : 'Domande pronte per la revisione'}
+              {isReviewerSelf ? 'domande create' : 'Domande pronte per la revisione'}
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
               {isReviewerSelf
-                ? 'Non ancora salvate. Approva, modifica e approva, o scarta ogni domanda per completare la creazione.'
+                ? 'Non ancora salvate. Puoi approvare, modificare o scartare ogni domanda creata.'
                 : 'Non ancora visibili al revisore. Mandale in revisione per completare la creazione delle domande.'}
             </p>
             {/* Prova: header sempre visibile, non si comprime più aprendo una domanda —
