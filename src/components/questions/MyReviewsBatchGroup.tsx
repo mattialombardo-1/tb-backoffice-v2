@@ -19,31 +19,17 @@ const PENDING_TAG_CLASSNAME =
 const REVIEWED_TAG_CLASSNAME =
   'border-emerald-500 bg-emerald-100 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-300';
 
-// Badge dell'Esito mock (vedi mockOutcomeForBatch in useReviewBatches) — renderizzato come
-// pillola per IN_PROGRESS e PARTIAL (vedi più sotto, header del batch), entrambe neutre
-// (nessun border/bg override, resta il grigio di default della variant "outline") e senza
-// peso extra: l'icona (spinner per IN_PROGRESS, AlertTriangle per PARTIAL) già comunica il
-// segnale da sola, il colore/bold non aggiungevano nulla — per PARTIAL evita anche il
-// conflitto col giallo, troppo vicino all'amber di "da revisionare" sotto (vedi
-// PENDING_TAG_CLASSNAME). COMPLETED non ha più badge: è lo stato di default, un segnale
-// colorato lì è rumore su ogni batch andato bene invece che sui pochi che meritano
-// attenzione. ERROR nemmeno: la riga rossa "Creazione domande interrotta" sotto il titolo
-// dice già la stessa cosa, il badge sopra era ridondante. Le voci COMPLETED/ERROR restano
-// solo per completezza del tipo BatchOutcome.
-const OUTCOME_TAG_CLASSNAME: Record<BatchOutcome, string> = {
-  COMPLETED: REVIEWED_TAG_CLASSNAME,
-  IN_PROGRESS: 'text-muted-foreground',
-  PARTIAL: 'text-muted-foreground',
-  ERROR:
-    'border-red-500 bg-red-100 text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300',
-};
-
-// Copy dell'Esito nell'header del batch (badge per IN_PROGRESS e PARTIAL — vedi sopra), più
-// descrittivo di BATCH_OUTCOME_LABELS (quello resta per le opzioni nel filtro, dove il
-// contesto "Esito" è già dato dal nome del campo): "Completata" o "In corso" da sole, lette
-// accanto a "N da revisionare", suonano come se si riferissero alla revisione invece che alla
-// generazione. COMPLETED/ERROR non sono più letti (vedi sopra), restano solo per completezza
-// del tipo.
+// Copy dell'Esito nell'header del batch — testo semplice (icona + label) per IN_PROGRESS e
+// PARTIAL, vedi più sotto: "in corso"/"parziale" sono fatti sullo stato della generazione, non
+// decisioni da prendere, stesso trattamento già dato a "N domande" — niente più badge/colore,
+// solo l'icona come richiamo visivo. COMPLETED non ha niente qui: è lo stato di default, un
+// segnale lì è rumore su ogni batch andato bene invece che sui pochi che meritano attenzione.
+// ERROR nemmeno: la riga rossa "Creazione domande interrotta" sotto il titolo dice già la
+// stessa cosa. Più descrittiva di BATCH_OUTCOME_LABELS (quello resta per le opzioni nel
+// filtro, dove il contesto "Esito" è già dato dal nome del campo): "Completata" o "In corso"
+// da sole, lette accanto a "N da revisionare", suonano come se si riferissero alla revisione
+// invece che alla generazione. COMPLETED/ERROR non sono letti qui, restano solo per
+// completezza del tipo.
 const OUTCOME_BADGE_LABEL: Record<BatchOutcome, string> = {
   ...BATCH_OUTCOME_LABELS,
   IN_PROGRESS: 'Elaborazione in corso',
@@ -259,9 +245,9 @@ export function MyReviewsBatchGroup({
   // sottostante — la stessa incoerenza risolta per ERROR. Unica differenza: "N domande" NON
   // va azzerato, è la quantità target/richiesta, non un fallimento (vedi sotto).
   const isLocked = hasError || batch.outcome === 'IN_PROGRESS';
-  // Unico caso non toccato in questo giro (vedi i commenti su OUTCOME_TAG_CLASSNAME e più
-  // sotto): PARTIAL resta con lo stesso trattamento di prima, badge per badge — Esito e
-  // Stato ancora non riconciliati per quel caso, da riprendere a parte.
+  // Serve solo a scegliere l'icona dell'Esito (AlertTriangle vs lo spinner di IN_PROGRESS,
+  // vedi più sotto) — per il resto della card (N domande, Stato, ecc.) PARTIAL segue lo
+  // stesso trattamento di COMPLETED, nessun'altra eccezione.
   const isPartial = batch.outcome === 'PARTIAL';
 
   const header = (
@@ -293,24 +279,21 @@ export function MyReviewsBatchGroup({
         </div>
         {/* Esito (mock — vedi mockOutcomeForBatch), su una riga propria tra il titolo e la
             chip Stato — non più affiancato al titolo: è un'informazione distinta da "cosa" è
-            il batch, merita il proprio spazio invece di affollare la prima riga. Stesso badge
-            neutro per IN_PROGRESS e PARTIAL (vedi OUTCOME_TAG_CLASSNAME) — cambia solo
-            l'icona. COMPLETED ed ERROR non hanno più badge Esito, vedi il commento lì. */}
+            il batch, merita il proprio spazio invece di affollare la prima riga. Non più una
+            Badge: "in corso"/"parziale" sono fatti sullo stato della generazione, non
+            decisioni da prendere, stessa regola già applicata a "N domande" — l'icona resta
+            l'unico richiamo visivo. COMPLETED ed ERROR non hanno niente qui, vedi il commento
+            su OUTCOME_BADGE_LABEL sopra. */}
         {(batch.outcome === 'IN_PROGRESS' || isPartial) && (
-          <div className="mt-2">
-            <Badge
-              variant="outline"
-              className={cn('shrink-0 gap-1', OUTCOME_TAG_CLASSNAME[batch.outcome])}
-            >
-              {batch.outcome === 'IN_PROGRESS' && (
-                <Loader2 className="h-3 w-3 animate-spin [animation-duration:1.6s]" />
-              )}
-              {isPartial && <AlertTriangle className="h-3 w-3" />}
-              {OUTCOME_BADGE_LABEL[batch.outcome]}
-              {batch.outcome === 'IN_PROGRESS' &&
-                batch.outcomeProgress != null &&
-                ` · ${batch.outcomeProgress}%`}
-            </Badge>
+          <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+            {batch.outcome === 'IN_PROGRESS' && (
+              <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin [animation-duration:1.6s]" />
+            )}
+            {isPartial && <AlertTriangle className="h-3.5 w-3.5 shrink-0" />}
+            {OUTCOME_BADGE_LABEL[batch.outcome]}
+            {batch.outcome === 'IN_PROGRESS' &&
+              batch.outcomeProgress != null &&
+              ` · ${batch.outcomeProgress}%`}
           </div>
         )}
         {/* Niente chip Stato per ERROR/IN_PROGRESS: per ERROR è coerente con "0 domande" sopra
