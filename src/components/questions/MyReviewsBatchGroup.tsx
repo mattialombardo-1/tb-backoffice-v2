@@ -9,7 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { BATCH_OUTCOME_LABELS, DIFFICULTY_LABELS } from '@/lib/types/questions';
-import type { BatchOutcome } from '@/lib/types/questions';
+import type { BatchOutcome, DifficultyLevel } from '@/lib/types/questions';
 import type { ReviewBatch, ReviewBatchQuestion } from '@/lib/hooks/useReviewBatches';
 
 // Stessi colori di STATUS_CONFIG in QuestionsListTable.tsx (TO_REVIEW/ACTIVE) — il conteggio
@@ -253,6 +253,30 @@ export function MyReviewsBatchGroup({
   // stesso trattamento di COMPLETED, nessun'altra eccezione.
   const isPartial = batch.outcome === 'PARTIAL';
 
+  // Mix di difficoltà, accanto a "N domande" — solo i livelli presenti (>0), stesso pattern
+  // già usato per il recap di Composizione in QuestionSetupAccordion ("N facile · N media ·
+  // N difficile"). non_ancora_valutata esclusa di proposito: non è un livello di difficoltà,
+  // è un'assenza di classificazione — includerla come un bucket alla pari del resto
+  // illustrerebbe male il mix. Il brief del cliente parla solo di Facile/Media/Difficile (i 3
+  // bucket del wizard di generazione), ma DifficultyLevel ne ha 6 — le domande in revisione,
+  // specie quelle non nate dal wizard, possono avere Medio-facile/Medio-difficile: restano
+  // visibili come bucket a sé, non forzate in uno dei 3 (punto segnalato a Mattia, non ancora
+  // deciso col cliente). Non calcolato per IN_PROGRESS/ERROR (isLocked): le domande lì non
+  // esistono ancora davvero (vedi il commento su isLocked sopra), un mix "finto" sarebbe
+  // fuorviante quanto lo sarebbe la chip Stato che già non mostriamo in quei casi.
+  const difficultyBreakdownLabel = isLocked
+    ? ''
+    : (() => {
+        const counts: Partial<Record<DifficultyLevel, number>> = {};
+        for (const q of [...batch.pending, ...batch.reviewed]) {
+          counts[q.difficulty] = (counts[q.difficulty] ?? 0) + 1;
+        }
+        return (Object.keys(DIFFICULTY_LABELS) as DifficultyLevel[])
+          .filter((level) => level !== 'non_ancora_valutata' && (counts[level] ?? 0) > 0)
+          .map((level) => `${counts[level]} ${DIFFICULTY_LABELS[level].toLowerCase()}`)
+          .join(' · ');
+      })();
+
   const header = (
     <div className="flex min-w-0 items-center gap-3">
       <Layers className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -275,9 +299,13 @@ export function MyReviewsBatchGroup({
           {/* Fatto, non stato: un conteggio non è una decisione da prendere, quindi è testo
               semplice invece di un badge — il colore resta riservato a "da revisionare" più
               sotto, l'unico segnale davvero actionable di questa card. Vale anche per PARTIAL,
-              non solo per COMPLETED/IN_PROGRESS: nessuna eccezione qui. */}
+              non solo per COMPLETED/IN_PROGRESS: nessuna eccezione qui. "|" prima del mix di
+              difficoltà (quando c'è, vedi difficultyBreakdownLabel sopra): stesso separatore
+              già usato altrove per dividere due riepiloghi distinti della stessa cosa (vedi
+              QuestionSetupAccordion), "·" resta per separare i bucket dentro il mix stesso. */}
           <span className="shrink-0 text-xs text-muted-foreground">
             {hasError ? 0 : batch.pending.length + batch.reviewed.length} domande
+            {difficultyBreakdownLabel && ` | ${difficultyBreakdownLabel}`}
           </span>
         </div>
         {/* Esito (mock — vedi mockOutcomeForBatch), su una riga propria tra il titolo e la
