@@ -284,16 +284,11 @@ export function MyReviewsBatchGroup({
           </p>
           {/* Fatto, non stato: un conteggio non è una decisione da prendere, quindi è testo
               semplice invece di un badge — il colore resta riservato a "da revisionare" più
-              sotto, l'unico segnale davvero actionable di questa card. */}
-          {isPartial ? (
-            <Badge variant="outline" className="shrink-0 font-normal text-muted-foreground">
-              {batch.pending.length + batch.reviewed.length} domande
-            </Badge>
-          ) : (
-            <span className="shrink-0 text-xs text-muted-foreground">
-              {hasError ? 0 : batch.pending.length + batch.reviewed.length} domande
-            </span>
-          )}
+              sotto, l'unico segnale davvero actionable di questa card. Vale anche per PARTIAL,
+              non solo per COMPLETED/IN_PROGRESS: nessuna eccezione qui. */}
+          <span className="shrink-0 text-xs text-muted-foreground">
+            {hasError ? 0 : batch.pending.length + batch.reviewed.length} domande
+          </span>
         </div>
         {/* Esito (mock — vedi mockOutcomeForBatch), su una riga propria tra il titolo e la
             chip Stato — non più affiancato al titolo: è un'informazione distinta da "cosa" è
@@ -321,23 +316,17 @@ export function MyReviewsBatchGroup({
             (mostrare "10 da revisionare" contraddirebbe sia il conteggio azzerato sia il box
             d'errore sotto); per IN_PROGRESS, anche se "N domande" resta il target, nessuna di
             quelle domande esiste ancora davvero — non c'è nulla da segnare come "da
-            revisionare" finché la generazione non è completa. "Già revisionate" è badge solo
-            per PARTIAL (non toccato); altrove è testo semplice, stesso ragionamento del
-            conteggio "N domande" sopra — "da revisionare" resta l'unico badge colorato. */}
+            revisionare" finché la generazione non è completa. "Già revisionate" è sempre testo
+            semplice (anche per PARTIAL), stesso ragionamento del conteggio "N domande" sopra —
+            "da revisionare" resta l'unico badge colorato di questa card. */}
         {!isLocked && (
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
             <Badge variant="outline" className={PENDING_TAG_CLASSNAME}>
               {batch.pending.length} da revisionare
             </Badge>
-            {isPartial ? (
-              <Badge variant="outline" className={REVIEWED_TAG_CLASSNAME}>
-                {batch.reviewed.length} già revisionate
-              </Badge>
-            ) : (
-              <span className="text-xs text-muted-foreground">
-                {batch.reviewed.length} già revisionate
-              </span>
-            )}
+            <span className="text-xs text-muted-foreground">
+              {batch.reviewed.length} già revisionate
+            </span>
           </div>
         )}
         {/* Motivo mock dell'errore — solo per ERROR, sempre visibile qui: quei batch non sono
