@@ -620,14 +620,18 @@ export function buildDb(): Db {
   // a mano. Materia/argomento/giorno sono fissi e letterali (non cercati via
   // hash come in una versione precedente): useReviewBatches (src/, non importa
   // da qui) riconosce questi tre batch per lo stesso identico terzetto
-  // materia+argomento+giorno — vedi DEMO_MATERIA/DEMO_ARGOMENTO/DEMO_OUTCOME_BY_DAY
-  // lì. Se uno dei tre valori cambia qui, va cambiato anche lì, altrimenti quel
-  // batch smette di essere riconosciuto come demo e torna "Elaborazione
-  // Completata" come tutti gli altri.
-  const DEMO_SUBJECT_NAME = 'Biologia';
-  const DEMO_TOPIC_NAME = 'La chimica dei viventi';
-  const demoSubject = subjects.find((s) => s.name === DEMO_SUBJECT_NAME)!;
-  const demoTopic = demoSubject.topics.find((t) => t.name === DEMO_TOPIC_NAME)!;
+  // materia+argomento+giorno — vedi DEMO_BATCHES_BY_OUTCOME lì. Se uno dei tre
+  // valori cambia qui, va cambiato anche lì, altrimenti quel batch smette di
+  // essere riconosciuto come demo e torna "Elaborazione Completata" come tutti
+  // gli altri. PARTIAL ha una materia/argomento diversa dagli altri due
+  // (Fisica/Cinematica invece di Biologia/La chimica dei viventi) — non serve
+  // che condividano lo stesso soggetto, e tenerli distinti evita che PARTIAL si
+  // legga come "la stessa domanda" di IN_PROGRESS/ERROR solo su un altro giorno.
+  const findSubjectTopic = (subjectName: string, topicName: string) => {
+    const subject = subjects.find((s) => s.name === subjectName)!;
+    const topic = subject.topics.find((t) => t.name === topicName)!;
+    return { subject, topic };
+  };
 
   // Giorno fisso, senza il jitter orario di iso(): i 5 membri di un batch demo
   // devono cadere tutti nello stesso giorno solare (dateKey in useReviewBatches
@@ -640,14 +644,18 @@ export function buildDb(): Db {
   // in alto" di useReviewBatches, i tre batch demo compaiono in cima alla
   // lista invece di perdersi in mezzo ai 200 seed casuali.
   const DEMO_BATCHES = [
-    { outcome: 'IN_PROGRESS', daysAgo: 1 },
-    { outcome: 'PARTIAL', daysAgo: 2 },
-    { outcome: 'ERROR', daysAgo: 3 },
+    {
+      outcome: 'IN_PROGRESS',
+      daysAgo: 1,
+      subjectName: 'Biologia',
+      topicName: 'La chimica dei viventi',
+    },
+    { outcome: 'PARTIAL', daysAgo: 2, subjectName: 'Fisica', topicName: 'Cinematica' },
+    { outcome: 'ERROR', daysAgo: 3, subjectName: 'Biologia', topicName: 'La chimica dei viventi' },
   ] as const;
 
-  for (const { daysAgo } of DEMO_BATCHES) {
-    const subject = demoSubject;
-    const topic = demoTopic;
+  for (const { daysAgo, subjectName, topicName } of DEMO_BATCHES) {
+    const { subject, topic } = findSubjectTopic(subjectName, topicName);
     const createdAt = fixedDayIso(daysAgo);
 
     for (let n = 0; n < 5; n++) {

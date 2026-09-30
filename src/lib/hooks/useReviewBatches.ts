@@ -100,7 +100,10 @@ const MIN_BATCH_SIZE = 2;
 // vedi il commento lì) sono l'UNICO caso con un esito diverso da "Elaborazione Completata",
 // riconosciuti per materia + argomento + giorno esatti: stessa terna letterale duplicata in
 // mock/db.ts (mock/ non importa da src/, vedi il commento in cima a quel file) — se uno dei
-// tre valori cambia in un posto va cambiato anche nell'altro.
+// tre valori cambia in un posto va cambiato anche nell'altro. PARTIAL ha una materia/argomento
+// diversa dagli altri due (Fisica/Cinematica, non Biologia/La chimica dei viventi) — per
+// questo ogni voce porta la propria terna materia+argomento+giorno invece di condividerne una
+// sola tra tutti e tre gli esiti.
 //
 // Qualunque altro batch — generato dal vivo durante la demo, o dalla stessa generazione dopo
 // un riavvio del server — deve invece risultare sempre COMPLETED: chi genera domande per il
@@ -114,24 +117,42 @@ const MIN_BATCH_SIZE = 2;
 // fissi qui sotto solo se l'utente sceglie esattamente la stessa materia/argomento nello
 // stesso giorno di calendario di uno dei tre batch demo. Un caso limite accettato, non quello
 // che la demo deve mostrare.
-const DEMO_MATERIA = 'Biologia';
-const DEMO_ARGOMENTO = 'La chimica dei viventi';
-const DEMO_OUTCOME_BY_DAY: Partial<Record<string, BatchOutcome>> = {
-  '01/09/2026': 'IN_PROGRESS',
-  '31/08/2026': 'PARTIAL',
-  '30/08/2026': 'ERROR',
-};
+const DEMO_BATCHES_BY_OUTCOME: {
+  materiaName: string;
+  argomentoName: string;
+  dayLabel: string;
+  outcome: BatchOutcome;
+}[] = [
+  {
+    materiaName: 'Biologia',
+    argomentoName: 'La chimica dei viventi',
+    dayLabel: '01/09/2026',
+    outcome: 'IN_PROGRESS',
+  },
+  {
+    materiaName: 'Fisica',
+    argomentoName: 'Cinematica',
+    dayLabel: '31/08/2026',
+    outcome: 'PARTIAL',
+  },
+  {
+    materiaName: 'Biologia',
+    argomentoName: 'La chimica dei viventi',
+    dayLabel: '30/08/2026',
+    outcome: 'ERROR',
+  },
+];
 
 function mockOutcomeForBatch(
   materiaName: string,
   argomentoName: string,
   dayLabel: string
 ): BatchOutcome {
-  if (materiaName === DEMO_MATERIA && argomentoName === DEMO_ARGOMENTO) {
-    const demoOutcome = DEMO_OUTCOME_BY_DAY[dayLabel];
-    if (demoOutcome) return demoOutcome;
-  }
-  return 'COMPLETED';
+  const demo = DEMO_BATCHES_BY_OUTCOME.find(
+    (d) =>
+      d.materiaName === materiaName && d.argomentoName === argomentoName && d.dayLabel === dayLabel
+  );
+  return demo?.outcome ?? 'COMPLETED';
 }
 
 // Il conteggio generato ("N" in "N/M domande") non serve mockarlo a parte: è già
