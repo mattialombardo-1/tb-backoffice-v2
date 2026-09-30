@@ -919,7 +919,7 @@ export function QuestionGenerationStep({
             variant="ghost"
             size="icon"
             onClick={handleExitClick}
-            className="-ml-2 w-fit text-muted-foreground hover:text-foreground"
+            className="-ml-2 text-muted-foreground hover:text-foreground"
           >
             <X className="h-5 w-5" />
           </Button>
