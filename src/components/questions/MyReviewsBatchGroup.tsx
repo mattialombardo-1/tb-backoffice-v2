@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { BATCH_OUTCOME_LABELS, DIFFICULTY_LABELS } from '@/lib/types/questions';
 import type { BatchOutcome } from '@/lib/types/questions';
@@ -324,6 +325,7 @@ export function MyReviewsBatchGroup({
             <Badge variant="outline" className={PENDING_TAG_CLASSNAME}>
               {batch.pending.length} da revisionare
             </Badge>
+            <Separator orientation="vertical" className="h-3" />
             <span className="text-xs text-muted-foreground">
               {batch.reviewed.length} già revisionate
             </span>
