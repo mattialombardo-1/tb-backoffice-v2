@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import {
   BookOpen,
   Check,
+  CheckCircle,
   ChevronDown,
   Eye,
   FileText,
@@ -57,7 +58,12 @@ import { REJECT_CUSTOM_REASON, REJECT_CUSTOM_TEXT_MAX, REJECT_REASONS } from '@/
 import { QuestionDraftEditContent } from './QuestionDraftEditContent';
 import { QUESTION_BANKS, pickQuestionBank } from './questionBanks';
 
-export type DraftStatus = 'pending' | 'in_revisione' | 'scartata';
+// 'approvata' esiste solo per il Caso A (revisore = sé stessi): la domanda è creata e
+// approvata subito, senza mai passare da 'in_revisione' — 'in_revisione' esiste solo per
+// il Caso B (altro revisore). I due stati non si mischiano mai sulla stessa domanda, sono
+// prodotti da due percorsi di persistenza distinti (vedi persistAndApprove/persistAndSubmit
+// più sotto).
+export type DraftStatus = 'pending' | 'in_revisione' | 'approvata' | 'scartata';
 
 // Grayscale, non l'accento blu: sono un riepilogo di cosa hai generato, non uno stato — un
 // colore acceso avrebbe fatto contrasto con i badge di stato delle righe sotto, che sono
@@ -141,12 +147,17 @@ const ALT_LETTERS = ['A', 'B', 'C', 'D', 'E'];
 // Tag di stato per riga — colori deliberatamente diversi da quelli dello stesso stato
 // altrove nel backoffice (es. "Da revisionare" è ambra nella lista Domande): qui il
 // verde segnala "già inviata con successo", non "in attesa di qualcuno".
+// "Da mandare in revisione" resta il default (Caso B, il più comune) — il Caso A lo
+// sovrascrive con "Da decidere" a runtime (vedi statusLabel dentro il componente, usa
+// isReviewerSelf che non esiste qui a livello di modulo).
 const STATUS_TAG_LABEL: Record<DraftStatus, string> = {
   // Non "Da revisionare": chi genera qui non è quasi mai chi revisiona — nel 90% dei
   // casi la manda a un altro revisore. "Da revisionare" implicherebbe erroneamente
   // che tocchi a lui/lei; il vero passo che manca è inviarla.
   pending: 'Da mandare in revisione',
   in_revisione: 'In revisione',
+  // Solo Caso A (vedi DraftStatus) — mai prodotto insieme a in_revisione sulla stessa domanda.
+  approvata: 'Approvata',
   scartata: 'Scartata',
 };
 
@@ -154,6 +165,10 @@ const STATUS_TAG_CLASSNAME: Record<DraftStatus, string> = {
   pending:
     'border-yellow-500 bg-yellow-100 text-yellow-700 dark:border-yellow-800 dark:bg-yellow-950 dark:text-yellow-300',
   in_revisione:
+    'border-emerald-500 bg-emerald-100 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-300',
+  // Stesso verde di in_revisione: entrambi sono l'esito "riuscito" della propria riga, solo
+  // per casi diversi (mai insieme nello stesso batch, vedi isReviewerSelf).
+  approvata:
     'border-emerald-500 bg-emerald-100 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-300',
   scartata:
     'border-rose-500 bg-rose-100 text-rose-700 dark:border-rose-800 dark:bg-rose-950 dark:text-rose-300',
@@ -348,9 +363,10 @@ export function QuestionGenerationStep({
     )
   );
   // Un id per questa generazione (un montaggio = una generazione, vedi sopra) — registrato
-  // per ogni domanda creata per davvero (vedi persistDraft), così "Domande da revisionare"
-  // può formare un batch a sé per ogni generazione invece di sommarla a una già esistente
-  // con stessi materia/argomento/data. Vedi questionGenerationBatches.ts.
+  // per ogni domanda creata per davvero (vedi persistAndApprove/persistAndSubmit più sotto),
+  // così "Domande da revisionare" può formare un batch a sé per ogni generazione invece di
+  // sommarla a una già esistente con stessi materia/argomento/data. Vedi
+  // questionGenerationBatches.ts.
   const [generationId] = useState(createGenerationId);
   // Più domande possono restare aperte insieme (non solo l'ultima cliccata): ognuna con il
   // proprio header sticky, così scorrendo capisci sempre in quale sei — vedi il trigger di riga.
@@ -502,9 +518,25 @@ export function QuestionGenerationStep({
     language: 'IT-it',
   });
 
-  /** Crea la domanda per davvero (mock API) e, se c'è un revisore, la manda subito in
-   *  revisione. Ritorna l'id reale creato. */
-  const persistDraft = async (draft: DraftQuestion): Promise<string> => {
+  // Da qui in giù, due famiglie di funzioni completamente separate — mai condivise tra
+  // Caso A e Caso B, per costruzione: ognuna produce solo lo stato che le compete
+  // (approvata / in_revisione) tramite il proprio percorso di persistenza
+  // (persistAndApprove / persistAndSubmit). Quale famiglia viene davvero chiamata dai
+  // bottoni dipende da isReviewerSelf nel JSX più sotto, non da un branch nascosto qui.
+
+  /** Caso A (isReviewerSelf): crea la domanda per davvero e la approva subito — mai
+   *  'in_revisione', il revisore è già chi sta generando, non serve passare dalla coda
+   *  "Domande da revisionare". */
+  const persistAndApprove = async (draft: DraftQuestion): Promise<string> => {
+    const created = await questionsService.create(client, buildCreatePayload(draft));
+    recordGeneratedQuestion(created.id, generationId);
+    await questionsService.approve(client, created.id);
+    return created.id;
+  };
+
+  /** Caso B (altro revisore): crea la domanda e la manda in revisione a reviewerId — mai
+   *  approvata da qui, solo da chi la riceve. */
+  const persistAndSubmit = async (draft: DraftQuestion): Promise<string> => {
     const created = await questionsService.create(client, buildCreatePayload(draft));
     recordGeneratedQuestion(created.id, generationId);
     if (reviewerId) {
@@ -513,37 +545,23 @@ export function QuestionGenerationStep({
     return created.id;
   };
 
-  const sendToReview = async (id: string) => {
-    const draft = drafts.find((d) => d.id === id);
-    if (!draft || draft.status !== 'pending') return;
-    updateDraft(id, { isPersisting: true });
-    try {
-      const questionId = await persistDraft(draft);
-      updateDraft(id, {
-        status: 'in_revisione',
-        persistedQuestionId: questionId,
-        isPersisting: false,
-      });
-      toast.success(`Domanda mandata in revisione${recipientSuffix}.`, {
-        duration: 5000,
-        className: REVIEW_SUCCESS_TOAST_CLASSNAME,
-      });
-    } catch {
-      updateDraft(id, { isPersisting: false });
-      toast.error("Errore durante l'invio in revisione. Riprova.");
-    }
-  };
-
-  /** Nucleo condiviso tra "Manda tutte in revisione" e il "Manda in revisione" bulk della
-   *  selezione: persiste ogni target in parallelo, aggiorna lo stato riga per riga in base
-   *  all'esito. Ritorna il numero di invii falliti — non manda toast né tocca isPersisting
-   *  a livello di pulsante: quello resta al chiamante, che sa quale bottone stava aspettando. */
-  const sendTargetsToReview = async (targets: DraftQuestion[]): Promise<number> => {
+  /** Nucleo condiviso da entrambi i casi per il bulk (singola riga inclusa, chiamata con un
+   *  array di un elemento): persiste ogni target in parallelo con la funzione e lo stato di
+   *  arrivo passati dal chiamante, aggiorna lo stato riga per riga in base all'esito. Ritorna
+   *  il numero di fallimenti — non manda toast né tocca isPersisting a livello di pulsante,
+   *  quello resta al chiamante. Il parametro esplicito (non un branch su isReviewerSelf qui
+   *  dentro) è la garanzia che Caso A non possa mai produrre 'in_revisione' né Caso B
+   *  'approvata'. */
+  const persistTargets = async (
+    targets: DraftQuestion[],
+    persistFn: (draft: DraftQuestion) => Promise<string>,
+    nextStatus: 'approvata' | 'in_revisione'
+  ): Promise<number> => {
     if (targets.length === 0) return 0;
     setDrafts((prev) =>
       prev.map((d) => (targets.some((t) => t.id === d.id) ? { ...d, isPersisting: true } : d))
     );
-    const outcomes = await Promise.allSettled(targets.map((d) => persistDraft(d)));
+    const outcomes = await Promise.allSettled(targets.map((d) => persistFn(d)));
     let failures = 0;
     setDrafts((prev) =>
       prev.map((d) => {
@@ -553,7 +571,7 @@ export function QuestionGenerationStep({
         if (outcome.status === 'fulfilled') {
           return {
             ...d,
-            status: 'in_revisione',
+            status: nextStatus,
             persistedQuestionId: outcome.value,
             isPersisting: false,
           };
@@ -565,13 +583,90 @@ export function QuestionGenerationStep({
     return failures;
   };
 
+  // --- Caso A: Approva (riga singola / tutte / selezione) — mai una conferma, è solo un
+  // passo del proprio flusso, non un invio a qualcun altro. ---
+
+  const approveDraft = async (id: string) => {
+    const draft = drafts.find((d) => d.id === id);
+    if (!draft || draft.status !== 'pending') return;
+    const failures = await persistTargets([draft], persistAndApprove, 'approvata');
+    if (failures === 0) {
+      toast.success('Domanda approvata.', {
+        duration: 5000,
+        className: REVIEW_SUCCESS_TOAST_CLASSNAME,
+      });
+    } else {
+      toast.error("Errore durante l'approvazione. Riprova.");
+    }
+  };
+
+  /** CTA principale del footer per il Caso A. L'uscita automatica a esito riuscito non è
+   *  gestita qui — vedi l'effect su daDecidere più sotto. */
+  const approveAll = async () => {
+    const targets = drafts.filter((d) => d.status === 'pending');
+    if (targets.length === 0) return 0;
+    setIsSendingAll(true);
+    const failures = await persistTargets(targets, persistAndApprove, 'approvata');
+    setIsSendingAll(false);
+    if (failures > 0) {
+      toast.error('Alcune domande non sono state approvate. Riprova.');
+    } else {
+      toast.success(
+        targets.length === 1 ? 'Domanda approvata.' : `${targets.length} domande approvate.`,
+        { duration: 5000, className: REVIEW_SUCCESS_TOAST_CLASSNAME }
+      );
+    }
+    return failures;
+  };
+
+  const handleBulkApprove = async () => {
+    const ids = bulk.selectedIds;
+    const targets = drafts.filter((d) => ids.has(d.id) && d.status === 'pending');
+    if (targets.length === 0) return;
+    setIsBulkSending(true);
+    const failures = await persistTargets(targets, persistAndApprove, 'approvata');
+    setIsBulkSending(false);
+    bulk.clearSelection();
+    if (failures > 0) {
+      toast.error('Alcune domande non sono state approvate. Riprova.');
+    } else {
+      toast.success(`${targets.length} domande approvate.`, {
+        duration: 5000,
+        className: REVIEW_SUCCESS_TOAST_CLASSNAME,
+      });
+    }
+  };
+
+  // Il Caso A non offre un terzo bottone "Approva tutte e esci" nel dialog di uscita — solo
+  // "Rimani" / "Elimina le rimanenti" (vedi lo step 4 del brief e il dialog più sotto):
+  // approveAll resta comunque richiamabile da lì per il bottone "Approva tutte" in alto,
+  // che segue lo stesso auto-exit del Caso B quando daDecidere torna a 0 (vedi l'effect
+  // più sotto), senza bisogno di un handler di uscita dedicato.
+
+  // --- Caso B: Manda in revisione (riga singola / tutte / selezione) — sempre con conferma,
+  // vedi pendingSend/confirmPendingSend più sotto. ---
+
+  const sendToReview = async (id: string) => {
+    const draft = drafts.find((d) => d.id === id);
+    if (!draft || draft.status !== 'pending') return;
+    const failures = await persistTargets([draft], persistAndSubmit, 'in_revisione');
+    if (failures === 0) {
+      toast.success(`Domanda mandata in revisione${recipientSuffix}.`, {
+        duration: 5000,
+        className: REVIEW_SUCCESS_TOAST_CLASSNAME,
+      });
+    } else {
+      toast.error("Errore durante l'invio in revisione. Riprova.");
+    }
+  };
+
   /** Manda in revisione tutte le domande ancora "pending" (non le scartate). Ritorna il
    *  numero di invii falliti, così chi chiama può decidere se uscire subito dopo o no. */
   const sendAllToReview = async (): Promise<number> => {
     const targets = drafts.filter((d) => d.status === 'pending');
     if (targets.length === 0) return 0;
     setIsSendingAll(true);
-    const failures = await sendTargetsToReview(targets);
+    const failures = await persistTargets(targets, persistAndSubmit, 'in_revisione');
     setIsSendingAll(false);
     if (failures > 0) {
       toast.error('Alcune domande non sono state inviate in revisione. Riprova.');
@@ -586,7 +681,8 @@ export function QuestionGenerationStep({
 
   // "Manda tutte e esci" nella conferma di uscita: invia il rimanente e esce solo se
   // è andato tutto a buon fine — altrimenti resta sul riepilogo, che nel frattempo
-  // mostra già lo stato aggiornato riga per riga.
+  // mostra già lo stato aggiornato riga per riga. Solo Caso B: il Caso A esce con
+  // "Elimina le rimanenti", non con un invio.
   const handleSendAllAndExit = async () => {
     const failures = await sendAllToReview();
     if (failures === 0) {
@@ -596,13 +692,6 @@ export function QuestionGenerationStep({
     }
   };
 
-  // CTA principale del footer: invia tutte le domande "pending". L'uscita automatica a
-  // esito riuscito non è più gestita qui — vedi l'effect su daDecidere sotto, che copre
-  // ogni strada che porta a "niente più da decidere", non solo questa.
-  const handleSendAllToReview = async () => {
-    await sendAllToReview();
-  };
-
   /** "Manda in revisione" della toolbar di selezione — stessa dinamica del singolo Manda in
    *  revisione per riga: solo lo scope cambia, dalla singola riga alla selezione corrente. */
   const handleBulkSendToReview = async () => {
@@ -610,7 +699,7 @@ export function QuestionGenerationStep({
     const targets = drafts.filter((d) => ids.has(d.id) && d.status === 'pending');
     if (targets.length === 0) return;
     setIsBulkSending(true);
-    const failures = await sendTargetsToReview(targets);
+    const failures = await persistTargets(targets, persistAndSubmit, 'in_revisione');
     setIsBulkSending(false);
     bulk.clearSelection();
     if (failures > 0) {
@@ -623,42 +712,22 @@ export function QuestionGenerationStep({
     }
   };
 
-  /** I tre entry point che mandano in revisione (riga, tutte, selezione) passano da qui
-   *  invece di invocare direttamente sendToReview/handleSendAllToReview/
-   *  handleBulkSendToReview: a sé stessi l'azione resta immediata come prima (nessuna
-   *  conferma, è solo un passo del proprio flusso), a qualcun altro si apre prima la modale —
-   *  vedi pendingSend/confirmPendingSend sotto. "Manda tutte e esci" nel dialog di uscita fa
-   *  eccezione: quel dialog è già di per sé una conferma, vedi il commento lì. */
-  const requestSendToReview = (id: string) => {
-    if (isReviewerSelf) {
-      sendToReview(id);
-    } else {
-      setPendingSend({ kind: 'single', id });
-    }
-  };
-
-  const requestSendAllToReview = () => {
-    if (isReviewerSelf) {
-      handleSendAllToReview();
-    } else {
-      setPendingSend({ kind: 'all' });
-    }
-  };
-
-  const requestBulkSendToReview = () => {
-    if (isReviewerSelf) {
-      handleBulkSendToReview();
-    } else {
-      setPendingSend({ kind: 'selection' });
-    }
-  };
+  /** I tre entry point che mandano in revisione (riga, tutte, selezione) — solo Caso B,
+   *  chiamati dal JSX solo quando !isReviewerSelf (vedi i bottoni più sotto): aprono sempre
+   *  la modale di conferma, mai un invio diretto — mandare a qualcun altro merita sempre una
+   *  conferma esplicita, a differenza di Approva (Caso A), che non la merita mai (vedi sopra).
+   *  "Manda tutte e esci" nel dialog di uscita fa eccezione: quel dialog è già di per sé una
+   *  conferma, vedi il commento lì. */
+  const requestSendToReview = (id: string) => setPendingSend({ kind: 'single', id });
+  const requestSendAllToReview = () => setPendingSend({ kind: 'all' });
+  const requestBulkSendToReview = () => setPendingSend({ kind: 'selection' });
 
   const confirmPendingSend = async () => {
     if (!pendingSend) return;
     if (pendingSend.kind === 'single') {
       await sendToReview(pendingSend.id);
     } else if (pendingSend.kind === 'all') {
-      await handleSendAllToReview();
+      await sendAllToReview();
     } else {
       await handleBulkSendToReview();
     }
@@ -722,9 +791,20 @@ export function QuestionGenerationStep({
     }
   };
 
+  // approvate e inRevisione non compaiono mai insieme sullo stesso batch (Caso A produce
+  // solo 'approvata', Caso B solo 'in_revisione', vedi DraftStatus) — sommarle entrambe in
+  // daDecidere resta corretto in entrambi i casi, quella che non si applica è sempre 0.
+  const approvate = drafts.filter((d) => d.status === 'approvata').length;
   const inRevisione = drafts.filter((d) => d.status === 'in_revisione').length;
   const scartate = drafts.filter((d) => d.status === 'scartata').length;
-  const daDecidere = drafts.length - inRevisione - scartate;
+  const daDecidere = drafts.length - approvate - inRevisione - scartate;
+
+  // "Da decidere" nel Caso A (approva/modifica+approva/scarta tocca a te), "Da mandare in
+  // revisione" nel Caso B (STATUS_TAG_LABEL.pending, il default) — solo 'pending' cambia per
+  // caso, gli altri stati (in_revisione/approvata/scartata) sono già esclusivi di un solo
+  // caso ciascuno, non serve differenziarli ulteriormente qui.
+  const statusLabel = (status: DraftStatus) =>
+    status === 'pending' && isReviewerSelf ? 'Da decidere' : STATUS_TAG_LABEL[status];
 
   // Quanto sta per essere mandato — per il copy della modale di conferma (pendingSend, vedi
   // sopra). selectedCount di bulk conta solo pending (le uniche spuntabili, vedi la checkbox
@@ -855,14 +935,18 @@ export function QuestionGenerationStep({
         <div className="flex justify-between gap-4">
           <div className="flex flex-col">
             {/* "Create" da solo suona concluso — il cliente lo leggeva come "fatto" quando in
-                realtà è a metà flusso: le domande esistono ma il revisore non le vede ancora.
-                Titolo e sottotitolo nominano il passo che manca, non solo la CTA a destra. */}
+                realtà è a metà flusso: le domande esistono ma non sono ancora salvate.
+                Titolo e sottotitolo nominano il passo che manca, non solo la CTA a destra.
+                Caso A (isReviewerSelf): il passo che manca è decidere, non "mandare" a
+                qualcuno — non esiste un revisore esterno che "non le vede ancora". */}
             <h1 className="text-xl font-semibold">
-              {drafts.length} Domande pronte per la revisione
+              {drafts.length}{' '}
+              {isReviewerSelf ? 'Domande generate' : 'Domande pronte per la revisione'}
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Non ancora visibili al revisore. Mandale in revisione per completare la creazione
-              delle domande.
+              {isReviewerSelf
+                ? 'Non ancora salvate. Approva, modifica e approva, o scarta ogni domanda per completare la creazione.'
+                : 'Non ancora visibili al revisore. Mandale in revisione per completare la creazione delle domande.'}
             </p>
             {/* Prova: header sempre visibile, non si comprime più aprendo una domanda —
                 per valutare quanto spazio reale resta alla revisione. */}
@@ -915,8 +999,9 @@ export function QuestionGenerationStep({
             )}
           </div>
           {/* CTA principale spostata qui dal footer — "Esci" è sparita: la X in alto
-              a sinistra basta per uscire, e "Manda tutte in revisione" esce già da
-              sola a invio riuscito (vedi handleSendAllToReview). justify-between:
+              a sinistra basta per uscire, e "Manda tutte in revisione"/"Approva tutte"
+              escono già da sole a esito riuscito (vedi l'effect su daDecidere più sotto).
+              justify-between:
               CTA in cima, recap ancorato in fondo alla colonna — in linea con
               "Assegnato a...", l'ultima riga a sinistra. */}
           <div className="flex shrink-0 flex-col items-end justify-between gap-2">
@@ -949,10 +1034,10 @@ export function QuestionGenerationStep({
                 </Button>
 
                 {/* Stessa dinamica dei bottoni per riga: "Scarta" ghost + testo destructive
-                    (apre la modale di motivazione, vedi requestBulkDiscard), "Manda in
-                    revisione" pieno ma neutro — non verde: qui non si sta "approvando" nulla,
-                    solo mandando avanti nel flusso, stesso trattamento del singolo "Manda in
-                    revisione". */}
+                    (apre la modale di motivazione, vedi requestBulkDiscard), poi Approva
+                    (Caso A, verde pieno — stesso trattamento del vero "Approva" in
+                    QuestionCreatePage) o Manda in revisione (Caso B, pieno ma neutro: qui non
+                    si sta approvando nulla, solo mandando avanti nel flusso). */}
                 <Button
                   variant="ghost"
                   size="sm"
@@ -963,18 +1048,34 @@ export function QuestionGenerationStep({
                   <Trash2 className="mr-1.5 h-3.5 w-3.5" />
                   Scarta
                 </Button>
-                <Button
-                  size="sm"
-                  disabled={bulk.selectedCount === 0 || isBulkSending}
-                  onClick={requestBulkSendToReview}
-                >
-                  {isBulkSending ? (
-                    <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    <Send className="mr-1.5 h-3.5 w-3.5" />
-                  )}
-                  Manda in revisione
-                </Button>
+                {isReviewerSelf ? (
+                  <Button
+                    size="sm"
+                    className="bg-emerald-600 text-white hover:bg-emerald-700"
+                    disabled={bulk.selectedCount === 0 || isBulkSending}
+                    onClick={handleBulkApprove}
+                  >
+                    {isBulkSending ? (
+                      <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <CheckCircle className="mr-1.5 h-3.5 w-3.5" />
+                    )}
+                    Approva
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    disabled={bulk.selectedCount === 0 || isBulkSending}
+                    onClick={requestBulkSendToReview}
+                  >
+                    {isBulkSending ? (
+                      <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Send className="mr-1.5 h-3.5 w-3.5" />
+                    )}
+                    Manda in revisione
+                  </Button>
+                )}
               </div>
             ) : (
               <div className="flex items-center gap-2">
@@ -982,8 +1083,8 @@ export function QuestionGenerationStep({
                   variant="outline"
                   onClick={() => {
                     // Entrare in selezione multipla chiude le righe aperte — coi loro
-                    // pulsanti "Scarta"/"Manda in revisione" per riga, altrimenti resterebbe
-                    // ambiguo se un click va alla riga aperta sotto o alla selezione.
+                    // pulsanti "Scarta"/"Approva"/"Manda in revisione" per riga, altrimenti
+                    // resterebbe ambiguo se un click va alla riga aperta sotto o alla selezione.
                     setOpenRowIds([]);
                     bulk.toggleBulkMode();
                   }}
@@ -991,22 +1092,38 @@ export function QuestionGenerationStep({
                   <ListChecks className="mr-1.5 h-4 w-4" />
                   {t('myReviews.bulk.toggle')}
                 </Button>
-                <Button
-                  onClick={requestSendAllToReview}
-                  disabled={isSendingAll || isClosingAfterSend}
-                >
-                  {isSendingAll || isClosingAfterSend ? (
-                    <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                  ) : (
-                    <Send className="mr-1.5 h-4 w-4" />
-                  )}
-                  Manda tutte in revisione
-                </Button>
+                {isReviewerSelf ? (
+                  <Button
+                    className="bg-emerald-600 text-white hover:bg-emerald-700"
+                    onClick={approveAll}
+                    disabled={isSendingAll || isClosingAfterSend}
+                  >
+                    {isSendingAll || isClosingAfterSend ? (
+                      <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                    ) : (
+                      <CheckCircle className="mr-1.5 h-4 w-4" />
+                    )}
+                    Approva tutte
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={requestSendAllToReview}
+                    disabled={isSendingAll || isClosingAfterSend}
+                  >
+                    {isSendingAll || isClosingAfterSend ? (
+                      <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Send className="mr-1.5 h-4 w-4" />
+                    )}
+                    Manda tutte in revisione
+                  </Button>
+                )}
               </div>
             )}
             <p className="text-sm text-muted-foreground">
-              {inRevisione} in revisione · {scartate} scartate · {daDecidere} da mandare in
-              revisione
+              {isReviewerSelf
+                ? `${approvate} approvate · ${scartate} scartate · ${daDecidere} da decidere`
+                : `${inRevisione} in revisione · ${scartate} scartate · ${daDecidere} da mandare in revisione`}
             </p>
           </div>
         </div>
@@ -1081,7 +1198,7 @@ export function QuestionGenerationStep({
                     {DIFFICULTY_LABELS[draft.difficulty]}
                   </Badge>
                   <Badge variant="outline" className={STATUS_TAG_CLASSNAME[draft.status]}>
-                    {STATUS_TAG_LABEL[draft.status]}
+                    {statusLabel(draft.status)}
                   </Badge>
                   <ChevronDown
                     className={cn(
@@ -1213,19 +1330,42 @@ export function QuestionGenerationStep({
                         Modifica
                       </Button>
                     )}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={draft.status !== 'pending' || draft.isPersisting}
-                      onClick={() => requestSendToReview(draft.id)}
-                    >
-                      {draft.isPersisting ? (
-                        <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                      ) : (
-                        <Send className="mr-1.5 h-3.5 w-3.5" />
-                      )}
-                      Manda in revisione
-                    </Button>
+                    {/* Approva (Caso A) e Manda in revisione (Caso B) non sono due varianti
+                        dello stesso bottone: chiamano funzioni completamente separate
+                        (approveDraft vs requestSendToReview, vedi sopra) — qui cambia solo
+                        quale delle due il click invoca, in base a isReviewerSelf. Approva è
+                        verde pieno, stesso trattamento del vero "Approva" in
+                        QuestionCreatePage — Manda in revisione resta outline neutro come
+                        prima: non sta approvando nulla, solo mandando avanti nel flusso. */}
+                    {isReviewerSelf ? (
+                      <Button
+                        size="sm"
+                        className="bg-emerald-600 text-white hover:bg-emerald-700"
+                        disabled={draft.status !== 'pending' || draft.isPersisting}
+                        onClick={() => approveDraft(draft.id)}
+                      >
+                        {draft.isPersisting ? (
+                          <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <CheckCircle className="mr-1.5 h-3.5 w-3.5" />
+                        )}
+                        Approva
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={draft.status !== 'pending' || draft.isPersisting}
+                        onClick={() => requestSendToReview(draft.id)}
+                      >
+                        {draft.isPersisting ? (
+                          <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Send className="mr-1.5 h-3.5 w-3.5" />
+                        )}
+                        Manda in revisione
+                      </Button>
+                    )}
                   </div>
                 </div>
               )}
@@ -1234,42 +1374,64 @@ export function QuestionGenerationStep({
         })}
       </div>
 
-      {/* Si apre solo se restano domande "da decidere" — se sono già tutte inviate o
-          scartate, non c'è niente da perdere e "Esci" esce direttamente. Niente modale di
-          conferma separata su "Manda tutte e esci" (a differenza degli altri due entry point,
-          vedi requestSendAllToReview): questo dialog è già di per sé una conferma, una seconda
-          in fila sarebbe ridondante — la frase su chi riceve le domande basta. */}
+      {/* Si apre solo se restano domande "da decidere" — se sono già tutte decise (approvate/
+          inviate o scartate), non c'è niente da perdere e "Esci" esce direttamente.
+          Due varianti distinte, non una sola con copy condizionale sui bottoni:
+          - Caso A: "Rimani" / "Elimina le rimanenti" — niente terzo bottone "approva ed
+            esci", non richiesto dal brief (Step 4: "compare un avviso con l'azione 'Elimina
+            le rimanenti'"). Nulla è mai stato persistito finché non approvato, quindi
+            "eliminare" è solo chiudere: stessa azione tecnica di onExit, copy che riflette
+            la conseguenza reale.
+          - Caso B: invariato — "Rimani" / "Esci comunque" / "Manda tutte e esci", nessuna
+            modale di conferma separata su quest'ultimo (è già di per sé una conferma). */}
       <Dialog open={confirmExitOpen} onOpenChange={setConfirmExitOpen}>
         <DialogContent showCloseButton={false}>
           <DialogHeader>
             <DialogTitle>Uscire dal riepilogo domande?</DialogTitle>
-            <DialogDescription>
-              {inRevisione} in revisione · {scartate} scartate · {daDecidere} ancora da mandare in
-              revisione. Se esci ora, quelle non ancora inviate né scartate andranno perse.
-              {!isReviewerSelf && daDecidere > 0 && (
-                <>
-                  {' '}
-                  Se scegli "Manda tutte e esci", le {daDecidere} rimanenti verranno mandate in
-                  revisione a {reviewerDisplayName}.
-                </>
-              )}
-            </DialogDescription>
+            {isReviewerSelf ? (
+              <DialogDescription>
+                {approvate} approvate · {scartate} scartate · {daDecidere} ancora da decidere. Se
+                esci ora, le {daDecidere} domande non ancora approvate né scartate verranno
+                eliminate: non sono mai state salvate.
+              </DialogDescription>
+            ) : (
+              <DialogDescription>
+                {inRevisione} in revisione · {scartate} scartate · {daDecidere} ancora da mandare in
+                revisione. Se esci ora, quelle non ancora inviate né scartate andranno perse.
+                {daDecidere > 0 && (
+                  <>
+                    {' '}
+                    Se scegli "Manda tutte e esci", le {daDecidere} rimanenti verranno mandate in
+                    revisione a {reviewerDisplayName}.
+                  </>
+                )}
+              </DialogDescription>
+            )}
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setConfirmExitOpen(false)}>
               Rimani
             </Button>
-            <Button variant="outline" onClick={onExit}>
-              Esci comunque
-            </Button>
-            <Button onClick={handleSendAllAndExit} disabled={isSendingAll}>
-              {isSendingAll ? (
-                <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-              ) : (
-                <Send className="mr-1.5 h-4 w-4" />
-              )}
-              Manda tutte e esci
-            </Button>
+            {isReviewerSelf ? (
+              <Button variant="destructive" onClick={onExit}>
+                <Trash2 className="mr-1.5 h-4 w-4" />
+                Elimina le rimanenti
+              </Button>
+            ) : (
+              <>
+                <Button variant="outline" onClick={onExit}>
+                  Esci comunque
+                </Button>
+                <Button onClick={handleSendAllAndExit} disabled={isSendingAll}>
+                  {isSendingAll ? (
+                    <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="mr-1.5 h-4 w-4" />
+                  )}
+                  Manda tutte e esci
+                </Button>
+              </>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1295,12 +1457,13 @@ export function QuestionGenerationStep({
         </DialogContent>
       </Dialog>
 
-      {/* Si apre solo quando il revisore non è "te stesso" (vedi isReviewerSelf e
-          requestSendToReview/requestSendAllToReview/requestBulkSendToReview sopra) — mandare
-          domande al proprio giro di revisione non ha bisogno di ribadire a chi vanno, mandarle
-          a qualcun altro sì. Stessa modale per tutti e tre gli entry point: cambia solo il
-          conteggio (pendingSendCount) e quale funzione la conferma esegue davvero
-          (confirmPendingSend). */}
+      {/* Solo Caso B: requestSendToReview/requestSendAllToReview/requestBulkSendToReview sono
+          chiamate dal JSX solo quando !isReviewerSelf (vedi i bottoni sopra) — il Caso A non
+          apre mai questa modale, approveDraft/approveAll/handleBulkApprove agiscono diretti.
+          Mandare domande al proprio giro di revisione non ha bisogno di ribadire a chi
+          vanno, mandarle a qualcun altro sì. Stessa modale per tutti e tre gli entry point:
+          cambia solo il conteggio (pendingSendCount) e quale funzione la conferma esegue
+          davvero (confirmPendingSend). */}
       <Dialog open={!!pendingSend} onOpenChange={(next) => !next && setPendingSend(null)}>
         <DialogContent showCloseButton={false}>
           <DialogHeader>
