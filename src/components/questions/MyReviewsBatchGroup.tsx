@@ -274,8 +274,17 @@ export function MyReviewsBatchGroup({
       <div className="min-w-0">
         <div className="flex min-w-0 items-center gap-2">
           {/* truncate: l'argomento nel titolo può essere lungo — su una riga sola con
-              ellissi invece di andare a capo o spingere i badge fuori. */}
-          <p className="truncate text-sm font-semibold">
+              ellissi invece di andare a capo o spingere i badge fuori. hasError: stesso
+              trattamento delle domande "scartata" in QuestionGenerationStep
+              (text-muted-foreground line-through) — questo batch, così come titolato, non è
+              mai esistito davvero, il titolo lo dice prima ancora di leggere il messaggio
+              rosso sotto. */}
+          <p
+            className={cn(
+              'truncate text-sm font-semibold',
+              hasError && 'text-muted-foreground line-through'
+            )}
+          >
             {batch.materiaName} · {batch.argomentoName} · {batch.dateLabel}
           </p>
           {/* Fatto, non stato: un conteggio non è una decisione da prendere, quindi è testo
