@@ -460,10 +460,13 @@ interface QuestionSetupAccordionProps {
   /** Modale di riepilogo post-generazione — aperta/chiusa da QuestionCreatePage. */
   summaryOpen: boolean;
   onExitSummary: () => void;
-  /** Manuale scelto in AddQuestionDialog, se il flusso parte da lì — sola inizializzazione:
-   *  QuestionSetupAccordion lo mette in un campo Manuale editabile in Classificazione (vedi
-   *  manualeTitle più sotto), non lo passa più pari pari a valle. */
-  initialManualeTitle?: string;
+  /** Obbligatorio — primo campo di Classificazione, Materia/Argomento/Sotto-argomento
+   *  restano disabilitati finché non è scelto (vedi disabled su MateriaField più sotto,
+   *  Argomento e Sotto-argomento si disabilitano da soli finché Materia non ha un
+   *  valore). Risolto qui, ma controllato da QuestionCreatePage insieme agli altri
+   *  campi che sbloccano "Crea Domanda" — stesso pattern di reviewerId sopra. */
+  manualeTitle: string;
+  onManualeTitleChange: (value: string) => void;
 }
 
 /**
@@ -483,7 +486,8 @@ export function QuestionSetupAccordion({
   onReviewerIdChange,
   summaryOpen,
   onExitSummary,
-  initialManualeTitle,
+  manualeTitle,
+  onManualeTitleChange,
 }: QuestionSetupAccordionProps) {
   // Primo step aperto di default all'atterraggio sul form — le altre due
   // restano comunque apribili subito, non c'è un ordine da rispettare.
@@ -529,13 +533,13 @@ export function QuestionSetupAccordion({
     setAutoOpenField(field);
   };
 
-  // Manuale — primo campo di Classificazione, a sinistra di Materia. Non fa parte
-  // dell'hierarchy hook (i manuali sono libri, non legati alla gerarchia Materia/Argomento,
-  // vedi il commento su MANUALE_TITLES in AddQuestionDialog): stato locale a sé, inizializzato
-  // dal manuale scelto lì se il flusso parte da quel picker, ma resta modificabile qui.
-  // READY_MANUALE_TITLES: stessa lista di manuali "pronti" mostrata nel picker — un manuale
-  // scelto qui deve essere uno di quelli su cui il sistema AI è già attivo.
-  const [manualeTitle, setManualeTitle] = useState(initialManualeTitle ?? '');
+  // Manuale — primo campo di Classificazione, a sinistra di Materia, ora obbligatorio
+  // (manualeTitle/onManualeTitleChange sono prop, non più stato locale — vedi il
+  // commento sulle props in cima al file). Non fa parte dell'hierarchy hook (i manuali
+  // sono libri, non legati alla gerarchia Materia/Argomento, vedi il commento su
+  // MANUALE_TITLES in AddQuestionDialog). READY_MANUALE_TITLES: stessa lista di manuali
+  // "pronti" mostrata nel picker — un manuale scelto qui deve essere uno di quelli su
+  // cui il sistema AI è già attivo.
   const manualeOptions = READY_MANUALE_TITLES.map((title) => ({
     value: `__fixed__${slugify(title)}`,
     label: title,
@@ -682,13 +686,13 @@ export function QuestionSetupAccordion({
     (s) => `__fixed__${slugify(s)}` === hierarchy.selection.sottoArgomentoId
   );
 
-  // "Tutti i campi" di una sezione, facoltativi compresi — criterio diverso da
-  // quello che sblocca "Crea Domanda" (solo gli obbligatori, vedi canGenerate in
-  // QuestionCreatePage): questo decide solo quando una sezione si chiude da sola
-  // per passare all'altra. Sotto-argomento conta solo se l'argomento scelto ne
-  // ha davvero (es. "Altro" non ne ha — vedi SOTTOARGOMENTO_OPTIONS): altrimenti
-  // non c'è nessun campo in più da aspettare.
+  // Tutti i campi di Classificazione, ora tutti obbligatori — Manuale compreso (prima
+  // era l'unico facoltativo, da cui il vecchio commento su "criterio diverso da quello
+  // che sblocca Crea Domanda": non vale più, sono la stessa cosa). Sotto-argomento conta
+  // solo se l'argomento scelto ne ha davvero (es. "Altro" non ne ha — vedi
+  // SOTTOARGOMENTO_OPTIONS): altrimenti non c'è nessun campo in più da aspettare.
   const classificazioneAllFilled =
+    manualeTitle !== '' &&
     hierarchy.selection.subjectId != null &&
     hierarchy.selection.topicId != null &&
     (currentSubtopics.length === 0 || hierarchy.selection.sottoArgomentoId != null);
@@ -815,9 +819,9 @@ export function QuestionSetupAccordion({
                 <GroupTrigger
                   title="Classificazione"
                   stepNumber={1}
-                  done={hierarchy.isComplete}
+                  done={classificazioneAllFilled}
                   badge={
-                    openSection === 'classificazione' || hierarchy.isComplete
+                    openSection === 'classificazione' || classificazioneAllFilled
                       ? undefined
                       : REQUIRED_BADGE
                   }
@@ -841,11 +845,14 @@ export function QuestionSetupAccordion({
                   sua. */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-3">
-                  <Label>Manuale</Label>
+                  <Label>
+                    Manuale
+                    <span className="ml-0.5 text-destructive">*</span>
+                  </Label>
                   <SearchableCombobox
                     value={manualeValue}
                     onChange={(v) => {
-                      setManualeTitle(
+                      onManualeTitleChange(
                         v ? (manualeOptions.find((o) => o.value === v)?.label ?? '') : ''
                       );
                     }}
@@ -860,9 +867,13 @@ export function QuestionSetupAccordion({
                     }}
                   />
                 </div>
+                {/* Materia (e a cascata Argomento/Sotto-argomento, che si disabilitano da
+                    soli finché rispettivamente Materia/Argomento non hanno un valore — vedi
+                    HierarchySelector) restano bloccati finché non c'è un Manuale: è il primo
+                    campo da compilare, non uno dei tanti. */}
                 <MateriaField
                   hierarchy={hierarchy}
-                  disabled={disabled}
+                  disabled={disabled || !manualeTitle}
                   fixedOptions={MATERIA_OPTIONS}
                   open={autoOpenField === 'materia' || undefined}
                   onOpenChange={(v) => {

@@ -73,7 +73,7 @@ export function QuestionCreatePage() {
     difficulty,
     questionType,
     reviewMode,
-    manualeTitle,
+    manualeTitle: initialManualeTitle,
   } = routeApi.useSearch();
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -88,6 +88,11 @@ export function QuestionCreatePage() {
 
   const hierarchy = useHierarchy(subjectId ? { subjectId, topicId: topicId ?? null } : undefined);
 
+  // Obbligatorio (vedi QuestionSetupAccordion): posseduto qui, non più solo
+  // un'inizializzazione locale, perché ora concorre a sbloccare "Crea Domanda" insieme
+  // agli altri campi in canGenerate sotto — stesso pattern di proposalReviewerId.
+  const [manualeTitle, setManualeTitle] = useState(initialManualeTitle ?? '');
+
   const form = useQuestionForm(editId ? editId : { initialDifficulty, initialType });
   const { updateHierarchyRef } = form;
 
@@ -96,16 +101,17 @@ export function QuestionCreatePage() {
   const [isApproving, setIsApproving] = useState(false);
 
   // Sollevati da QuestionSetupAccordion: servono qui per sapere se i campi
-  // obbligatori (Materia, Argomento, griglia Quantità, Revisore) sono compilati e
-  // quindi se la CTA "Crea Domanda" può essere cliccabile. Il numero di risposte non
-  // è più tra questi: è uno stepper per livello con un default sempre valido (4), non
-  // un campo che può restare "non ancora scelto" (vedi QuestionSetupAccordion). Partono
-  // vuoti: "Assegna a me" è l'unica proposta di default rimasta, ma QuestionSetupAccordion
-  // la applica solo alla prima apertura della sezione che la contiene — non prima, non
-  // appena atterrati sul form (vedi lì).
+  // obbligatori (Manuale, Materia, Argomento, griglia Quantità, Revisore) sono
+  // compilati e quindi se la CTA "Crea Domanda" può essere cliccabile. Il numero di
+  // risposte non è più tra questi: è uno stepper per livello con un default sempre
+  // valido (4), non un campo che può restare "non ancora scelto" (vedi
+  // QuestionSetupAccordion). Partono vuoti: "Assegna a me" è l'unica proposta di
+  // default rimasta, ma QuestionSetupAccordion la applica solo alla prima apertura
+  // della sezione che la contiene — non prima, non appena atterrati sul form (vedi lì).
   const [proposalQuantity, setProposalQuantity] = useState('');
   const [proposalReviewerId, setProposalReviewerId] = useState<string | null>(null);
   const canGenerate =
+    manualeTitle !== '' &&
     hierarchy.isComplete &&
     proposalQuantity !== '' &&
     Number(proposalQuantity) > 0 &&
@@ -367,7 +373,8 @@ export function QuestionCreatePage() {
             onReviewerIdChange={setProposalReviewerId}
             summaryOpen={summaryOpen}
             onExitSummary={handleExitSummary}
-            initialManualeTitle={manualeTitle}
+            manualeTitle={manualeTitle}
+            onManualeTitleChange={setManualeTitle}
           />
 
           {!reviewMode && (
