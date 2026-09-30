@@ -29,7 +29,7 @@ const STATUS_OPTIONS = (['TO_REVIEW', 'REVIEWED'] as MyReviewStatus[]).map((v) =
 // Esito della generazione — mockato per intero (vedi mockOutcomeForBatch in
 // useReviewBatches): non esiste ancora un job di generazione da interrogare, questo filtro
 // serve solo a mostrarne il funzionamento nella demo.
-const OUTCOME_OPTIONS = (['IN_PROGRESS', 'COMPLETED', 'PARTIAL', 'ERROR'] as BatchOutcome[]).map(
+const OUTCOME_OPTIONS = (['COMPLETED', 'IN_PROGRESS', 'PARTIAL', 'ERROR'] as BatchOutcome[]).map(
   (v) => ({ value: v, label: BATCH_OUTCOME_LABELS[v] })
 );
 
