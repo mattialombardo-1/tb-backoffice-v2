@@ -497,6 +497,11 @@ export function QuestionGenerationStep({
   // esiste nemmeno lì) — solo loggato, stesso limite mock di bulkReject in questions.ts.
   const discard = (id: string, reason?: string) => {
     updateDraft(id, { status: 'scartata' });
+    // Stessa richiusura automatica di "Approva" (vedi approveDraft): decisione presa,
+    // non serve tenerla aperta — e stesso ancoraggio dello scroll sulla riga, non sulle
+    // righe che le stavano dietro.
+    setOpenRowIds((prev) => prev.filter((x) => x !== id));
+    setLastAutoClosedId(id);
     if (reason) console.info('[scarta] motivo:', reason, 'domanda:', id);
     toast.success('Domanda scartata.');
   };
