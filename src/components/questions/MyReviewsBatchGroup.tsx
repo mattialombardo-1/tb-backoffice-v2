@@ -320,10 +320,14 @@ export function MyReviewsBatchGroup({
         {/* PARTIAL: non più badge pieno (era giallo, troppo vicino all'amber di "da
             revisionare" nella riga sotto — due segnali diversi che sembravano lo stesso
             colore per errore). Icona + testo, senza pillola: il segnale "attenzione" resta
-            leggibile, ma il colore in questa card lo porta solo l'amber di Stato sotto. */}
+            leggibile, ma il colore in questa card lo porta solo l'amber di Stato sotto.
+            gap-1.5 e icona h-3.5, non gap-1/h-3 di prima (quello era il gap interno della
+            Badge, non più pertinente ora che non è più una Badge) — stessa misura delle altre
+            righe icona+testo di questo file (il messaggio ERROR sotto, il box "Generate N/M
+            domande" nell'accordion aperto). */}
         {isPartial && (
-          <div className="mt-2 flex items-center gap-1 text-xs font-semibold text-muted-foreground">
-            <AlertTriangle className="h-3 w-3" />
+          <div className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+            <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
             {OUTCOME_BADGE_LABEL.PARTIAL}
           </div>
         )}
