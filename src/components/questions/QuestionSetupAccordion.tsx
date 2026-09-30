@@ -943,7 +943,9 @@ export function QuestionSetupAccordion({
                     className="grid"
                     style={{ gridTemplateColumns: 'auto max-content max-content 1fr' }}
                   >
-                    <div className="border-r border-b bg-muted/40" />
+                    <div className="flex items-center border-r border-b bg-muted/40 px-6 py-2.5 text-xs font-semibold text-foreground">
+                      Difficoltà
+                    </div>
                     {/* Niente border-r tra questa e "Numero di risposte", e padding interno
                         ridotto (pr-3/pl-3 sul lato che si tocca, invece di px-6 su entrambi) —
                         sono lo stesso raggruppamento: la quantità di domande "Risposta chiusa"
