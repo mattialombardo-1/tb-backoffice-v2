@@ -282,10 +282,13 @@ export function MyReviewsBatchGroup({
             il batch, merita il proprio spazio invece di affollare la prima riga. Non più una
             Badge: "in corso"/"parziale" sono fatti sullo stato della generazione, non
             decisioni da prendere, stessa regola già applicata a "N domande" — l'icona resta
-            l'unico richiamo visivo. COMPLETED ed ERROR non hanno niente qui, vedi il commento
+            il richiamo visivo principale. font-semibold (a differenza di "N domande", che
+            resta regular): a differenza di un conteggio, questo dice che il batch non è nello
+            stato di default — merita un filo di peso in più pur restando senza colore, non è
+            un dettaglio qualunque. COMPLETED ed ERROR non hanno niente qui, vedi il commento
             su OUTCOME_BADGE_LABEL sopra. */}
         {(batch.outcome === 'IN_PROGRESS' || isPartial) && (
-          <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+          <div className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
             {batch.outcome === 'IN_PROGRESS' && (
               <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin [animation-duration:1.6s]" />
             )}
