@@ -10,6 +10,9 @@ interface MyReviewsSearch {
   dateTo?: string;
   search?: string;
   page?: number;
+  /** Gruppi di domande (batch) vs domande singole — vedi MyReviewsPage. Default "groups",
+   *  mai scritto in URL per quel caso (omesso, non 'groups' letterale) per restare pulita. */
+  tab?: 'groups' | 'singles';
 }
 
 export const Route = createFileRoute('/_authenticated/questions/to-review')({
@@ -27,6 +30,7 @@ export const Route = createFileRoute('/_authenticated/questions/to-review')({
         : typeof raw.page === 'string'
           ? parseInt(raw.page, 10) || undefined
           : undefined,
+    tab: raw.tab === 'singles' ? 'singles' : undefined,
   }),
   component: MyReviewsPage,
 });

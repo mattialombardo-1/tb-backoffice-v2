@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { MultiSelect } from '@/components/ui/multi-select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { ArgomentoOption } from '@/lib/hooks/useReviewBatches';
 import type {
   BatchOutcome,
@@ -48,6 +49,12 @@ interface MyReviewsFiltersProps {
    *  le domande generate hanno un topicId "fixedOptions" che il catalogo non conosce. */
   materiaOptions: HierarchyItem[];
   argomentoOptions: ArgomentoOption[];
+  /** true sulla tab "Domande singole" di MyReviewsPage: Esito è una proprietà della
+   *  generazione/batch, non della singola domanda isolata (vedi la MultiSelect sotto e la
+   *  discussione in design/notes) — disabilitato, non nascosto, così la barra filtri non
+   *  cambia larghezza passando da una tab all'altra. Il valore scelto resta comunque salvato:
+   *  tornando su "Gruppi di domande" si ritrova applicato senza doverlo reimpostare. */
+  outcomeDisabled?: boolean;
 }
 
 /**
@@ -66,6 +73,7 @@ export function MyReviewsFilters({
   onReset,
   materiaOptions,
   argomentoOptions,
+  outcomeDisabled = false,
 }: MyReviewsFiltersProps) {
   const { t } = useTranslation();
 
@@ -163,14 +171,35 @@ export function MyReviewsFilters({
           className="w-[160px]"
         />
 
-        {/* Esito */}
-        <MultiSelect
-          options={OUTCOME_OPTIONS}
-          value={filters.outcomes}
-          onChange={(v) => onFilterChange({ outcomes: v as BatchOutcome[] })}
-          placeholder={t('myReviews.filters.outcome')}
-          className="w-[160px]"
-        />
+        {/* Esito — disabilitato (non nascosto) sulla tab Domande singole, vedi
+            outcomeDisabled sopra. Il wrapper <span> è il vero trigger del tooltip: un
+            elemento disabled ha pointer-events-none (vedi Button), quindi da solo non
+            riceverebbe mai l'hover. */}
+        {outcomeDisabled ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="inline-block">
+                <MultiSelect
+                  options={OUTCOME_OPTIONS}
+                  value={filters.outcomes}
+                  onChange={(v) => onFilterChange({ outcomes: v as BatchOutcome[] })}
+                  placeholder={t('myReviews.filters.outcome')}
+                  className="w-[160px]"
+                  disabled
+                />
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>Non si applica alle domande singole</TooltipContent>
+          </Tooltip>
+        ) : (
+          <MultiSelect
+            options={OUTCOME_OPTIONS}
+            value={filters.outcomes}
+            onChange={(v) => onFilterChange({ outcomes: v as BatchOutcome[] })}
+            placeholder={t('myReviews.filters.outcome')}
+            className="w-[160px]"
+          />
+        )}
 
         {/* Periodo */}
         <Popover>

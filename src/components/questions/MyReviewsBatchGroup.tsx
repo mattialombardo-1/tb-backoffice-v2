@@ -46,7 +46,9 @@ const COL_DIFFICULTY = 'w-28';
 const COL_DATE = 'w-24';
 const COL_ACTION = 'w-32';
 
-function BatchColumnHeader({ selectionMode }: { selectionMode: boolean }) {
+/** Esportate: riusate anche dalla tab "Domande singole" di MyReviewsPage, che non ha nessun
+ *  batch da aprire ma vuole la stessa identica intestazione/riga — vedi MyReviewsSingleList. */
+export function BatchColumnHeader({ selectionMode }: { selectionMode: boolean }) {
   const { t } = useTranslation();
   return (
     <div className="flex items-center gap-4 border-b bg-muted/30 px-5 py-2 text-xs font-medium text-muted-foreground">
@@ -63,7 +65,8 @@ function BatchColumnHeader({ selectionMode }: { selectionMode: boolean }) {
   );
 }
 
-function BatchQuestionRow({
+/** Esportata per lo stesso motivo di BatchColumnHeader sopra. */
+export function BatchQuestionRow({
   question,
   index,
   selectionMode,

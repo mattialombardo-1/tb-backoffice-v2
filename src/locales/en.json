@@ -1066,6 +1066,10 @@
   "myReviews": {
     "title": "Questions to review",
     "subtitle": "Questions awaiting review assigned to you.",
+    "tabs": {
+      "groups": "Question groups",
+      "singles": "Single questions"
+    },
     "empty": "No questions to review",
     "noResultsFiltered": "No results for the selected filters",
     "review": "Review",

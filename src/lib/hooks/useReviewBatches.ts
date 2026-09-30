@@ -371,8 +371,17 @@ export function useReviewBatches(filters: MyReviewsFilters = EMPTY_FILTERS) {
 
   const unbatched = useMemo(
     // allQuestions è sempre la lista live da myReviews() — isReviewed è sempre false qui,
-    // mai "Già revisionate" (quelle non sono più in allQuestions una volta uscite dal server).
-    () => allQuestions.filter((q) => matchesFilters(q, filters, false) && !batchedIds.has(q.id)),
+    // mai "Già revisionate" (quelle non sono più in allQuestions una volta uscite dal server) —
+    // reviewedInSession è quindi sempre false, ma il tipo resta ReviewBatchQuestion (non
+    // QuestionListItem) così la tab "Domande singole" di MyReviewsPage può riusare
+    // BatchQuestionRow/BatchColumnGroup pari pari, senza dover mappare nulla lì. Più recente
+    // in cima, stesso criterio di batches sopra — senza, l'ordine sarebbe quello (arbitrario)
+    // restituito da myReviews().
+    (): ReviewBatchQuestion[] =>
+      allQuestions
+        .filter((q) => matchesFilters(q, filters, false) && !batchedIds.has(q.id))
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .map((q) => ({ ...q, reviewedInSession: false })),
     [allQuestions, filters, batchedIds]
   );
 

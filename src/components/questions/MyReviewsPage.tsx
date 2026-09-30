@@ -14,6 +14,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Route } from '@/routes/_authenticated/questions/to-review';
 import { useApiClient } from '@/lib/api/useApiClient';
 import { questionsService } from '@/lib/services/questions';
@@ -27,13 +28,34 @@ import type {
 import { MyReviewsBatchGroup } from './MyReviewsBatchGroup';
 import { MyReviewsBulkRejectDialog } from './MyReviewsBulkRejectDialog';
 import { MyReviewsFilters } from './MyReviewsFilters';
+import { MyReviewsSingleList } from './MyReviewsSingleList';
 import { QuestionsListPagination } from './QuestionsListPagination';
 
 const parseCSV = (v: string | undefined): string[] => (v ? v.split(',').filter(Boolean) : []);
 
+type ReviewTab = 'groups' | 'singles';
+
 // Batch più "pesanti" di una riga di Domande — ogni card si apre in una tabella che può
 // arrivare a decine di righe — quindi una pagina più corta di quella di Domande (20).
-const PER_PAGE = 10;
+// Le domande singole sono righe piatte, senza nulla da aprire: stessa densità della lista
+// "Domande" (20), non quella dei batch.
+const GROUPS_PER_PAGE = 10;
+const SINGLES_PER_PAGE = 20;
+
+/** Pallino di conteggio accanto al nome della tab — nascosto a 0, non un'altra forma di zero
+ *  da leggere. Cerchio vero (non una pillola): min-width pari all'altezza per restare
+ *  circolare anche con due cifre. bg-primary, non bg-muted/bg-secondary: in questo tema sono
+ *  esattamente lo stesso colore di bg-muted (la TabsList sotto) — praticamente invisibile in
+ *  entrambi gli stati, attivo (bg-background) e inattivo. primary è l'unico token con
+ *  contrasto vero contro tutti e due. */
+function TabCounter({ count }: { count: number }) {
+  if (count === 0) return null;
+  return (
+    <span className="ml-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[11px] font-semibold text-primary-foreground tabular-nums">
+      {count}
+    </span>
+  );
+}
 
 export function MyReviewsPage() {
   const { t } = useTranslation();
@@ -51,6 +73,9 @@ export function MyReviewsPage() {
     search: search.search ?? '',
   };
   const page = search.page ?? 1;
+  // 'groups' non è mai scritto in URL (vedi validateSearch in to-review.tsx) — solo 'singles'
+  // lo è, così l'URL resta pulito nel caso di default.
+  const activeTab: ReviewTab = search.tab === 'singles' ? 'singles' : 'groups';
 
   const updateFilters = (patch: Partial<FiltersType>) => {
     const next = { ...filters, ...patch };
@@ -64,6 +89,7 @@ export function MyReviewsPage() {
         dateFrom: next.dateFrom || undefined,
         dateTo: next.dateTo || undefined,
         search: next.search || undefined,
+        tab: activeTab === 'singles' ? 'singles' : undefined,
         // page omesso di proposito: un cambio filtro riporta sempre a pagina 1, come in
         // QuestionsListPage — restare sulla pagina 5 quando il filtro ne lascia 2 sarebbe
         // una pagina vuota.
@@ -93,10 +119,17 @@ export function MyReviewsPage() {
     !!filters.dateTo ||
     !!filters.search;
 
-  const { batches, materiaOptions, argomentoOptions, isFetching, isError, refetch } =
+  const { batches, unbatched, materiaOptions, argomentoOptions, isFetching, isError, refetch } =
     useReviewBatches(filters);
 
-  const pagedBatches = batches.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+  const pagedBatches = batches.slice((page - 1) * GROUPS_PER_PAGE, page * GROUPS_PER_PAGE);
+  const pagedSingles = unbatched.slice((page - 1) * SINGLES_PER_PAGE, page * SINGLES_PER_PAGE);
+
+  // Counter a pallino delle tab — sempre il numero totale di domande da revisionare nella
+  // categoria, non il numero di gruppi (vedi TabCounter sopra): per "Gruppi di domande" è la
+  // somma di tutti i "da revisionare" nei batch filtrati, non quanti batch ci sono.
+  const groupsPendingCount = batches.reduce((sum, b) => sum + b.pending.length, 0);
+  const singlesPendingCount = unbatched.length;
 
   // Un solo batch aperto alla volta, come un accordion — aprirne uno chiude quello già
   // aperto. Sollevato qui (non locale a ogni MyReviewsBatchGroup) proprio per poterlo
@@ -110,12 +143,20 @@ export function MyReviewsPage() {
   // "tutto" (selectPage con ogni id pending di ogni batch filtrato, non solo la pagina
   // corrente) non ha bisogno della modalità "isAllSelected" virtuale dell'hook: qui i dati
   // sono già tutti in memoria (myReviews() non è paginato lato server), quindi "tutto" è un
-  // insieme concreto di id, non un conteggio da un endpoint separato.
+  // insieme concreto di id, non un conteggio da un endpoint separato. Resta condiviso tra le
+  // due tab (stessi id, mai in collisione tra gruppi e singole) — una selezione fatta su una
+  // tab non si perde passando all'altra.
   const bulk = useBulkSelection();
   const [isBulkApproving, setIsBulkApproving] = useState(false);
   const [bulkRejectDialogOpen, setBulkRejectDialogOpen] = useState(false);
 
-  const allPendingIds = batches.flatMap((b) => b.pending.map((q) => q.id));
+  // "Seleziona tutto"/conteggio nella toolbar di selezione: scope sulla tab attiva, non su
+  // entrambe insieme — spuntare "tutto" mentre guardi i gruppi non deve spuntare anche le
+  // singole che non stai vedendo.
+  const allPendingIds =
+    activeTab === 'groups'
+      ? batches.flatMap((b) => b.pending.map((q) => q.id))
+      : unbatched.map((q) => q.id);
   const allSelected = bulk.isPageFullySelected(allPendingIds);
   const someSelected = allPendingIds.some((id) => bulk.selectedIds.has(id));
   const selectAllState: boolean | 'indeterminate' =
@@ -200,7 +241,29 @@ export function MyReviewsPage() {
         dateFrom: filters.dateFrom || undefined,
         dateTo: filters.dateTo || undefined,
         search: filters.search || undefined,
+        tab: activeTab === 'singles' ? 'singles' : undefined,
         page: nextPage === 1 ? undefined : nextPage,
+      },
+      replace: true,
+    });
+  };
+
+  // Cambiare tab riporta a pagina 1, stessa logica di un cambio filtro — le due tab hanno
+  // paginazioni indipendenti (10 per i gruppi, 20 per le singole), "pagina 3" dei gruppi non
+  // significa nulla passando alle singole.
+  const handleTabChange = (next: ReviewTab) => {
+    setOpenBatchKey(null);
+    navigate({
+      to: '/questions/to-review',
+      search: {
+        materias: filters.materias.join(',') || undefined,
+        argomenti: filters.argomenti.join(',') || undefined,
+        statuses: filters.statuses.join(',') || undefined,
+        outcomes: filters.outcomes.join(',') || undefined,
+        dateFrom: filters.dateFrom || undefined,
+        dateTo: filters.dateTo || undefined,
+        search: filters.search || undefined,
+        tab: next === 'singles' ? 'singles' : undefined,
       },
       replace: true,
     });
@@ -337,36 +400,75 @@ export function MyReviewsPage() {
             specifico di questa schermata — ridotti a Stato, Esito, Materia, Argomento, Periodo
             più la ricerca testo/ID. Applicati client-side dentro useReviewBatches:
             myReviews() non accetta parametri di filtro. Esito è mockato — vedi il commento su
-            mockOutcomeForBatch in useReviewBatches.ts. */}
+            mockOutcomeForBatch in useReviewBatches.ts. Condivisi tra le due tab sotto, non
+            duplicati: cambiare un filtro si applica a entrambe le categorie, anche se solo
+            una alla volta è visibile. */}
         <MyReviewsFilters
           filters={filters}
           onFilterChange={updateFilters}
           onReset={handleResetFilters}
           materiaOptions={materiaOptions}
           argomentoOptions={argomentoOptions}
+          outcomeDisabled={activeTab === 'singles'}
         />
 
-        {/* Proposta di design: il "listone" piatto delle revisioni singole è nascosto per
-            ora — interfaccia pulita per concentrarsi sui batch generati insieme (stessa
-            materia, stesso giorno). Vedi useReviewBatches. */}
-        {pagedBatches.length > 0 ? (
-          <div className="space-y-3">
-            {pagedBatches.map((batch) => (
-              <MyReviewsBatchGroup
-                key={batch.key}
-                batch={batch}
-                open={effectiveOpenKey === batch.key}
-                onOpenChange={(next) => setOpenBatchKey(next ? batch.key : null)}
-                cardRef={(el) => {
-                  cardRefs.current[batch.key] = el;
-                }}
-                selectionMode={bulk.isBulkMode}
-                selectedIds={bulk.selectedIds}
-                onToggleQuestion={bulk.toggleItem}
-                onToggleBatch={handleToggleBatch}
-              />
-            ))}
-          </div>
+        {/* Gruppi di domande (batch generati insieme) vs domande singole (sotto
+            MIN_BATCH_SIZE, vedi useReviewBatches) — separate per non mischiare accordion di
+            dimensione variabile con righe piatte nella stessa lista, che si leggerebbe come
+            un'accozzaglia. Sotto i filtri, non sopra: i filtri restano un contesto comune a
+            entrambe le viste, la scelta di cosa guardare viene dopo. */}
+        <Tabs value={activeTab} onValueChange={(v) => handleTabChange(v as ReviewTab)}>
+          <TabsList>
+            <TabsTrigger value="groups">
+              {t('myReviews.tabs.groups')}
+              <TabCounter count={groupsPendingCount} />
+            </TabsTrigger>
+            <TabsTrigger value="singles">
+              {t('myReviews.tabs.singles')}
+              <TabCounter count={singlesPendingCount} />
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+
+        {activeTab === 'groups' ? (
+          pagedBatches.length > 0 ? (
+            <div className="space-y-3">
+              {pagedBatches.map((batch) => (
+                <MyReviewsBatchGroup
+                  key={batch.key}
+                  batch={batch}
+                  open={effectiveOpenKey === batch.key}
+                  onOpenChange={(next) => setOpenBatchKey(next ? batch.key : null)}
+                  cardRef={(el) => {
+                    cardRefs.current[batch.key] = el;
+                  }}
+                  selectionMode={bulk.isBulkMode}
+                  selectedIds={bulk.selectedIds}
+                  onToggleQuestion={bulk.toggleItem}
+                  onToggleBatch={handleToggleBatch}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-3 py-16 text-center">
+              <p className="text-sm text-muted-foreground">
+                {hasFilters ? t('myReviews.noResultsFiltered') : t('myReviews.empty')}
+              </p>
+              {hasFilters && (
+                <Button variant="outline" size="sm" onClick={handleResetFilters}>
+                  {t('myReviews.resetFilters')}
+                </Button>
+              )}
+            </div>
+          )
+        ) : pagedSingles.length > 0 ? (
+          <MyReviewsSingleList
+            questions={pagedSingles}
+            startIndex={(page - 1) * SINGLES_PER_PAGE + 1}
+            selectionMode={bulk.isBulkMode}
+            selectedIds={bulk.selectedIds}
+            onToggleQuestion={bulk.toggleItem}
+          />
         ) : (
           <div className="flex flex-col items-center gap-3 py-16 text-center">
             <p className="text-sm text-muted-foreground">
@@ -382,12 +484,13 @@ export function MyReviewsPage() {
       </div>
 
       {/* Stessa barra sticky in fondo di QuestionsListPage — coerenza col resto del
-          backoffice invece di un contatore/paginazione posizionato diversamente qui. */}
+          backoffice invece di un contatore/paginazione posizionato diversamente qui.
+          Paginazione indipendente per tab: total/perPage seguono quale delle due è attiva. */}
       <div className="sticky bottom-0 border-t bg-background px-6 py-4">
         <QuestionsListPagination
           page={page}
-          total={batches.length}
-          perPage={PER_PAGE}
+          total={activeTab === 'groups' ? batches.length : unbatched.length}
+          perPage={activeTab === 'groups' ? GROUPS_PER_PAGE : SINGLES_PER_PAGE}
           onPageChange={handlePageChange}
         />
       </div>

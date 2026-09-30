@@ -1068,6 +1068,10 @@
   "myReviews": {
     "title": "Domande da revisionare",
     "subtitle": "Le domande in attesa di revisione assegnate a te.",
+    "tabs": {
+      "groups": "Gruppi di domande",
+      "singles": "Domande singole"
+    },
     "empty": "Nessuna domanda da revisionare",
     "noResultsFiltered": "Nessun risultato per i filtri selezionati",
     "review": "Revisiona",
