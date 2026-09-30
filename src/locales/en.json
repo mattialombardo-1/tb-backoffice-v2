@@ -268,12 +268,12 @@
       "title": "Create Question",
       "desc": "How do you want to proceed?",
       "bulkOption": {
-        "title": "Generate in bulk",
-        "desc": "Create a batch of AI-generated questions, to review before publishing"
+        "title": "Question groups",
+        "desc": "Create several questions together, to be sent for review before being approved."
       },
       "manualOption": {
-        "title": "Create manually",
-        "desc": "Write one question at a time"
+        "title": "Single question",
+        "desc": "Write one question at a time and send it for review when it's ready."
       }
     },
     "noResults": "No questions found",

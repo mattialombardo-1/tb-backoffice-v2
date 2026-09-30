@@ -269,12 +269,12 @@
       "title": "Crea Domanda",
       "desc": "Come vuoi procedere?",
       "bulkOption": {
-        "title": "Genera massivamente",
-        "desc": "Crea un batch di domande con l'AI, da revisionare prima di pubblicarle"
+        "title": "Gruppi di domande",
+        "desc": "Crea più domande insieme, da mandare in revisione prima di essere approvate."
       },
       "manualOption": {
-        "title": "Crea manualmente",
-        "desc": "Scrivi una domanda alla volta"
+        "title": "Domanda singola",
+        "desc": "Scrivi una domanda alla volta e mandala in revisione quando è pronta."
       }
     },
     "noResults": "Nessuna domanda presente",
