@@ -1421,12 +1421,11 @@ export function QuestionGenerationStep({
           <DialogHeader>
             <DialogTitle>Uscire dal riepilogo domande?</DialogTitle>
             <DialogDescription>
-              <span className="font-semibold">
+              <span className="mb-1.5 block font-semibold">
                 {isReviewerSelf ? approvate : inRevisione}{' '}
                 {isReviewerSelf ? 'approvate' : 'in revisione'} · {scartate} scartate · {daDecidere}{' '}
                 ancora da decidere.
               </span>
-              <br />
               Se esci ora, le {daDecidere} domande non ancora{' '}
               {isReviewerSelf ? 'approvate' : 'mandate in revisione'} né scartate verranno
               eliminate.
