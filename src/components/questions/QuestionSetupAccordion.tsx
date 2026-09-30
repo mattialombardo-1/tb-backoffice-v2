@@ -930,15 +930,18 @@ export function QuestionSetupAccordion({
                     Un Fragment per riga (non un div): resta un unico CSS grid, non una
                     tabella annidata — ogni cella è un figlio diretto del grid container,
                     l'auto-flow riga per riga fa il resto. */}
-                {/* w-fit, non più w-full: le tre colonne non hanno lo stesso contenuto (due
-                    steppers vs uno) — 1fr le forzerebbe alla stessa larghezza, sprecando
-                    spazio o stringendo la colonna più piena. max-content lascia che ognuna
-                    prenda solo lo spazio che le serve; px-6 (non più px-2/3) e gap-6 tra gli
-                    stepper danno il respiro che prima mancava. */}
-                <div className="w-fit overflow-hidden rounded-md border">
+                {/* w-full, non più w-fit: senza, la tabella restava più stretta della card
+                    (fissa, vedi il commento sulla Card più sotto) — lasciando un margine
+                    destro vuoto, incoerente con Classificazione e Gestisci revisione che
+                    riempiono tutta la larghezza disponibile. Le prime tre colonne restano
+                    max-content (non hanno lo stesso contenuto — due stepper vs uno — 1fr le
+                    forzerebbe alla stessa larghezza), solo l'ultima ("Completamento") è 1fr:
+                    assorbe lo spazio residuo, portando il bordo destro della tabella a filo
+                    con quello della card invece di lasciarlo a metà. */}
+                <div className="w-full overflow-hidden rounded-md border">
                   <div
                     className="grid"
-                    style={{ gridTemplateColumns: 'auto repeat(3, max-content)' }}
+                    style={{ gridTemplateColumns: 'auto max-content max-content 1fr' }}
                   >
                     <div className="border-r border-b bg-muted/40" />
                     {/* Niente border-r tra questa e "Numero di risposte", e padding interno
