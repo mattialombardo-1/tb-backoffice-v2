@@ -268,7 +268,6 @@
     "addDialog": {
       "title": "Crea Domanda",
       "desc": "Come vuoi procedere?",
-      "back": "Indietro",
       "bulkOption": {
         "title": "Genera massivamente",
         "desc": "Crea un batch di domande con l'AI, da revisionare prima di pubblicarle"
@@ -276,10 +275,6 @@
       "manualOption": {
         "title": "Crea manualmente",
         "desc": "Scrivi una domanda alla volta"
-      },
-      "manuale": {
-        "title": "Genera domande",
-        "desc": "Scegli il manuale di partenza"
       }
     },
     "noResults": "Nessuna domanda presente",
