@@ -912,7 +912,9 @@ export function QuestionGenerationStep({
     <div className="fixed inset-0 z-50 flex flex-col bg-background">
       {/* X sulla propria riga, in alto a sinistra — non accanto al titolo, come nel
           resto del backoffice. La badge "sola lettura" le sta accanto: è lo stato
-          dell'intera pagina che si sta per chiudere, non un'etichetta del titolo. */}
+          dell'intera pagina che si sta per chiudere, non un'etichetta del titolo.
+          Solo Caso B: nel Caso A non è più vero, "Modifica" lo smentisce — vedi
+          isReviewerSelf. */}
       <div className="flex shrink-0 flex-col gap-4 border-b bg-background px-8 py-6">
         <div className="flex items-center gap-3">
           <Button
@@ -923,10 +925,12 @@ export function QuestionGenerationStep({
           >
             <X className="h-5 w-5" />
           </Button>
-          <Badge variant="secondary" className="shrink-0">
-            <Eye className="size-3" />
-            Domande in sola lettura
-          </Badge>
+          {!isReviewerSelf && (
+            <Badge variant="secondary" className="shrink-0">
+              <Eye className="size-3" />
+              Domande in sola lettura
+            </Badge>
+          )}
         </div>
         {/* items-stretch (default, non più items-start): le due colonne prendono la
             stessa altezza, così il recap a destra può ancorarsi in basso, in linea
