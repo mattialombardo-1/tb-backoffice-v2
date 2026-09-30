@@ -417,12 +417,18 @@ export function MyReviewsPage() {
             dimensione variabile con righe piatte nella stessa lista, che si leggerebbe come
             un'accozzaglia. Sotto i filtri, non sopra: i filtri restano un contesto comune a
             entrambe le viste, la scelta di cosa guardare viene dopo. */}
-        {/* variant="line": niente pillola/sfondo, un sottolineato sulla tab attiva su una
-            riga divisoria a piena larghezza — stile di riferimento fornito da Mattia (tab
-            "Coins/Collectibles/Orders"), non il default shadcn a pillola usato altrove nel
-            backoffice. */}
-        <Tabs value={activeTab} onValueChange={(v) => handleTabChange(v as ReviewTab)}>
-          <TabsList variant="line" className="h-auto w-full justify-start gap-6 border-b p-0">
+        {/* variant="line": niente pillola/sfondo, un sottolineato sulla tab attiva — stile di
+            riferimento fornito da Mattia (tab "Coins/Collectibles/Orders"), non il default
+            shadcn a pillola usato altrove nel backoffice. Centrata (flex justify-center sul
+            contenitore, niente w-full sulla TabsList): la riga divisoria sotto segue la
+            larghezza del contenuto (border-b sulla TabsList stessa, w-fit) invece di arrivare
+            fino ai margini della card. */}
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => handleTabChange(v as ReviewTab)}
+          className="flex w-full items-center"
+        >
+          <TabsList variant="line" className="h-auto gap-6 border-b p-0">
             <TabsTrigger value="groups" className="px-0 pb-3">
               {t('myReviews.tabs.groups')}
               <TabCounter count={groupsPendingCount} />
