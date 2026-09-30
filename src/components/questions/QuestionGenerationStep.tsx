@@ -1482,8 +1482,8 @@ export function QuestionGenerationStep({
                 introduce già il destinatario) e niente icona (che nell'header serve a
                 introdurre la riga da sola, qui il testo la introduce già). */}
             <DialogDescription asChild>
-              <div className="flex flex-col items-start gap-1.5">
-                <span>
+              <div className="flex flex-col items-start gap-2.5">
+                <span className="font-semibold">
                   {pendingSendCount === 1
                     ? 'La domanda verrà mandata in revisione e assegnata a:'
                     : `Le ${pendingSendCount} domande verranno mandate in revisione e assegnate a:`}
@@ -1508,7 +1508,7 @@ export function QuestionGenerationStep({
               ) : (
                 <Send className="mr-1.5 h-4 w-4" />
               )}
-              Manda in revisione
+              {pendingSend?.kind === 'all' ? 'Manda tutte in revisione' : 'Manda in revisione'}
             </Button>
           </DialogFooter>
         </DialogContent>
