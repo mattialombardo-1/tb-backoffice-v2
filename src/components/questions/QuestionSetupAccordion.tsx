@@ -883,15 +883,19 @@ export function QuestionSetupAccordion({
                         sono lo stesso raggruppamento: la quantità di domande "Risposta chiusa"
                         e quante risposte hanno, non due colonne indipendenti come
                         "Completamento". */}
-                    <div className="border-b bg-muted/40 py-2.5 pr-3 pl-6 text-center text-xs font-semibold text-foreground">
+                    <div className="flex items-center justify-center border-b bg-muted/40 py-2.5 pr-3 pl-6 text-center text-xs font-semibold text-foreground">
                       Domande a
                       <br />
                       risposta chiusa
                     </div>
-                    <div className="border-r border-b bg-muted/40 py-2.5 pr-6 pl-3 text-center text-xs font-semibold text-foreground">
+                    {/* flex items-center: da sola questa cella è una riga sola, ma condivide
+                        l'altezza di riga con le due vicine (che vanno a capo su due righe) —
+                        senza centratura verticale il suo testo resterebbe ancorato in alto
+                        invece che centrato rispetto a loro. */}
+                    <div className="flex items-center justify-center border-r border-b bg-muted/40 py-2.5 pr-6 pl-3 text-center text-xs font-semibold text-foreground">
                       Numero di risposte
                     </div>
-                    <div className="border-b bg-muted/40 px-6 py-2.5 text-center text-xs font-semibold text-foreground">
+                    <div className="flex items-center justify-center border-b bg-muted/40 px-6 py-2.5 text-center text-xs font-semibold text-foreground">
                       Domande a
                       <br />
                       completamento
