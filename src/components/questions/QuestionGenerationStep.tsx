@@ -373,6 +373,11 @@ export function QuestionGenerationStep({
   const [openRowIds, setOpenRowIds] = useState<string[]>([]);
   // L'ultima riga aperta (non chiusa) — è quella su cui ancorare lo scroll, non l'intero set.
   const [lastOpenedId, setLastOpenedId] = useState<string | null>(null);
+  // Riga che si è appena richiusa da sola dopo un'approvazione (non un toggle manuale
+  // dell'utente): il collasso del suo contenuto sposta il resto della lista verso l'alto,
+  // quindi senza riancorare lo scroll ci si ritrova a vedere righe più in basso invece del
+  // titolo appena approvato — vedi l'effect gemello di quello su lastOpenedId.
+  const [lastAutoClosedId, setLastAutoClosedId] = useState<string | null>(null);
   // "Manda tutte in revisione" in corso — disabilita il pulsante in alto mentre le chiamate
   // sono in volo (quelle per riga hanno il proprio isPersisting, vedi DraftQuestion).
   const [isSendingAll, setIsSendingAll] = useState(false);
@@ -458,6 +463,14 @@ export function QuestionGenerationStep({
       rowRefs.current[lastOpenedId]?.scrollIntoView({ block: 'start' });
     }
   }, [lastOpenedId]);
+
+  // Stessa ancora, per la richiusura automatica dopo l'approvazione: la riga appena
+  // approvata deve restare in vista, non sparire sotto le righe che le stavano dietro.
+  useEffect(() => {
+    if (lastAutoClosedId) {
+      rowRefs.current[lastAutoClosedId]?.scrollIntoView({ block: 'start' });
+    }
+  }, [lastAutoClosedId]);
 
   const toggleRow = (id: string) => {
     setOpenRowIds((prev) => {
@@ -594,6 +607,7 @@ export function QuestionGenerationStep({
       // Approvata: niente più CTA al suo interno (vedi sotto), quindi non ha più senso
       // tenerla aperta — si richiude da sola come le altre righe già chiuse.
       setOpenRowIds((prev) => prev.filter((x) => x !== id));
+      setLastAutoClosedId(id);
       toast.success('Domanda approvata.', {
         duration: 5000,
         className: REVIEW_SUCCESS_TOAST_CLASSNAME,
