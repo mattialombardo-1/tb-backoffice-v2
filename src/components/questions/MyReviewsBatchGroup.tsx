@@ -298,12 +298,15 @@ export function MyReviewsBatchGroup({
               {hasError ? 0 : batch.pending.length + batch.reviewed.length} domande
             </span>
           )}
-          {/* Esito (mock — vedi mockOutcomeForBatch): IN_PROGRESS resta badge pieno — non c'è
-              nessun altro colore in questa card con cui possa competere (isLocked nasconde la
-              riga Stato). COMPLETED (successo, stato di default) ed ERROR (ridondante con la
-              riga rossa sotto) non hanno più un badge Esito, vedi il commento su
-              OUTCOME_TAG_CLASSNAME. */}
-          {batch.outcome === 'IN_PROGRESS' && (
+        </div>
+        {/* Esito (mock — vedi mockOutcomeForBatch), su una riga propria tra il titolo e la
+            chip Stato — non più affiancato al titolo: è un'informazione distinta da "cosa" è
+            il batch, merita il proprio spazio invece di affollare la prima riga. IN_PROGRESS
+            resta badge pieno (nessun altro colore in questa card con cui competere, isLocked
+            nasconde la riga Stato sotto). COMPLETED ed ERROR non hanno più badge Esito, vedi
+            il commento su OUTCOME_TAG_CLASSNAME. */}
+        {batch.outcome === 'IN_PROGRESS' && (
+          <div className="mt-2">
             <Badge
               variant="outline"
               className={cn('shrink-0 gap-1', OUTCOME_TAG_CLASSNAME[batch.outcome])}
@@ -312,18 +315,18 @@ export function MyReviewsBatchGroup({
               {OUTCOME_BADGE_LABEL.IN_PROGRESS}
               {batch.outcomeProgress != null && ` · ${batch.outcomeProgress}%`}
             </Badge>
-          )}
-          {/* PARTIAL: non più badge pieno (era giallo, troppo vicino all'amber di "da
-              revisionare" nella riga sotto — due segnali diversi che sembravano lo stesso
-              colore per errore). Icona + testo, senza pillola: il segnale "attenzione" resta
-              leggibile, ma il colore in questa card lo porta solo l'amber di Stato sotto. */}
-          {isPartial && (
-            <span className="flex shrink-0 items-center gap-1 text-xs font-semibold text-muted-foreground">
-              <AlertTriangle className="h-3 w-3" />
-              {OUTCOME_BADGE_LABEL.PARTIAL}
-            </span>
-          )}
-        </div>
+          </div>
+        )}
+        {/* PARTIAL: non più badge pieno (era giallo, troppo vicino all'amber di "da
+            revisionare" nella riga sotto — due segnali diversi che sembravano lo stesso
+            colore per errore). Icona + testo, senza pillola: il segnale "attenzione" resta
+            leggibile, ma il colore in questa card lo porta solo l'amber di Stato sotto. */}
+        {isPartial && (
+          <div className="mt-2 flex items-center gap-1 text-xs font-semibold text-muted-foreground">
+            <AlertTriangle className="h-3 w-3" />
+            {OUTCOME_BADGE_LABEL.PARTIAL}
+          </div>
+        )}
         {/* Niente chip Stato per ERROR/IN_PROGRESS: per ERROR è coerente con "0 domande" sopra
             (mostrare "10 da revisionare" contraddirebbe sia il conteggio azzerato sia il box
             d'errore sotto); per IN_PROGRESS, anche se "N domande" resta il target, nessuna di
