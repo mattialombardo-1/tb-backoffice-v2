@@ -591,6 +591,9 @@ export function QuestionGenerationStep({
     if (!draft || draft.status !== 'pending') return;
     const failures = await persistTargets([draft], persistAndApprove, 'approvata');
     if (failures === 0) {
+      // Approvata: niente più CTA al suo interno (vedi sotto), quindi non ha più senso
+      // tenerla aperta — si richiude da sola come le altre righe già chiuse.
+      setOpenRowIds((prev) => prev.filter((x) => x !== id));
       toast.success('Domanda approvata.', {
         duration: 5000,
         className: REVIEW_SUCCESS_TOAST_CLASSNAME,
