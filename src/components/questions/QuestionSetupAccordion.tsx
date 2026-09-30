@@ -838,7 +838,7 @@ export function QuestionSetupAccordion({
                 </div>
               )}
             </div>
-            <AccordionContent className="flex flex-col gap-3.5 px-6 pt-4 pb-5">
+            <AccordionContent className="flex flex-col gap-3 px-6 pt-4 pb-5">
               {/* Ordine richiesto: Manuale e Materia sulla prima riga, Argomento e
                   Sottoargomento sulla seconda — l'auto-flow del grid a 2 colonne fa il resto,
                   non serve più il col-span-2 che prima dava a Sotto-argomento una riga tutta
@@ -927,7 +927,7 @@ export function QuestionSetupAccordion({
                 </div>
               )}
             </div>
-            <AccordionContent className="flex flex-col gap-5 px-6 pt-4 pb-5">
+            <AccordionContent className="flex flex-col gap-3 px-6 pt-4 pb-5">
               <div className="flex flex-col gap-3">
                 <Label>
                   Quantità per difficoltà e tipo
@@ -1081,7 +1081,7 @@ export function QuestionSetupAccordion({
                 </div>
               )}
             </div>
-            <AccordionContent className="flex flex-col gap-3.5 px-6 pt-4 pb-5">
+            <AccordionContent className="flex flex-col gap-3 px-6 pt-4 pb-5">
               <div className="flex flex-col gap-3">
                 <Label>
                   Chi revisiona queste domande?
