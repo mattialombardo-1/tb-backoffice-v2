@@ -419,14 +419,16 @@ export function MyReviewsPage() {
             entrambe le viste, la scelta di cosa guardare viene dopo. */}
         {/* variant="line": niente pillola/sfondo, un sottolineato sulla tab attiva — stile di
             riferimento fornito da Mattia (tab "Coins/Collectibles/Orders"), non il default
-            shadcn a pillola usato altrove nel backoffice. Centrata (flex justify-center sul
-            contenitore, niente w-full sulla TabsList): la riga divisoria sotto segue la
-            larghezza del contenuto (border-b sulla TabsList stessa, w-fit) invece di arrivare
-            fino ai margini della card. */}
+            shadcn a pillola usato altrove nel backoffice. Allineata a sinistra (items-start),
+            non centrata: è l'unico elemento coerente col resto della pagina (titolo, filtri,
+            card), tutto già a sinistra. TabsList resta w-fit (niente w-full): la riga
+            divisoria sotto segue la larghezza del contenuto, non arriva ai margini della
+            card. Niente padding/margin extra sul contenitore: il bordo sinistro della
+            TabsList deve cadere esattamente sotto quello della barra di ricerca sopra. */}
         <Tabs
           value={activeTab}
           onValueChange={(v) => handleTabChange(v as ReviewTab)}
-          className="flex w-full items-center"
+          className="flex items-start"
         >
           <TabsList variant="line" className="h-auto gap-6 border-b p-0">
             <TabsTrigger value="groups" className="px-0 pb-3">
