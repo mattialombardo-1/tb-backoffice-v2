@@ -412,13 +412,16 @@ export function MyReviewsBatchGroup({
               qui dentro l'accordion aperto, non più nell'header sempre visibile: su una card
               PARTIAL a riposo il colore si accumulava (badge Esito + chip Stato + questo
               warning, tutti insieme) senza che l'utente avesse chiesto di vederlo. Aprendo il
-              batch la richiesta è implicita — è lì che si legge perché mancano domande. Su
-              PARTIAL il "Generate N/M domande" è in semibold, il resto della frase no — N è
-              vero (pending.length + reviewed.length), M è mockato (outcomeRequested). */}
+              batch la richiesta è implicita — è lì che si legge perché mancano domande. Testo
+              neutro, non più amber: è una spiegazione/nota di contesto, non un'azione da
+              compiere — quella resta solo "N da revisionare" nell'header sopra, l'unico
+              segnale che merita colore. Il "Generate N/M domande" resta in semibold, il resto
+              della frase no — N è vero (pending.length + reviewed.length), M è mockato
+              (outcomeRequested). */}
           {batch.outcomeReason && (
             <div className="flex max-w-prose items-start gap-1.5 border-b px-5 py-3">
-              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
-              <p className="text-xs leading-relaxed text-amber-700 dark:text-amber-300">
+              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+              <p className="text-xs leading-relaxed text-muted-foreground">
                 <span className="font-semibold">
                   Generate {batch.pending.length + batch.reviewed.length}/{batch.outcomeRequested}{' '}
                   domande.
