@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from '@tanstack/react-router';
-import { PenLine, Sparkles } from 'lucide-react';
+import { Layers, PenLine } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -60,7 +60,7 @@ export function AddQuestionDialog({ open, onOpenChange, campaignContext }: AddQu
             onClick={() => goTo('/questions/create')}
             className="flex items-start gap-3 rounded-lg border p-4 text-left transition-colors hover:border-primary hover:bg-accent/50"
           >
-            <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+            <Layers className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
             <div>
               <p className="text-sm font-medium">{t('questions.addDialog.bulkOption.title')}</p>
               <p className="mt-0.5 text-xs text-muted-foreground">
