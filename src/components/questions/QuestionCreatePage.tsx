@@ -271,7 +271,7 @@ export function QuestionCreatePage() {
                   ? t('myReviews.reviewTitle')
                   : isEditMode
                     ? 'Modifica Domanda'
-                    : 'Crea Domanda'}
+                    : 'Crea Domande'}
               </h1>
               {form.isReadOnly && !reviewMode && (
                 <Badge variant="secondary">{t('questions.readOnly')}</Badge>
