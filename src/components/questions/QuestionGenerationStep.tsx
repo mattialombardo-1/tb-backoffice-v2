@@ -1298,80 +1298,88 @@ export function QuestionGenerationStep({
                   {/* Affiancati, non spezzati agli estremi del layout — un solo cluster di
                       azioni a destra. "Scarta" resta ghost + testo destructive, "Manda in
                       revisione" passa a outline: il pieno (variant="default") resta solo
-                      su "Manda tutte in revisione" in alto a destra nell'header. */}
-                  <div className="mt-4 flex flex-wrap items-center justify-end gap-3">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-destructive hover:text-destructive"
-                      disabled={isPersisted || isScartata}
-                      onClick={() => requestDiscard(draft.id)}
-                    >
-                      <Trash2 className="mr-1.5 h-3.5 w-3.5" />
-                      Scarta
-                    </Button>
-                    {isScartata && (
-                      <Button variant="ghost" size="sm" onClick={() => restore(draft.id)}>
-                        <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
-                        Ripristina
-                      </Button>
-                    )}
-                    {/* Solo quando il revisore è sé stessi: se la revisione tocca comunque a
-                        te, ha senso poter correggere la bozza direttamente qui invece di
-                        mandarla in revisione così com'è e poi riaprirla da "Domande da
-                        revisionare". Non ha senso per un altro revisore: non è lui/lei a
-                        decidere cosa correggere in fase di generazione. Apre
-                        QuestionDraftEditContent — vedi lì il perché non è lo stesso
-                        componente di QuestionEditContent (la domanda non esiste ancora sul
-                        backend). */}
-                    {isReviewerSelf && (
+                      su "Manda tutte in revisione" in alto a destra nell'header.
+                      Niente più azioni una volta approvata (solo Caso A, l'unico stato che
+                      arriva qui senza passare da 'scartata' — vedi isScartata sotto, che
+                      resta com'era: "Scarta" e "Modifica"/"Approva" restano visibili ma
+                      disabilitati quando scartata, con "Ripristina" per tornare indietro):
+                      approvata è definitiva, non c'è nulla da scartare, modificare o
+                      approvare di nuovo su una domanda già creata. */}
+                  {draft.status !== 'approvata' && (
+                    <div className="mt-4 flex flex-wrap items-center justify-end gap-3">
                       <Button
-                        variant="outline"
+                        variant="ghost"
                         size="sm"
-                        disabled={draft.status !== 'pending'}
-                        onClick={() => setEditingDraftId(draft.id)}
+                        className="text-destructive hover:text-destructive"
+                        disabled={isPersisted || isScartata}
+                        onClick={() => requestDiscard(draft.id)}
                       >
-                        <Pencil className="mr-1.5 h-3.5 w-3.5" />
-                        Modifica
+                        <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                        Scarta
                       </Button>
-                    )}
-                    {/* Approva (Caso A) e Manda in revisione (Caso B) non sono due varianti
-                        dello stesso bottone: chiamano funzioni completamente separate
-                        (approveDraft vs requestSendToReview, vedi sopra) — qui cambia solo
-                        quale delle due il click invoca, in base a isReviewerSelf. Approva è
-                        verde pieno, stesso trattamento del vero "Approva" in
-                        QuestionCreatePage — Manda in revisione resta outline neutro come
-                        prima: non sta approvando nulla, solo mandando avanti nel flusso. */}
-                    {isReviewerSelf ? (
-                      <Button
-                        size="sm"
-                        className="bg-emerald-600 text-white hover:bg-emerald-700"
-                        disabled={draft.status !== 'pending' || draft.isPersisting}
-                        onClick={() => approveDraft(draft.id)}
-                      >
-                        {draft.isPersisting ? (
-                          <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                        ) : (
-                          <CheckCircle className="mr-1.5 h-3.5 w-3.5" />
-                        )}
-                        Approva
-                      </Button>
-                    ) : (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={draft.status !== 'pending' || draft.isPersisting}
-                        onClick={() => requestSendToReview(draft.id)}
-                      >
-                        {draft.isPersisting ? (
-                          <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                        ) : (
-                          <Send className="mr-1.5 h-3.5 w-3.5" />
-                        )}
-                        Manda in revisione
-                      </Button>
-                    )}
-                  </div>
+                      {isScartata && (
+                        <Button variant="ghost" size="sm" onClick={() => restore(draft.id)}>
+                          <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
+                          Ripristina
+                        </Button>
+                      )}
+                      {/* Solo quando il revisore è sé stessi: se la revisione tocca comunque a
+                          te, ha senso poter correggere la bozza direttamente qui invece di
+                          mandarla in revisione così com'è e poi riaprirla da "Domande da
+                          revisionare". Non ha senso per un altro revisore: non è lui/lei a
+                          decidere cosa correggere in fase di generazione. Apre
+                          QuestionDraftEditContent — vedi lì il perché non è lo stesso
+                          componente di QuestionEditContent (la domanda non esiste ancora sul
+                          backend). */}
+                      {isReviewerSelf && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={draft.status !== 'pending'}
+                          onClick={() => setEditingDraftId(draft.id)}
+                        >
+                          <Pencil className="mr-1.5 h-3.5 w-3.5" />
+                          Modifica
+                        </Button>
+                      )}
+                      {/* Approva (Caso A) e Manda in revisione (Caso B) non sono due varianti
+                          dello stesso bottone: chiamano funzioni completamente separate
+                          (approveDraft vs requestSendToReview, vedi sopra) — qui cambia solo
+                          quale delle due il click invoca, in base a isReviewerSelf. Approva è
+                          verde pieno, stesso trattamento del vero "Approva" in
+                          QuestionCreatePage — Manda in revisione resta outline neutro come
+                          prima: non sta approvando nulla, solo mandando avanti nel flusso. */}
+                      {isReviewerSelf ? (
+                        <Button
+                          size="sm"
+                          className="bg-emerald-600 text-white hover:bg-emerald-700"
+                          disabled={draft.status !== 'pending' || draft.isPersisting}
+                          onClick={() => approveDraft(draft.id)}
+                        >
+                          {draft.isPersisting ? (
+                            <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <CheckCircle className="mr-1.5 h-3.5 w-3.5" />
+                          )}
+                          Approva
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={draft.status !== 'pending' || draft.isPersisting}
+                          onClick={() => requestSendToReview(draft.id)}
+                        >
+                          {draft.isPersisting ? (
+                            <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <Send className="mr-1.5 h-3.5 w-3.5" />
+                          )}
+                          Manda in revisione
+                        </Button>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
