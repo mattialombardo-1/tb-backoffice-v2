@@ -225,6 +225,25 @@ function NumberStepper({
   );
 }
 
+// Stessa lista di manuali "pronti" del picker in AddQuestionDialog.tsx — duplicata, non
+// importata: esportarla da lì farebbe fallire il lint di react-refresh (un file di
+// componente può esportare solo componenti, stesso vincolo già documentato per
+// TYPE_DESCRIPTIONS in QuestionTypeSelector.tsx).
+const READY_MANUALE_TITLES = [
+  'Chimica',
+  'Dermatologia e Chirurgia plastica',
+  'Endocrinologia',
+  'Igiene e Medicina preventiva e Statistica sanitaria',
+  "Malattie dell'apparato digerente",
+  'Malattie infettive e tropicali',
+  'Medicina Legale',
+  'Neurologia e Neurochirurgia',
+  'Oncologia',
+  'Otorinolaringoiatria',
+  'Psichiatria',
+  'Reumatologia e Immunologia',
+];
+
 // Proposta di design: lista fissa per la sezione Materia — solo "Chimica" è
 // selezionabile, le altre sono segnaposto in attesa di essere abilitate.
 const MATERIA_OPTIONS: FixedMateriaOption[] = [
@@ -441,9 +460,10 @@ interface QuestionSetupAccordionProps {
   /** Modale di riepilogo post-generazione — aperta/chiusa da QuestionCreatePage. */
   summaryOpen: boolean;
   onExitSummary: () => void;
-  /** Manuale scelto in AddQuestionDialog, se il flusso parte da lì — passato pari pari a
-   *  QuestionGenerationStep, vedi manualeTitle lì. */
-  manualeTitle?: string;
+  /** Manuale scelto in AddQuestionDialog, se il flusso parte da lì — sola inizializzazione:
+   *  QuestionSetupAccordion lo mette in un campo Manuale editabile in Classificazione (vedi
+   *  manualeTitle più sotto), non lo passa più pari pari a valle. */
+  initialManualeTitle?: string;
 }
 
 /**
@@ -463,7 +483,7 @@ export function QuestionSetupAccordion({
   onReviewerIdChange,
   summaryOpen,
   onExitSummary,
-  manualeTitle,
+  initialManualeTitle,
 }: QuestionSetupAccordionProps) {
   // Primo step aperto di default all'atterraggio sul form — le altre due
   // restano comunque apribili subito, non c'è un ordine da rispettare.
@@ -508,6 +528,21 @@ export function QuestionSetupAccordion({
     setOpenSection(section);
     setAutoOpenField(field);
   };
+
+  // Manuale — primo campo di Classificazione, a sinistra di Materia. Non fa parte
+  // dell'hierarchy hook (i manuali sono libri, non legati alla gerarchia Materia/Argomento,
+  // vedi il commento su MANUALE_TITLES in AddQuestionDialog): stato locale a sé, inizializzato
+  // dal manuale scelto lì se il flusso parte da quel picker, ma resta modificabile qui.
+  // READY_MANUALE_TITLES: stessa lista di manuali "pronti" mostrata nel picker — un manuale
+  // scelto qui deve essere uno di quelli su cui il sistema AI è già attivo.
+  const [manualeTitle, setManualeTitle] = useState(initialManualeTitle ?? '');
+  const manualeOptions = READY_MANUALE_TITLES.map((title) => ({
+    value: `__fixed__${slugify(title)}`,
+    label: title,
+  }));
+  const manualeValue = manualeTitle
+    ? (manualeOptions.find((o) => o.label === manualeTitle)?.value ?? null)
+    : null;
 
   // Griglia difficoltà × tipo — sostituisce le tre quantità per livello (un solo tipo
   // valido per l'intero batch): ora ogni cella (livello, tipo) ha la propria quantità,
@@ -684,6 +719,12 @@ export function QuestionSetupAccordion({
   }, [openSection, classificazioneAllFilled, composizioneAllFilled]);
 
   const classificazioneTagItems: FieldTagItem[] = [
+    manualeTitle
+      ? {
+          label: manualeTitle,
+          onClick: () => openFieldDropdown('classificazione', 'manuale'),
+        }
+      : null,
     hierarchy.selection.subjectName
       ? {
           label: hierarchy.selection.subjectName,
@@ -794,7 +835,31 @@ export function QuestionSetupAccordion({
               )}
             </div>
             <AccordionContent className="flex flex-col gap-3.5 px-6 pt-4 pb-5">
+              {/* Ordine richiesto: Manuale e Materia sulla prima riga, Argomento e
+                  Sottoargomento sulla seconda — l'auto-flow del grid a 2 colonne fa il resto,
+                  non serve più il col-span-2 che prima dava a Sotto-argomento una riga tutta
+                  sua. */}
               <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col gap-3">
+                  <Label>Manuale</Label>
+                  <SearchableCombobox
+                    value={manualeValue}
+                    onChange={(v) => {
+                      setManualeTitle(
+                        v ? (manualeOptions.find((o) => o.value === v)?.label ?? '') : ''
+                      );
+                    }}
+                    options={manualeOptions}
+                    placeholder="Seleziona manuale"
+                    searchPlaceholder="Cerca manuale..."
+                    emptyMessage="Nessun manuale trovato."
+                    disabled={disabled}
+                    open={autoOpenField === 'manuale' || undefined}
+                    onOpenChange={(v) => {
+                      if (!v) setAutoOpenField(null);
+                    }}
+                  />
+                </div>
                 <MateriaField
                   hierarchy={hierarchy}
                   disabled={disabled}
@@ -813,17 +878,15 @@ export function QuestionSetupAccordion({
                     if (!v) setAutoOpenField(null);
                   }}
                 />
-                <div className="col-span-2">
-                  <SottoArgomentoField
-                    hierarchy={hierarchy}
-                    disabled={disabled}
-                    fixedOptionsByArgomento={SOTTOARGOMENTO_OPTIONS}
-                    open={autoOpenField === 'sottoargomento' || undefined}
-                    onOpenChange={(v) => {
-                      if (!v) setAutoOpenField(null);
-                    }}
-                  />
-                </div>
+                <SottoArgomentoField
+                  hierarchy={hierarchy}
+                  disabled={disabled}
+                  fixedOptionsByArgomento={SOTTOARGOMENTO_OPTIONS}
+                  open={autoOpenField === 'sottoargomento' || undefined}
+                  onOpenChange={(v) => {
+                    if (!v) setAutoOpenField(null);
+                  }}
+                />
               </div>
             </AccordionContent>
           </AccordionItem>

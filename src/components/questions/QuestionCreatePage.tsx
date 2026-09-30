@@ -367,7 +367,7 @@ export function QuestionCreatePage() {
             onReviewerIdChange={setProposalReviewerId}
             summaryOpen={summaryOpen}
             onExitSummary={handleExitSummary}
-            manualeTitle={manualeTitle}
+            initialManualeTitle={manualeTitle}
           />
 
           {!reviewMode && (
