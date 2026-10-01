@@ -1467,7 +1467,10 @@ export function QuestionGenerationStep({
               Rimani
             </Button>
             <Button variant="destructive" onClick={onExit}>
-              <Trash2 className="mr-1.5 h-4 w-4" />
+              {/* Niente mr-1.5 sull'icona: il Button ha già gap-2 tra i figli (vedi
+                  buttonVariants) — aggiungerlo sommava i due spazi, più largo del gap-2 usato
+                  da sola altrove (es. "Salva e Approva" in QuestionDraftEditContent). */}
+              <Trash2 className="h-4 w-4" />
               Elimina le rimanenti
             </Button>
           </DialogFooter>
