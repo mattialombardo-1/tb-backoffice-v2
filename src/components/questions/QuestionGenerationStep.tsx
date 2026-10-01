@@ -629,6 +629,37 @@ export function QuestionGenerationStep({
     }
   };
 
+  /** "Salva e Approva" di QuestionDraftEditContent — unico passo per editare e approvare una
+   *  bozza, invece dei due di prima (chiudi l'editor, poi un secondo click su "Approva" nella
+   *  riga): chi modifica qui è sempre chi approva (Caso A), i due gesti sono lo stesso giudizio.
+   *  patchedDraft (non `draft` di stato) è quello che persistAndApprove usa per il payload di
+   *  creazione — così la domanda creata riflette subito le modifiche appena fatte, senza dover
+   *  aspettare che updateDraft aggiorni lo stato prima di leggerlo. onSaveAndApprove in
+   *  QuestionDraftEditContent già mostra l'errore a video se failures > 0; qui serve solo il
+   *  successo (toast + richiusura riga), stesso trattamento di approveDraft sopra. */
+  const saveAndApproveDraft = async (
+    id: string,
+    patch: Partial<DraftQuestion>,
+    wasModified: boolean
+  ): Promise<boolean> => {
+    const draft = drafts.find((d) => d.id === id);
+    if (!draft || draft.status !== 'pending') return false;
+    const patchedDraft = { ...draft, ...patch };
+    updateDraft(id, patch);
+    const failures = await persistTargets([patchedDraft], persistAndApprove, 'approvata');
+    if (failures > 0) {
+      toast.error("Errore durante il salvataggio e l'approvazione. Riprova.");
+      return false;
+    }
+    setOpenRowIds((prev) => prev.filter((x) => x !== id));
+    setLastAutoClosedId(id);
+    toast.success(wasModified ? 'Domanda modificata e approvata.' : 'Domanda approvata.', {
+      duration: 5000,
+      className: REVIEW_SUCCESS_TOAST_CLASSNAME,
+    });
+    return true;
+  };
+
   /** CTA principale del footer per il Caso A. L'uscita automatica a esito riuscito non è
    *  gestita qui — vedi l'effect su daDecidere più sotto. */
   const approveAll = async () => {
@@ -1585,9 +1616,10 @@ export function QuestionGenerationStep({
 
       {/* CTA "Modifica" per riga (solo isReviewerSelf, vedi sopra) — z-[60], sopra lo z-50
           di questo step: si sovrappone, non lo sostituisce, così chiuderla torna esattamente
-          al riepilogo così com'era. onSave scrive il patch nella bozza locale con
-          updateDraft — nessuna chiamata al backend, vedi il commento su
-          QuestionDraftEditContent per il perché. */}
+          al riepilogo così com'era. onSaveAndApprove persiste per davvero (create+approve,
+          vedi saveAndApproveDraft sopra) — "Salva e Approva" lì chiude l'editor da sé a esito
+          riuscito (onClose o, se c'era una modifica, dopo il motivo facoltativo), quindi qui
+          non serve chiudere anche da fuori. */}
       {editingDraftId && (
         <QuestionDraftEditContent
           draft={drafts.find((d) => d.id === editingDraftId)!}
@@ -1598,7 +1630,9 @@ export function QuestionGenerationStep({
           topicId={topicId}
           sottoArgomentoId={sottoArgomentoId}
           onClose={() => setEditingDraftId(null)}
-          onSave={(patch) => updateDraft(editingDraftId, patch)}
+          onSaveAndApprove={(patch, wasModified) =>
+            saveAndApproveDraft(editingDraftId, patch, wasModified)
+          }
         />
       )}
     </div>

@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { toast } from 'sonner';
-import { ArrowLeft, BookOpen, Save, Send } from 'lucide-react';
+import { ArrowLeft, BookOpen, CheckCircle, Loader2, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -43,7 +42,7 @@ import { REJECT_CUSTOM_REASON, REJECT_CUSTOM_TEXT_MAX, REJECT_REASONS } from '@/
 import { useQuestionForm } from '@/lib/hooks/useQuestionForm';
 import { QuestionContentEditor } from './QuestionContentEditor';
 import { QuestionStudentPreview } from './QuestionStudentPreview';
-import { REVIEW_SUCCESS_TOAST_CLASSNAME, type DraftQuestion } from './QuestionGenerationStep';
+import type { DraftQuestion } from './QuestionGenerationStep';
 
 interface QuestionDraftEditContentProps {
   draft: DraftQuestion;
@@ -54,9 +53,12 @@ interface QuestionDraftEditContentProps {
   topicId: string;
   sottoArgomentoId: string;
   onClose: () => void;
-  /** Scrive le modifiche nella bozza in QuestionGenerationStep — locale, nessuna chiamata
-   *  al backend qui (vedi il commento sopra il componente). */
-  onSave: (patch: Partial<DraftQuestion>) => void;
+  /** Scrive le modifiche nella bozza E la approva nello stesso gesto (crea per davvero la
+   *  domanda sul backend mock, poi la approva) — vedi il commento sopra il componente.
+   *  `wasModified` arriva già calcolato da qui (form.isDirty prima del salvataggio, non dopo:
+   *  vedi handleSaveAndApproveClick) così il chiamante non deve indovinarlo da un patch che
+   *  potrebbe anche essere "vuoto". Ritorna true se la persistenza è andata a buon fine. */
+  onSaveAndApprove: (patch: Partial<DraftQuestion>, wasModified: boolean) => Promise<boolean>;
 }
 
 /**
@@ -64,18 +66,27 @@ interface QuestionDraftEditContentProps {
  * stesso componente, perché le opzioni in alto sono strutturalmente diverse: qui non c'è un
  * revisore da scegliere (la CTA che apre questa schermata è visibile solo quando il revisore
  * è già te stesso — vedi requestDiscard/isReviewerSelf in QuestionGenerationStep), non c'è
- * Approva/Rigetta (non è un flusso di revisione), e soprattutto la domanda non esiste ancora
- * sul backend (persistedQuestionId è null finché non la mandi in revisione da lì): "Salva
- * modifiche" qui aggiorna solo l'oggetto DraftQuestion in memoria tramite onSave, non chiama
- * questionsService. Per lo stesso motivo Materia/Argomento/Sotto-argomento sono badge statici
- * (i valori già decisi al passo 1), non l'HierarchySelector interattivo dell'originale: quello
- * userebbe useHierarchy per interrogare il catalogo reale, ma le domande generate da
- * QuestionSetupAccordion possono avere un topicId "fixedOptions" (__fixed__...) che nel
- * catalogo non esiste — mostrarlo in un dropdown live lo farebbe apparire vuoto/sbagliato.
- * form (useQuestionForm) resta in modalità "creazione" (nessun editQuestionId, quindi nessuna
- * fetch): viene solo seminato una volta al mount con i valori della bozza, poi form.markClean()
- * azzera isDirty che quella semina avrebbe altrimenti attivato (passa dagli stessi setter
- * dell'utente) — così "Salva modifiche" resta disabilitato finché non tocchi davvero qualcosa.
+ * Rigetta (non è un flusso di revisione), e soprattutto la domanda non esiste ancora sul
+ * backend quando si apre questa schermata (persistedQuestionId è null): "Salva e Approva" la
+ * crea per davvero (mock API) e la approva nello stesso click — un solo momento, non due
+ * (prima si editava in locale, poi si tornava alla riga per un secondo click su "Approva":
+ * visto che chi modifica è sempre chi approva in questo flusso — Caso A, isReviewerSelf — i
+ * due gesti sono lo stesso giudizio, non ha senso separarli). La chiamata vera e propria resta
+ * in onSaveAndApprove, qui non si importa questionsService — stesso principio di separazione
+ * già in QuestionGenerationStep (persistAndApprove/persistAndSubmit). Stesso schema di
+ * QuestionEditContent (handleSaveAndApprove lì) per bottone/colori/feedback facoltativo post-
+ * salvataggio, con QuestionDraftEditContent come origine del pattern. Per lo stesso motivo di
+ * prima, Materia/Argomento/Sotto-argomento restano badge statici (i valori già decisi al passo
+ * 1), non l'HierarchySelector interattivo dell'originale: quello userebbe useHierarchy per
+ * interrogare il catalogo reale, ma le domande generate da QuestionSetupAccordion possono avere
+ * un topicId "fixedOptions" (__fixed__...) che nel catalogo non esiste — mostrarlo in un
+ * dropdown live lo farebbe apparire vuoto/sbagliato. form (useQuestionForm) resta in modalità
+ * "creazione" (nessun editQuestionId, quindi nessuna fetch): viene solo seminato una volta al
+ * mount con i valori della bozza, poi form.markClean() azzera l'isDirty che quella semina
+ * avrebbe altrimenti attivato (passa dagli stessi setter dell'utente) — serve solo a sapere se
+ * c'è stata una modifica vera (vedi wasModified in handleSaveAndApproveClick), "Salva e
+ * Approva" resta invece sempre cliccabile anche a form pulito: si può approvare senza aver
+ * cambiato nulla, non solo dopo una modifica.
  */
 export function QuestionDraftEditContent({
   draft,
@@ -86,7 +97,7 @@ export function QuestionDraftEditContent({
   topicId,
   sottoArgomentoId,
   onClose,
-  onSave,
+  onSaveAndApprove,
 }: QuestionDraftEditContentProps) {
   // Il tipo non è più uniforme per tutto il batch (griglia difficoltà × tipo in
   // QuestionSetupAccordion) — ogni bozza porta il proprio, vedi DraftQuestion.type.
@@ -140,6 +151,7 @@ export function QuestionDraftEditContent({
 
   const [showPassageDialog, setShowPassageDialog] = useState(false);
   const [confirmLeaveOpen, setConfirmLeaveOpen] = useState(false);
+  const [isApproving, setIsApproving] = useState(false);
 
   // Motivo della modifica — facoltativo, a differenza di quello di "Scarta" (stessa lista,
   // stesso componente Select+"Altro", vedi @/lib/rejectReasons): qui serve solo a capire cosa
@@ -163,11 +175,14 @@ export function QuestionDraftEditContent({
     onClose();
   };
 
-  // La modifica si salva subito al click, non dopo il feedback (vedi il commento sullo state
-  // di editReasonOpen sotto): la modale che segue non è più una conferma di salvataggio, è una
-  // richiesta di motivazione facoltativa su una modifica già avvenuta — per questo dà conferma
-  // (toast) qui, prima di aprirla, e non nella modale stessa.
-  const handleSaveClick = () => {
+  // Salva e approva nello stesso click (vedi il commento sul componente) — niente più toast
+  // qui dentro: lo mostra onSaveAndApprove (successo o errore), che è anche l'unico a sapere
+  // se la persistenza è davvero riuscita. wasModified va letto PRIMA di chiamarlo: il patch
+  // potrebbe lasciare isDirty invariato lato chiamante, ma qui è lo stato del form che conta,
+  // e solo qui sappiamo se l'utente ha davvero toccato qualcosa prima di approvare. Se fallisce
+  // (network), si resta sulla schermata — niente modale di feedback né chiusura, l'utente può
+  // solo riprovare.
+  const handleSaveAndApproveClick = async () => {
     const patch: Partial<DraftQuestion> = {
       text: form.questionText,
       difficulty: form.difficulty,
@@ -179,19 +194,25 @@ export function QuestionDraftEditContent({
       const correctIdx = form.alternatives.findIndex((a) => a.isCorrect);
       patch.correctIndex = correctIdx === -1 ? 0 : correctIdx;
     }
-    onSave(patch);
-    toast.success('Modifiche salvate.', {
-      duration: 5000,
-      className: REVIEW_SUCCESS_TOAST_CLASSNAME,
-    });
-    setEditReason('');
-    setEditCustomText('');
-    setEditReasonOpen(true);
+    const wasModified = form.isDirty;
+    setIsApproving(true);
+    const success = await onSaveAndApprove(patch, wasModified);
+    setIsApproving(false);
+    if (!success) return;
+    if (wasModified) {
+      setEditReason('');
+      setEditCustomText('');
+      setEditReasonOpen(true);
+    } else {
+      onClose();
+    }
   };
 
-  // La modifica è già salvata a questo punto (vedi handleSaveClick) — chiudere la modale, con
-  // "Invia feedback" o saltandola (Salta, Esc, click fuori), riporta sempre alla lista: non
-  // c'è più nulla da annullare, solo il motivo facoltativo da loggare o meno.
+  // La domanda è già salvata e approvata a questo punto (vedi handleSaveAndApproveClick) —
+  // chiudere la modale, con "Invia feedback" o saltandola (Salta, Esc, click fuori), riporta
+  // sempre alla lista: non c'è più nulla da annullare, solo il motivo facoltativo da loggare o
+  // meno. Si apre solo se wasModified era true — approvare senza aver cambiato nulla non è una
+  // "modifica" su cui chiedere un motivo.
   const submitFeedback = () => {
     const reason = isEditCustomReason ? editCustomText.trim() : editReason;
     if (reason) console.info('[modifica bozza] motivo:', reason, 'domanda:', draft.id);
@@ -225,9 +246,17 @@ export function QuestionDraftEditContent({
           </Button>
           <h1 className="text-xl font-semibold">Modifica bozza</h1>
         </div>
-        <Button onClick={handleSaveClick} disabled={hasValidationErrors || !form.isDirty}>
-          <Save className="h-4 w-4" />
-          Salva modifiche
+        <Button
+          onClick={handleSaveAndApproveClick}
+          disabled={hasValidationErrors || isApproving}
+          className="bg-emerald-600 text-white hover:bg-emerald-700"
+        >
+          {isApproving ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <CheckCircle className="h-4 w-4" />
+          )}
+          Salva e Approva
         </Button>
       </div>
 
