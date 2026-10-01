@@ -1609,8 +1609,10 @@ export function QuestionGenerationStep({
             <Button variant="outline" onClick={() => setPendingDiscard(null)}>
               Annulla
             </Button>
+            {/* Niente mr-1.5 sull'icona: il Button ha già gap-2 tra i figli, vedi lo stesso
+                fix su "Elimina le rimanenti" più sopra. */}
             <Button variant="destructive" onClick={confirmDiscard} disabled={!canConfirmDiscard}>
-              <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+              <Trash2 className="h-3.5 w-3.5" />
               Scarta
             </Button>
           </DialogFooter>
