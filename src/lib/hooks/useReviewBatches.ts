@@ -6,7 +6,7 @@ import type {
   MyReviewsFilters,
   QuestionListItem,
 } from '@/lib/types/questions';
-import { getGenerationId } from './questionGenerationBatches';
+import { getGeneration } from './questionGenerationBatches';
 import { useMyReviews } from './useMyReviews';
 
 export interface ArgomentoOption extends HierarchyItem {
@@ -91,8 +91,13 @@ export interface ReviewBatch {
   outcomeProgress?: number;
 }
 
-// Proposta di design: un batch "vero" ha più di una domanda — un singolo invio isolato non
-// è una generazione, resta nella lista piatta sotto.
+// Soglia per il solo raggruppamento per attributi (origine non nota, vedi makeBatchKey) —
+// senza un'origine esplicita da cui dedurlo, un batch "vero" deve avere più di una domanda,
+// altrimenti una singola domanda isolata rischierebbe di sembrare una generazione solo per
+// coincidenza di materia/argomento/giorno con un'altra. Non si applica più ai gruppi con
+// origine esplicita (explicitGroupKeys): quelli sanno già di essere un gruppo a prescindere
+// dal conteggio — e in pratica QuestionSetupAccordion impone comunque un minimo di 2 in
+// generazione (MIN_TOTAL_QUANTITY), quindi un "gruppo da 1" bulk non dovrebbe più accadere.
 const MIN_BATCH_SIZE = 2;
 
 // Mock dell'esito di generazione — nessun job reale da interrogare (vedi BatchOutcome in
@@ -199,20 +204,41 @@ function mockProgressForBatch(key: string): number {
 // sparire di scatto — e il batch si toglie da solo quando non ne resta più nessuna da fare.
 const seenBatchMembers = new Map<string, Map<string, QuestionListItem>>();
 
+// Chiavi di batch che sappiamo per certo essere un "gruppo" (entry point bulk,
+// QuestionGenerationStep) — vedi makeBatchKey sotto. Una volta vista come gruppo una chiave
+// lo resta per tutta la sessione, anche se in un render successivo nessuna delle domande
+// ancora in allQuestions porta più quel tag (es. tutte revisionate tranne una, che da sola
+// non lo saprebbe ridire) — stessa logica "cresce solo" di seenBatchMembers sopra, per lo
+// stesso motivo: l'informazione va preservata, non ricalcolata da uno stato parziale.
+const explicitGroupKeys = new Set<string>();
+
 function dateKey(iso: string): string {
   return new Date(iso).toLocaleDateString('it-IT');
 }
 
-// Regola d'oro: ogni generazione forma un batch a sé, mai sommato a uno già esistente con
-// stessi materia/argomento/data. Il modo sicuro è l'id di generazione (questionGenerationBatches.ts,
-// registrato al momento della creazione) — quando c'è, è lui da solo la chiave: due
-// generazioni con gli stessi attributi restano comunque distinte. Senza (domanda creata
-// prima di un refresh di pagina, che azzera quella memoria) si ricade sul raggruppamento
-// per attributi — materia + argomento + data — il meglio possibile senza un id persistito.
-function makeBatchKey(q: Pick<QuestionListItem, 'id' | 'subjectId' | 'topicId'>, dKey: string) {
-  const generationId = getGenerationId(q.id);
-  if (generationId) return `gen::${generationId}`;
-  return `${q.subjectId}::${q.topicId}::${dKey}`;
+// Regola d'oro: l'entry point con cui una domanda è stata creata decide se può finire in un
+// gruppo, non il conteggio di quante domande condividono materia/argomento/giorno (quello
+// era solo un'euristica, vedi il commento su GenerationKind in questionGenerationBatches.ts
+// per i due casi reali che rompeva). 'single' (QuestionCreateManualPage) non si raggruppa
+// MAI, nemmeno per coincidenza di attributi con un'altra domanda — null segnala al
+// chiamante di escluderla del tutto da seenBatchMembers, così non può diventare membro di
+// nessun batch. 'group' (QuestionGenerationStep) usa sempre il proprio generationId come
+// chiave, a prescindere da quante domande ne fanno parte (anche una sola, da quando
+// QuestionSetupAccordion impone un minimo di 2 in generazione — ma qui non si assume quel
+// minimo, è una garanzia del chiamante, non di questa funzione). Senza alcun tag (domanda
+// creata prima di un refresh di pagina, che azzera quella memoria, o da un flusso diverso da
+// questi due) si ricade sul raggruppamento per attributi — materia + argomento + data — il
+// meglio possibile senza un'origine nota, con la soglia minima (MIN_BATCH_SIZE) ad evitare
+// che una coincidenza isolata sembri un gruppo.
+function makeBatchKey(
+  q: Pick<QuestionListItem, 'id' | 'subjectId' | 'topicId'>,
+  dKey: string
+): { key: string; isExplicitGroup: boolean } | null {
+  const generation = getGeneration(q.id);
+  if (generation?.kind === 'single') return null;
+  if (generation?.kind === 'group')
+    return { key: `gen::${generation.generationId}`, isExplicitGroup: true };
+  return { key: `${q.subjectId}::${q.topicId}::${dKey}`, isExplicitGroup: false };
 }
 
 /**
@@ -280,7 +306,13 @@ export function useReviewBatches(filters: MyReviewsFilters = EMPTY_FILTERS) {
 
     for (const q of allQuestions) {
       const dKey = dateKey(q.createdAt);
-      const key = makeBatchKey(q, dKey);
+      const batchInfo = makeBatchKey(q, dKey);
+      // null = 'single' per origine nota (QuestionCreateManualPage): questa domanda non
+      // entra mai in seenBatchMembers, quindi non può diventare membro di nessun batch —
+      // resta sempre in unbatched più sotto, qualunque sia materia/argomento/giorno.
+      if (!batchInfo) continue;
+      const { key, isExplicitGroup } = batchInfo;
+      if (isExplicitGroup) explicitGroupKeys.add(key);
       if (!seenBatchMembers.has(key)) seenBatchMembers.set(key, new Map());
       seenBatchMembers.get(key)!.set(q.id, q);
       if (!meta.has(key))
@@ -295,11 +327,13 @@ export function useReviewBatches(filters: MyReviewsFilters = EMPTY_FILTERS) {
 
     const result: ReviewBatch[] = [];
     for (const [key, members] of seenBatchMembers) {
-      // MIN_BATCH_SIZE è una proprietà strutturale del batch (quante domande ne fanno
-      // davvero parte), non del risultato filtrato — va controllata qui, sui membri grezzi,
-      // non dopo aver applicato lo Stato/la ricerca: un batch da 10 con 9 filtrate via non
-      // deve sparire solo perché ne resta "1 sola" a valle del filtro.
-      if (members.size < MIN_BATCH_SIZE) continue;
+      // MIN_BATCH_SIZE è un'euristica per il solo raggruppamento per attributi (origine non
+      // nota, vedi makeBatchKey) — un gruppo con un'origine esplicita (explicitGroupKeys) è
+      // un gruppo a prescindere da quanti membri conta, anche uno solo: lo sa già per certo
+      // da dove viene, non deve dedurlo dal conteggio. Controllata sui membri grezzi, non dopo
+      // aver applicato lo Stato/la ricerca: un batch da 10 con 9 filtrate via non deve
+      // sparire solo perché ne resta "1 sola" a valle del filtro.
+      if (!explicitGroupKeys.has(key) && members.size < MIN_BATCH_SIZE) continue;
 
       const pending: ReviewBatchQuestion[] = [];
       const reviewed: ReviewBatchQuestion[] = [];

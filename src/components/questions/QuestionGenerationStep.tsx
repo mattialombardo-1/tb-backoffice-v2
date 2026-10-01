@@ -554,7 +554,7 @@ export function QuestionGenerationStep({
    *  "Domande da revisionare". */
   const persistAndApprove = async (draft: DraftQuestion): Promise<string> => {
     const created = await questionsService.create(client, buildCreatePayload(draft));
-    recordGeneratedQuestion(created.id, generationId);
+    recordGeneratedQuestion(created.id, generationId, 'group');
     await questionsService.approve(client, created.id);
     return created.id;
   };
@@ -563,7 +563,7 @@ export function QuestionGenerationStep({
    *  approvata da qui, solo da chi la riceve. */
   const persistAndSubmit = async (draft: DraftQuestion): Promise<string> => {
     const created = await questionsService.create(client, buildCreatePayload(draft));
-    recordGeneratedQuestion(created.id, generationId);
+    recordGeneratedQuestion(created.id, generationId, 'group');
     if (reviewerId) {
       await questionsService.submit(client, created.id, reviewerId);
     }

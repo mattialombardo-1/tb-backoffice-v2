@@ -110,11 +110,14 @@ export function QuestionCreatePage() {
   // della sezione che la contiene — non prima, non appena atterrati sul form (vedi lì).
   const [proposalQuantity, setProposalQuantity] = useState('');
   const [proposalReviewerId, setProposalReviewerId] = useState<string | null>(null);
+  // Number(proposalQuantity) >= 2, non > 0: un gruppo da una sola domanda non è un gruppo —
+  // stesso minimo imposto dentro la griglia (MIN_TOTAL_QUANTITY in QuestionSetupAccordion,
+  // che qui arriva già sommata in un'unica stringa, vedi onQuantityChange).
   const canGenerate =
     manualeTitle !== '' &&
     hierarchy.isComplete &&
     proposalQuantity !== '' &&
-    Number(proposalQuantity) > 0 &&
+    Number(proposalQuantity) >= 2 &&
     proposalReviewerId !== null;
 
   // Secondo step dopo "Crea Domanda" (non un dialog) — vedi QuestionGenerationStep.

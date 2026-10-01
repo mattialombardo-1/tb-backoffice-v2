@@ -428,6 +428,12 @@ const DIFFICULTY_BUCKETS: { key: DifficultyBucket; label: string }[] = [
 // input.
 const MAX_TOTAL_QUANTITY = 20;
 
+// Pavimento sul totale — un "gruppo" da una sola domanda non è un gruppo (vedi
+// composizioneAllFilled più sotto e canGenerate in QuestionCreatePage, che la rispecchia):
+// forzava useReviewBatches a scegliere tra farlo sparire in "Domande singole" o mostrare una
+// card di gruppo con una domanda sola, nessuna delle due corretta per com'è nata.
+const MIN_TOTAL_QUANTITY = 2;
+
 // "L'altra" sezione a cui passare quando quella aperta si chiude da sola a
 // tutti i campi compilati — non è un percorso bloccato (ogni sezione resta
 // comunque sempre apribile a mano), è solo l'ordine "naturale" di lettura.
@@ -699,10 +705,11 @@ export function QuestionSetupAccordion({
   // Non serve più controllare che ogni cella abbia un valore "esplicito" (prima:
   // quantities[key] !== '', per distinguere un campo mai toccato da uno zero voluto) —
   // con gli stepper ogni cella è sempre un numero visibile fin dall'inizio (parte da
-  // "0", vedi sopra), quindi basta il totale positivo. Niente più controllo sul numero
-  // di risposte: anche quello è ormai uno stepper con un default sempre valido (4),
-  // non un campo che può restare "non ancora scelto".
-  const composizioneAllFilled = totalQuantity > 0;
+  // "0", vedi sopra). Niente più controllo sul numero di risposte: anche quello è ormai
+  // uno stepper con un default sempre valido (4), non un campo che può restare "non
+  // ancora scelto". Il totale deve però raggiungere MIN_TOTAL_QUANTITY, non bastare che
+  // sia positivo: un gruppo da 1 sola domanda non è un gruppo (vedi il commento lì).
+  const composizioneAllFilled = totalQuantity >= MIN_TOTAL_QUANTITY;
 
   // Chiuderebbe la sezione aperta e aprirebbe la prossima quando TUTTI i suoi campi sono
   // compilati (facoltativi compresi) — vedi AUTO_ADVANCE_ON_FILLED in cima al file per il
@@ -1046,8 +1053,17 @@ export function QuestionSetupAccordion({
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {totalQuantity} domande in totale · fino a {MAX_TOTAL_QUANTITY} per volta.
+                  {totalQuantity} domande in totale · minimo {MIN_TOTAL_QUANTITY}, fino a{' '}
+                  {MAX_TOTAL_QUANTITY} per volta.
                 </p>
+                {/* Solo sotto soglia (1), non a 0: a 0 "minimo 2" nella riga sopra basta già —
+                    qui serve solo a spiegare perché "Crea Domanda" resta bloccato quando
+                    sembrerebbe già pronto (una cella valorizzata, totale positivo). */}
+                {totalQuantity > 0 && totalQuantity < MIN_TOTAL_QUANTITY && (
+                  <p className="text-xs text-destructive">
+                    Servono almeno {MIN_TOTAL_QUANTITY} domande per generare un gruppo.
+                  </p>
+                )}
               </div>
             </AccordionContent>
           </AccordionItem>

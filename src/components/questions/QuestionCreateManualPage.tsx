@@ -18,6 +18,7 @@ import {
 import { useHierarchy } from '@/lib/hooks/useHierarchy';
 import { useQuestionForm } from '@/lib/hooks/useQuestionForm';
 import { useReviewerList } from '@/lib/hooks/useReviewerList';
+import { createGenerationId, recordGeneratedQuestion } from '@/lib/hooks/questionGenerationBatches';
 import { useApiClient } from '@/lib/api/useApiClient';
 import { campaignsService } from '@/lib/services/campaignsService';
 import type { DifficultyLevel, QuestionType } from '@/lib/types/questions';
@@ -160,6 +161,12 @@ export function QuestionCreateManualPage() {
   const handleConfirmSubmit = async (reviewerId: string, reviewerName: string) => {
     try {
       const savedQuestionId = await form.submitToReviewer(hierarchy.selection, reviewerId);
+      // 'single': questo è l'entry point "Domanda singola" di AddQuestionDialog — mai nello
+      // stesso batch di un'altra domanda, nemmeno per coincidenza di materia/argomento/giorno
+      // con un'altra singola o con un gruppo bulk (vedi il commento su GenerationKind in
+      // questionGenerationBatches.ts e su useReviewBatches.makeBatchKey). Un generationId a sé
+      // a ogni invio, mai condiviso.
+      recordGeneratedQuestion(savedQuestionId, createGenerationId(), 'single');
       toast.success(t('questions.create.submitted', { name: reviewerName }));
 
       if (isCampaignMode && savedQuestionId) {
