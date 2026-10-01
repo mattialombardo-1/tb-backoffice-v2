@@ -927,7 +927,7 @@ export function QuestionSetupAccordion({
             <AccordionContent className="flex flex-col gap-3 px-6 pt-4 pb-5">
               <div className="flex flex-col gap-3">
                 <Label>
-                  Quantità per difficoltà e tipo
+                  Quantità di domande per difficoltà e tipo
                   <span className="ml-0.5 text-destructive">*</span>
                 </Label>
                 {/* Griglia difficoltà (righe) × 3 colonne fisse: quantità "Risposta chiusa",
