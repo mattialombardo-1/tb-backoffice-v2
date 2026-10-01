@@ -389,7 +389,9 @@ export function QuestionDraftEditContent({
       <AlertDialog open={confirmLeaveOpen} onOpenChange={setConfirmLeaveOpen}>
         <AlertDialogContent onEscapeKeyDown={(e) => e.preventDefault()}>
           <AlertDialogHeader>
-            <AlertDialogTitle>Hai fatto delle modifiche, vuoi scartarle e uscire?</AlertDialogTitle>
+            <AlertDialogTitle>
+              Hai fatto delle modifiche, vuoi annullarle e uscire?
+            </AlertDialogTitle>
             <AlertDialogDescription>
               Le modifiche non salvate andranno perse.
             </AlertDialogDescription>
@@ -400,7 +402,7 @@ export function QuestionDraftEditContent({
               onClick={handleConfirmLeave}
               className={buttonVariants({ variant: 'destructive' })}
             >
-              Scarta ed esci
+              Annulla le modifiche ed esci
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
