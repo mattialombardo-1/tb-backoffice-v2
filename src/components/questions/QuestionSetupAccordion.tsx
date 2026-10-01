@@ -434,22 +434,15 @@ const MAX_TOTAL_QUANTITY = 20;
 // card di gruppo con una domanda sola, nessuna delle due corretta per com'è nata.
 const MIN_TOTAL_QUANTITY = 2;
 
-// "L'altra" sezione a cui passare quando quella aperta si chiude da sola a
-// tutti i campi compilati — non è un percorso bloccato (ogni sezione resta
-// comunque sempre apribile a mano), è solo l'ordine "naturale" di lettura.
-// L'ultima (gestisci-revisione) non ha un successivo: si chiude e basta.
-const NEXT_SECTION: Record<string, string> = {
-  classificazione: 'composizione',
-  composizione: 'gestisci-revisione',
-};
-
-// Disattivato su richiesta di Mattia (29/09/2026): con la griglia di Composizione
-// bastava valorizzare anche una sola cella per soddisfare composizioneAllFilled,
-// chiudendo la sezione a metà interazione mentre si stava ancora confrontando quantità
-// su più righe. La navigazione tra sezioni va ripensata da capo — per ora ogni sezione
-// si apre/chiude solo a mano. Il resto della logica resta pronto (flag a true per
-// riattivarla), non rimosso.
-const AUTO_ADVANCE_ON_FILLED = false;
+// Disattivato su richiesta di Mattia (29/09/2026) per ENTRAMBE le transizioni: con la
+// griglia di Composizione bastava valorizzare anche una sola cella per soddisfare
+// composizioneAllFilled, chiudendo la sezione a metà interazione mentre si stava ancora
+// confrontando quantità su più righe. Riattivato (02/10/2026) solo per Classificazione →
+// Composizione: lì "tutti i campi compilati" è inequivocabile (Manuale, Materia, Argomento,
+// Sotto-argomento se previsto — vedi classificazioneAllFilled), non un conteggio sommato
+// cella per cella come in Composizione. Composizione → Gestisci revisione resta manuale:
+// il problema che l'aveva fatta disattivare è ancora lì, non risolto da questa riattivazione
+// parziale.
 
 interface QuestionSetupAccordionProps {
   hierarchy: HierarchyState;
@@ -711,23 +704,20 @@ export function QuestionSetupAccordion({
   // sia positivo: un gruppo da 1 sola domanda non è un gruppo (vedi il commento lì).
   const composizioneAllFilled = totalQuantity >= MIN_TOTAL_QUANTITY;
 
-  // Chiuderebbe la sezione aperta e aprirebbe la prossima quando TUTTI i suoi campi sono
-  // compilati (facoltativi compresi) — vedi AUTO_ADVANCE_ON_FILLED in cima al file per il
-  // perché è disattivato.
-  const autoAdvancedRef = useRef<Set<string>>(new Set());
+  // Chiude Classificazione e apre Composizione da sola, appena i suoi campi sono tutti
+  // compilati — vedi il commento sopra MIN_TOTAL_QUANTITY per perché solo questa
+  // transizione, non anche Composizione → Gestisci revisione. Un ref booleano semplice
+  // (non più un Set di sezioni, inutile ora che ce n'è una sola da guardare): scatta una
+  // sola volta per apertura di questo step — se l'utente torna indietro a correggere
+  // qualcosa in Classificazione dopo essere avanzato, non si richiude di scatto sotto di
+  // lui alla prossima modifica.
+  const classificazioneAutoAdvancedRef = useRef(false);
   useEffect(() => {
-    if (!AUTO_ADVANCE_ON_FILLED) return;
-    if (!openSection || autoAdvancedRef.current.has(openSection)) return;
-    const allFilled =
-      openSection === 'classificazione'
-        ? classificazioneAllFilled
-        : openSection === 'composizione'
-          ? composizioneAllFilled
-          : false;
-    if (!allFilled) return;
-    autoAdvancedRef.current.add(openSection);
-    setOpenSection(NEXT_SECTION[openSection] ?? '');
-  }, [openSection, classificazioneAllFilled, composizioneAllFilled]);
+    if (classificazioneAutoAdvancedRef.current) return;
+    if (openSection !== 'classificazione' || !classificazioneAllFilled) return;
+    classificazioneAutoAdvancedRef.current = true;
+    setOpenSection('composizione');
+  }, [openSection, classificazioneAllFilled]);
 
   const classificazioneTagItems: FieldTagItem[] = [
     manualeTitle
