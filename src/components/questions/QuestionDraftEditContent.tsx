@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, BookOpen, CheckCircle, Loader2, Send } from 'lucide-react';
+import { ArrowLeft, BookOpen, Check, CheckCircle, Loader2, Pencil, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -246,18 +246,40 @@ export function QuestionDraftEditContent({
           </Button>
           <h1 className="text-xl font-semibold">Modifica bozza</h1>
         </div>
-        <Button
-          onClick={handleSaveAndApproveClick}
-          disabled={hasValidationErrors || isApproving}
-          className="bg-emerald-600 text-white hover:bg-emerald-700"
-        >
-          {isApproving ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <CheckCircle className="h-4 w-4" />
-          )}
-          Salva e Approva
-        </Button>
+        <div className="flex items-center gap-3">
+          {/* Non blocca niente (vedi sopra, "Salva e Approva" resta cliccabile anche a form
+              pulito) — segnala solo se c'è una modifica non ancora salvata, per chi è entrato
+              qui senza sapere già se vuole solo approvare o anche correggere qualcosa. Cambia
+              al primo carattere toccato (form.isDirty), non a "Salva e Approva" già premuto:
+              una volta premuto l'editor si chiude, quindi non c'è un secondo stato "salvato" da
+              rappresentare qui (a differenza di AutosaveIndicator nella vera schermata di
+              revisione, che invece traccia un salvataggio autonomo sul backend). */}
+          <Badge variant={form.isDirty ? 'outline' : 'secondary'} className="gap-1.5">
+            {form.isDirty ? (
+              <>
+                <Pencil className="h-3 w-3" />
+                Modifiche non salvate
+              </>
+            ) : (
+              <>
+                <Check className="h-3 w-3" />
+                Nessuna modifica
+              </>
+            )}
+          </Badge>
+          <Button
+            onClick={handleSaveAndApproveClick}
+            disabled={hasValidationErrors || isApproving}
+            className="bg-emerald-600 text-white hover:bg-emerald-700"
+          >
+            {isApproving ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <CheckCircle className="h-4 w-4" />
+            )}
+            Salva e Approva
+          </Button>
+        </div>
       </div>
 
       {/* Due colonne, stesso layout di QuestionEditContent */}
